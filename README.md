@@ -7,43 +7,50 @@
 ## Table of Contents
 
 - [Rostrum — AI Debate Training Platform](#rostrum--ai-debate-training-platform)
-	- [Table of Contents](#table-of-contents)
-	- [What It Does](#what-it-does)
-	- [Problem \& Impact](#problem--impact)
-		- [What Problem Does the Project Solve?](#what-problem-does-the-project-solve)
-		- [Who Benefits?](#who-benefits)
-		- [What is the Potential Impact?](#what-is-the-potential-impact)
-	- [Demo](#demo)
-		- [Live Demo Link](#live-demo-link)
-	- [How to Use](#how-to-use)
-	- [Features](#features)
-		- [1. Core Debate Engine](#1-core-debate-engine)
-		- [2. AI Opponent — Gemini 3.6 Flash](#2-ai-opponent--gemini-36-flash)
-		- [3. Voice Round-Trip — ElevenLabs](#3-voice-round-trip--elevenlabs)
-		- [4. Fallback Chain (every third-party call has one)](#4-fallback-chain-every-third-party-call-has-one)
-		- [5. Argument Rewrite Assistant](#5-argument-rewrite-assistant)
-		- [6. AI Personas \& Difficulty](#6-ai-personas--difficulty)
-		- [7. Adjudication Report](#7-adjudication-report)
-		- [8. History \& Session Management](#8-history--session-management)
-		- [9. Language Parity (English / Bangla)](#9-language-parity-english--bangla)
-	- [How We Used the APIs](#how-we-used-the-apis)
-		- [Gemini API (via Google AI Studio)](#gemini-api-via-google-ai-studio)
-		- [ElevenLabs API](#elevenlabs-api)
-	- [Architecture](#architecture)
-		- [1. System Overview](#1-system-overview)
-		- [2. Per-Turn Data Flow (Tournament Mode)](#2-per-turn-data-flow-tournament-mode)
-		- [3. Gemini Prompt Modes](#3-gemini-prompt-modes)
-		- [4. Fallback Chain](#4-fallback-chain)
-		- [5. Database Schema (ER Diagram)](#5-database-schema-er-diagram)
-		- [6. Debate Round State Machine](#6-debate-round-state-machine)
-	- [Tech Stack](#tech-stack)
-	- [Requirements](#requirements)
-	- [Local Setup](#local-setup)
-	- [Project Structure](#project-structure)
-	- [Data Model](#data-model)
-	- [Prize Track Declarations](#prize-track-declarations)
-	- [Known Limitations](#known-limitations)
-	- [Author](#author)
+  - [Table of Contents](#table-of-contents)
+  - [Live Demo Link](#live-demo-link)
+  - [What It Does](#what-it-does)
+  - [Problem \& Impact](#problem--impact)
+    - [What Problem Does the Project Solve?](#what-problem-does-the-project-solve)
+    - [Who Benefits?](#who-benefits)
+    - [What is the Potential Impact?](#what-is-the-potential-impact)
+  - [How to Use](#how-to-use)
+  - [Features](#features)
+    - [1. Core Debate Engine](#1-core-debate-engine)
+    - [2. AI Opponent — Gemini 3.6 Flash](#2-ai-opponent--gemini-36-flash)
+    - [3. Voice Round-Trip — ElevenLabs](#3-voice-round-trip--elevenlabs)
+    - [4. Fallback Chain (every third-party call has one)](#4-fallback-chain-every-third-party-call-has-one)
+    - [5. Argument Rewrite Assistant](#5-argument-rewrite-assistant)
+    - [6. AI Personas \& Difficulty](#6-ai-personas--difficulty)
+    - [7. Adjudication Report](#7-adjudication-report)
+    - [8. History \& Session Management](#8-history--session-management)
+    - [9. Language Parity (English / Bangla)](#9-language-parity-english--bangla)
+  - [How We Used the APIs](#how-we-used-the-apis)
+    - [Gemini API (via Google AI Studio)](#gemini-api-via-google-ai-studio)
+    - [ElevenLabs API](#elevenlabs-api)
+  - [Architecture](#architecture)
+    - [1. System Overview](#1-system-overview)
+    - [2. Per-Turn Data Flow (Tournament Mode)](#2-per-turn-data-flow-tournament-mode)
+    - [3. Gemini Prompt Modes](#3-gemini-prompt-modes)
+    - [4. Fallback Chain](#4-fallback-chain)
+    - [5. Database Schema (ER Diagram)](#5-database-schema-er-diagram)
+    - [6. Debate Round State Machine](#6-debate-round-state-machine)
+  - [Tech Stack](#tech-stack)
+  - [Requirements](#requirements)
+  - [Local Setup](#local-setup)
+  - [Project Structure](#project-structure)
+  - [Data Model](#data-model)
+  - [Prize Track Declarations](#prize-track-declarations)
+  - [Known Limitations](#known-limitations)
+  - [Author](#author)
+
+## Live Demo Link
+
+**Live Site:** https://rostrum.onrender.com
+
+> **Note:** The demo is hosted on Render's free tier and may take a while to load on the first request due to cold starts.
+
+> As the live site is using free tiers of Gemini and ElevenLabs, the demo may run out of credits anytime and fail to generate speeches. So we recommend you to run the demo locally by following the [Local Setup](#local-setup) instructions using your own API keys.
 
 ## What It Does
 
@@ -74,14 +81,6 @@ Existing learning avenues fail debaters in three critical ways:
 - **Democratized Debate Training:** Rostrum acts as an instant, 24/7 personalized coach for debaters regardless of geographical or financial constraints.
 - **Bilingual Empowerment:** By maintaining 100% feature parity between English and Bangla (motions, STT, AI turns, speech rewrites, and adjudication), Rostrum bridges the tech gap for regional debate circuits in South Asia.
 - **Actionable AI-Powered Pedagogy:** Rather than just scoring a debate at the end, Rostrum's live "Improve my argument" feature visually demonstrates how to transform weak reasoning into tournament-grade speeches in real time.
-
-## Demo
-
-### Live Demo Link
-
-**Live Site:** https://rostrum.onrender.com
-
-> **Note:** The demo is hosted on Render's free tier and may take a while to load on the first request due to cold starts.
 
 ## How to Use
 
@@ -506,6 +505,8 @@ stateDiagram-v2
 ## Local Setup
 
 ```bash
+git clone https://github.com/atia-farha/Rostrum.git
+cd Rostrum
 composer setup
 php artisan db:seed
 ```
