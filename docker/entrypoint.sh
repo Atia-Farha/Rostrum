@@ -46,9 +46,9 @@ php artisan config:cache
 php artisan route:cache
 php artisan view:cache
 
-# Execute database migrations
-echo "Running database migrations..."
-php artisan migrate --force
+# Execute database migrations and seed default data
+echo "Running database migrations & seeders..."
+php artisan migrate --force --seed
 
 echo "Starting PHP-FPM and Nginx..."
 php-fpm -D
