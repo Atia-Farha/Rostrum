@@ -16,6 +16,8 @@ services:
         value: Rostrum
       - key: APP_URL
         sync: false
+      - key: ASSET_URL
+        sync: false
       - key: APP_KEY
         generateValue: true
       - key: LOG_CHANNEL

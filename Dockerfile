@@ -63,6 +63,9 @@ WORKDIR /var/www/html
 # Copy application files
 COPY . .
 
+# Remove local hot file if present in context
+RUN rm -f public/hot
+
 # Copy built vendor and frontend assets from previous stages
 COPY --from=composer-builder /app/vendor ./vendor
 COPY --from=node-builder /app/public/build ./public/build

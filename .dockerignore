@@ -1,0 +1,10 @@
+.git
+.github
+.env
+.env.backup
+node_modules
+vendor
+storage/*.sqlite
+storage/database/database.sqlite
+public/storage
+public/hot
