@@ -144,9 +144,16 @@ class DebateController extends Controller
         $aiMoveType  = null;
         $aiError     = null;
 
+        // If the AI already spoke first in this round (ai_first flow), the
+        // user's turn just completed the exchange — do NOT generate a second AI speech.
+        $aiAlreadySpoke = $currentRound->turns()
+            ->where('speaker', 'ai')
+            ->exists();
+
         // --- 4. Generate AI opponent response ---
         // If Gemini already produced a response via the audio fallback, skip a second call.
-        if (isset($geminiAiText) && $geminiAiText) {
+        if (! $aiAlreadySpoke) {
+            if (isset($geminiAiText) && $geminiAiText) {
             $aiText = $geminiAiText;
             // Extract sparring/tournament move type if present in audio fallback response
             if (preg_match('/^\[([A-Z\-\s]+)\]\s*/i', $aiText, $matches)) {
@@ -174,6 +181,7 @@ class DebateController extends Controller
                 $aiText  = null;
                 $aiError = $e->getMessage() ?: 'The opponent could not respond right now. Please try again.';
             }
+        }
         }
 
         // ── TTS SYNTHESIS (independent of Gemini result) ─────────────────────
@@ -229,7 +237,7 @@ class DebateController extends Controller
         $debateComplete = false;
         $newRound       = null;
 
-        if ($aiTurn && $debate->mode === 'tournament') {
+        if ($debate->mode === 'tournament') {
             $roundComplete = $this->engine->isRoundComplete($currentRound->refresh());
 
             if ($roundComplete) {

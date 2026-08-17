@@ -57,8 +57,9 @@ class DebateRoundEngine
     public function firstSpeakerForPhase(Debate $debate, string $phase): string
     {
         if ($phase === 'closing') {
-            // Reply-speech reversal: Government gets the last word
-            return $debate->user_side === 'government' ? 'opposition' : 'government';
+            // Reply-speech reversal: Opposition always replies first, so the
+            // Government (which opened the round) delivers the final word.
+            return 'opposition';
         }
 
         // Opening and Rebuttal: Government speaks first

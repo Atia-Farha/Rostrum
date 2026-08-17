@@ -30,19 +30,7 @@
         });
     </script>
 
-    @php
-        // Never hard-fail the page when Vite assets are missing (e.g. build not
-        // run on a fresh deploy) — render unstyled content instead of a 500.
-        $viteAssets = file_exists(public_path('build/manifest.json'));
-    @endphp
-    @if ($viteAssets)
-        @vite(['resources/css/app.css', 'resources/js/app.js'])
-    @else
-        <style>
-            body { font-family: system-ui, sans-serif; background: #090b10; color: #f8fafc; }
-            a { color: #6366f1; }
-        </style>
-    @endif
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 <body class="h-full @yield('body_class')">
 

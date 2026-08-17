@@ -1431,6 +1431,12 @@
                                     this.timeLeft = cfg.phaseDuration;
                                 }
                             });
+                        } else if (data.round_complete && (data.new_phase || data.debate_complete)) {
+                            // AI already spoke first this round — user's turn completed it.
+                            // No second AI speech; move to the next phase.
+                            window.debateArena?.removeStatusBubbles();
+                            this.state = 'idle';
+                            setTimeout(() => location.reload(), 1200);
                         } else {
                             // AI failed — show AI-side error bubble with dedicated retry callback
                             window.debateArena?.showAiError(
