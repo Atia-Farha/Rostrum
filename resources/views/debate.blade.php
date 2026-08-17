@@ -1422,21 +1422,40 @@
                             window.debateArena?.showAiThinking(this.aiThinkingMsg);
 
                             window.debateArena?.appendAiTurn(data, () => {
-                                // Reload only when the server moved state forward
-                                // (new phase / debate complete). Otherwise keep going live.
-                                if (data.debate_complete || (data.round_complete && data.new_phase)) {
+                                // Reload only when the debate is complete or when advancing phase AND user speaks first next
+                                if (data.debate_complete) {
                                     setTimeout(() => location.reload(), 1500);
+                                } else if (data.round_complete && data.new_phase) {
+                                    if (data.next_speaker === 'user') {
+                                        setTimeout(() => location.reload(), 1500);
+                                    } else {
+                                        // AI speaks first in the new phase — trigger directly without page reload
+                                        this.state = 'ai_thinking';
+                                        this.aiThinkingMsg = `${cfg.personaName} is preparing their ${data.new_phase} speech…`;
+                                        window.debateArena?.showAiThinking(this.aiThinkingMsg);
+                                        cfg.currentPhase = data.new_phase;
+                                        this.triggerAiFirst();
+                                    }
                                 } else {
                                     this.state = 'idle';
                                     this.timeLeft = cfg.phaseDuration;
                                 }
                             });
                         } else if (data.round_complete && (data.new_phase || data.debate_complete)) {
-                            // AI already spoke first this round — user's turn completed it.
-                            // No second AI speech; move to the next phase.
+                            // User's turn completed the round.
                             window.debateArena?.removeStatusBubbles();
-                            this.state = 'idle';
-                            setTimeout(() => location.reload(), 1200);
+                            if (data.debate_complete) {
+                                setTimeout(() => location.reload(), 1200);
+                            } else if (data.next_speaker === 'user') {
+                                setTimeout(() => location.reload(), 1200);
+                            } else {
+                                // AI speaks first in the new phase (e.g. Closing phase reply reversal)
+                                this.state = 'ai_thinking';
+                                this.aiThinkingMsg = `${cfg.personaName} is preparing their ${data.new_phase} speech…`;
+                                window.debateArena?.showAiThinking(this.aiThinkingMsg);
+                                cfg.currentPhase = data.new_phase;
+                                this.triggerAiFirst();
+                            }
                         } else {
                             // AI failed — show AI-side error bubble with dedicated retry callback
                             window.debateArena?.showAiError(
