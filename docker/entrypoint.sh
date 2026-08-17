@@ -6,6 +6,9 @@ PORT="${PORT:-8080}"
 sed -i "s/listen 8080/listen ${PORT}/g" /etc/nginx/nginx.conf
 sed -i "s/listen \[::\]:8080/listen \[::\]:${PORT}/g" /etc/nginx/nginx.conf
 
+# Remove local Vite hot file if copied into container
+rm -f /var/www/html/public/hot
+
 # Ensure storage subdirectories exist with proper permissions
 mkdir -p \
     /var/www/html/storage/app/public/audio \
