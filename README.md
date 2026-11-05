@@ -851,4 +851,4 @@ All IDs are UUIDs (`HasUuids`) except `users` (auto-increment). All child tables
 ## Author
 Developed by [Atia Farha](https://github.com/atia-farha).
 
-> See `[rostrum-prd.md](/rostrum-prd.md)` for the full product specification document.
+> See [rostrum-prd.md](rostrum-prd.md) for the full product specification document.
