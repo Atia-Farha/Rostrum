@@ -10,13 +10,22 @@ use Illuminate\Support\Str;
 class ElevenLabsService
 {
     private string $apiKey;
-    private string $model;
     private string $baseUrl = 'https://api.elevenlabs.io/v1';
+
+    /**
+     * Resolved models per voice, for the lifetime of this service instance.
+     *
+     * A voice's model is a property of the voice, not of the language, and
+     * the API has to be asked once to learn it. The service is resolved per
+     * request, so this cache lives for a single request at most.
+     *
+     * @var array<string, list<string>>
+     */
+    private array $modelByVoice = [];
 
     public function __construct()
     {
         $this->apiKey = (string) config('services.elevenlabs.key', env('ELEVENLABS_API_KEY', ''));
-        $this->model  = (string) config('debate.elevenlabs_model', 'eleven_multilingual_v2');
     }
 
     /**
@@ -35,34 +44,56 @@ class ElevenLabsService
      */
     public function synthesize(string $text, string $voiceId, string $language): string
     {
-        // eleven_multilingual_v2 produces the best Bangla phonetics with any voice
-        $model = $language === 'bn'
-            ? 'eleven_multilingual_v2'
-            : 'eleven_turbo_v2_5';
+        $models = $this->modelsFor($voiceId);
 
         $text = $this->trimToSentenceBoundary($text, (int) config('debate.tts_max_chars', 1500));
 
-        $response = $this->callTts($text, $voiceId, $model);
+        $response = null;
+        $usedModel = $models[0];
+
+        foreach ($models as $model) {
+            $response = $this->callTts($text, $voiceId, $model);
+
+            if ($response->successful()) {
+                $usedModel = $model;
+                break;
+            }
+
+            // This account is not entitled to the voice's own model. The
+            // voice still has to speak, so try the next candidate — the
+            // general model is the last one and always works.
+            if ($response->status() === 401 || $response->status() === 403) {
+                Log::warning('ElevenLabs model not available to this account — trying the next one', [
+                    'voice_id' => $voiceId,
+                    'model_id' => $model,
+                    'status'   => $response->status(),
+                ]);
+                continue;
+            }
+
+            break;
+        }
 
         // Quota exhausted — retry once with a text that fits the remaining credits
-        if ($response->failed() && str_contains($response->body(), 'quota_exceeded')) {
+        if ($response && $response->failed() && str_contains($response->body(), 'quota_exceeded')) {
             $shorter = $this->trimToCreditBudget($text, $response->body());
             if ($shorter !== $text) {
                 Log::warning('ElevenLabs TTS quota — retrying with trimmed text', [
                     'original_chars' => mb_strlen($text),
                     'trimmed_chars'  => mb_strlen($shorter),
                 ]);
-                $response = $this->callTts($shorter, $voiceId, $model);
+                $response = $this->callTts($shorter, $voiceId, $usedModel);
             }
         }
 
-        if ($response->failed()) {
+        if (! $response || $response->failed()) {
             Log::error('ElevenLabs TTS failed', [
-                'status'   => $response->status(),
-                'body'     => $response->body(),
+                'status'   => $response?->status(),
+                'body'     => $response?->body(),
                 'voice_id' => $voiceId,
+                'model_id' => $usedModel,
             ]);
-            throw new \RuntimeException('ElevenLabs TTS API call failed: ' . $response->status());
+            throw new \RuntimeException('ElevenLabs TTS API call failed: ' . ($response?->status() ?? 'no response'));
         }
 
         // Store the audio file on the private disk. We return only the file
@@ -75,6 +106,103 @@ class ElevenLabsService
         $disk->put($filename, $response->body());
 
         return basename($filename);
+    }
+
+    /**
+     * The models to speak this voice with, best first.
+     *
+     * A cloned voice carries its character in the model it was fine-tuned
+     * on. ElevenLabs reports those models on the voice itself, and the
+     * language the voice was verified in sits with them. Using a general
+     * model instead — eleven_multilingual_v2 — does not fail: the request
+     * succeeds and the Bangla is pronounced correctly. But the rendering
+     * falls back to that model's own generic delivery, which is flat and
+     * narrow in pitch, and the voice stops sounding like the person it
+     * was cloned from. That is why a Bangla debate can use the right voice
+     * ID and still sound like no voice in particular.
+     *
+     * So the model is a property of the voice and is looked up, not
+     * assumed from the language. The list ends with the general model, so
+     * the voice always has something to speak with even if the account
+     * cannot reach the voice's own models.
+     *
+     * @return list<string>
+     */
+    private function modelsFor(string $voiceId): array
+    {
+        if (isset($this->modelByVoice[$voiceId])) {
+            return $this->modelByVoice[$voiceId];
+        }
+
+        $fallback = (string) config('debate.elevenlabs_model', 'eleven_multilingual_v2');
+
+        $response = Http::withHeaders(['xi-api-key' => $this->apiKey])
+            ->timeout(30)
+            ->get("{$this->baseUrl}/voices/{$voiceId}");
+
+        if ($response->failed()) {
+            Log::warning('Could not read ElevenLabs voice metadata — using the default model', [
+                'voice_id' => $voiceId,
+                'status'   => $response->status(),
+            ]);
+
+            return $this->modelByVoice[$voiceId] = [$fallback];
+        }
+
+        return $this->modelByVoice[$voiceId] = $this->candidateModels($response->json(), $fallback);
+    }
+
+    /**
+     * Order the models a voice can be spoken with, best first.
+     *
+     * The fine-tuned models are listed on the voice, and the languages the
+     * voice was verified in are listed against the models it was verified
+     * for. A model the voice was verified in for this language comes
+     * first; the voice's other fine-tuned models come next, because they
+     * are still the voice's own delivery. The general model is last.
+     *
+     * @param array<string, mixed> $voice
+     * @return list<string>
+     */
+    private function candidateModels(array $voice, string $fallback): array
+    {
+        $baseModels = $voice['high_quality_base_model_ids'] ?? [];
+
+        if (! is_array($baseModels) || $baseModels === []) {
+            return [$fallback];
+        }
+
+        $language = (string) config('debate.tts_language', 'bn');
+
+        $models = [];
+
+        // A model the voice was verified in for the language being spoken.
+        foreach ((array) ($voice['verified_languages'] ?? []) as $entry) {
+            if (($entry['language'] ?? null) !== $language) {
+                continue;
+            }
+            $modelId = $entry['model_id'] ?? null;
+            if ($modelId && in_array($modelId, $baseModels, true) && ! in_array($modelId, $models, true)) {
+                $models[] = $modelId;
+            }
+        }
+
+        // The voice's own fine-tuned models. Some are only on higher plans
+        // (eleven_v4_hq, eleven_v4_post_trained), so the synthesiser falls
+        // through them if the account is not entitled to one.
+        foreach ($baseModels as $modelId) {
+            if (! in_array($modelId, $models, true)) {
+                $models[] = $modelId;
+            }
+        }
+
+        // The general model is the last resort — it always works, but it
+        // flattens the voice into a generic delivery.
+        if (! in_array($fallback, $models, true)) {
+            $models[] = $fallback;
+        }
+
+        return $models;
     }
 
     /**

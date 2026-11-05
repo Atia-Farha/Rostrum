@@ -98,16 +98,36 @@ class DebateController extends Controller
                 // The public disk would expose every user's voice to anyone
                 // who can guess (or enumerate) the filename.
                 $userAudioName = 'user_'.Str::uuid().'.webm';
-                Storage::disk('local')->put(
+
+                // The disk is configured with 'throw' => false, so a failed
+                // write returns false instead of raising. Without this check
+                // the URL below would point at a file that was never written
+                // and the turn would offer a Listen button that 404s.
+                $written = Storage::disk('local')->put(
                     'audio/'.$userAudioName,
                     file_get_contents($audioFile->getRealPath())
                 );
-                $userAudioUrl = route('debates.audio', [
-                    'debate' => $debate->id,
-                    'file' => $userAudioName,
-                ]);
+
+                if ($written === false) {
+                    Log::error('Could not store the user recording', [
+                        'debate_id' => $debate->id,
+                        'file'      => $userAudioName,
+                    ]);
+
+                    $userAudioUrl = null;
+                } else {
+                    $userAudioUrl = route('debates.audio', [
+                        'debate' => $debate->id,
+                        'file' => $userAudioName,
+                    ]);
+                }
             } catch (\Exception $e) {
                 // Audio saving failed — continue without audio URL
+                Log::error('Could not store the user recording', [
+                    'debate_id' => $debate->id,
+                    'error'     => $e->getMessage(),
+                ]);
+
                 $userAudioUrl = null;
             }
 

@@ -280,10 +280,9 @@
             scroll-behavior: smooth;
         }
 
-        .transcript-feed::-webkit-scrollbar { width: 4px; }
-        .transcript-feed::-webkit-scrollbar-track { background: transparent; }
-        .transcript-feed::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.08); border-radius: 2px; }
-        .transcript-feed::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.15); }
+        /* The transcript and podium panes take the app-wide scrollbar
+           from resources/css/app.css, so one design covers the page
+           scroller and every pane inside it. */
 
         /* ── Sidebar Column ── */
         .podium-col {
@@ -875,6 +874,11 @@
                 max-height: none;
                 padding: 0;
             }
+
+            /* The app-wide scrollbar is a screen affordance; the printed
+               transcript does not get one. */
+            ::-webkit-scrollbar { display: none !important; }
+            * { scrollbar-width: none !important; }
         }
     </style>
 

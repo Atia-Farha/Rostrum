@@ -443,11 +443,11 @@ sequenceDiagram
 flowchart LR
     GEM["Gemini 3.6 Flash\ngenerativelanguage.googleapis.com"]
 
-    A["**A** Motion Generation\nlanguage + category\n→ motion text"]
-    B["**B** Debate Turn\nsystem_prompt\n+ persona + register\n+ difficulty\n+ stage brief\n(phase + slot\n+ speech answered)\n+ full transcript\n→ ai_text"]
-    B2["**B2** Multimodal Fallback\nbase64 audio/webm\n+ same stage brief as B\n→ {transcript, ai_text}"]
-    C["**C** Argument Rewrite\nslot-aware coaching prompt\n→ {rewritten_text,\nexplanation_bullets}"]
-    D["**D** Adjudication\nfull transcript + motion\n+ rubric instructions\n→ {matter_score,\nmanner_score, method_score,\ntotal_score, fallacies,\nfeedback_bullets, verdict}"]
+    A["A Motion Generation\nlanguage + category\n→ motion text"]
+    B["B Debate Turn\nsystem_prompt\n+ persona + register\n+ difficulty\n+ stage brief\n(phase + slot\n+ speech answered)\n+ full transcript\n→ ai_text"]
+    B2["B2 Multimodal Fallback\nbase64 audio/webm\n+ same stage brief as B\n→ {transcript, ai_text}"]
+    C["C Argument Rewrite\nslot-aware coaching prompt\n→ {rewritten_text,\nexplanation_bullets}"]
+    D["D Adjudication\nfull transcript + motion\n+ rubric instructions\n→ {matter_score,\nmanner_score, method_score,\ntotal_score, fallacies,\nfeedback_bullets, verdict}"]
 
     GEM --- A
     GEM --- B
@@ -523,7 +523,7 @@ erDiagram
         text description
         text system_prompt
         string elevenlabs_voice_id
-        string elevenlabs_voice_id_bn (nullable)
+        string elevenlabs_voice_id_bn "nullable"
         timestamps created_at
     }
 
@@ -606,7 +606,7 @@ erDiagram
 stateDiagram-v2
     [*] --> Setup : user fills setup form
 
-    Setup --> Opening : POST /debates\nDebateController creates debate\nDebateRoundEngine seeds first round
+    Setup --> Opening : POST /debates<br/>DebateController creates debate<br/>DebateRoundEngine seeds first round
 
     state Opening {
         direction LR
@@ -635,14 +635,14 @@ stateDiagram-v2
 
     state Sparring {
         [*] --> FreeTurns : any number of turns
-        FreeTurns --> FreeTurns : AI picks move type\nFOLLOW-UP·CONTRADICTION\nCHALLENGE·REBUTTAL
+        FreeTurns --> FreeTurns : AI picks move type<br/>FOLLOW-UP·CONTRADICTION<br/>CHALLENGE·REBUTTAL
         FreeTurns --> [*] : user clicks End Round
     }
 
     Setup --> Sparring : mode = sparring
     Sparring --> DebateComplete
 
-    DebateComplete --> Adjudicated : POST /debates/{id}/adjudicate\nGemini returns scored JSON
+    DebateComplete --> Adjudicated : POST /debates/{id}/adjudicate<br/>Gemini returns scored JSON
     Adjudicated --> [*] : view feedback sheet
 ```
 
@@ -844,21 +844,11 @@ All IDs are UUIDs (`HasUuids`) except `users` (auto-increment). All child tables
 
 ## Known Limitations
 
-- **Bangla Text-to-Speech Quality:** Bangla AI responses are spoken with native Bangla voices (Fahad Mir, Rayhan, Rakib) rather than the English voices, which removes most of the accented, non-native cadence the multilingual model produced. A residual accent remains, because the model itself — not the voice — shapes the phonetics: the same `eleven_multilingual_v2` engine speaks both languages, so Bangla output still carries some of the model's English phoneme bias. Text transcripts remain fully readable and clear.
-
-- **Speaking time is estimated, not measured:** the report's delivery analysis converts word count into seconds at a fixed 140 words per minute (`config('debate.words_per_minute')`). It is a good estimate of prepared competitive delivery, but it is not a measurement — a debater who pauses to gather a thought will look slower than the estimate suggests. The *proportion* of each phase's budget used is the reliable figure; the absolute seconds are not.
-
-- **The Bangla word count is a heuristic:** Bangla does not space its words, so the report counts characters and divides by five (the average Bangla word length). It is close enough to be useful but it is an estimate, and it is the input to the delivery analysis above.
-
-- **No Content-Security-Policy:** the app loads Google Fonts and a CDN fallback for Alpine.js, and it uses inline Alpine.js expressions. A strict CSP would need nonces threaded through every view plus an explicit allowlist for the font and script origins — deliberately left out rather than half-done. See §11.
+- **Bangla Text-to-Speech Quality:** While Bangla text generation, motion parsing, transcription, and adjudication work accurately, the synthesized Bangla voice audio using ElevenLabs (`eleven_multilingual_v2`) can sound unnaturally accented, unclear, or non-native. The underlying TTS models currently struggle with native Bengali phonetics and cadence, making spoken Bangla AI responses difficult to understand at times. Text transcripts remain fully readable and clear.
 
 - **The report's derived prose is not localised:** the brief, band summaries, phase notes and delivery commentary are English in a Bangla report. The judge's own findings, the mark and the transcript *are* in Bangla — only the scaffolding around them is English. See §12.
-
-- **Two dashboard aggregates are computed but not rendered:** `DashboardController` still builds a `$resumable` debate and a `$byFormat` split that the overview view no longer uses. They are harmless (both are derived from the collection already loaded) but they are dead weight, and `$resumable` in particular describes a feature the overview deliberately dropped.
-
-- **`ELEVENLABS_MODEL` is read but never applied:** `config('debate.elevenlabs_model')` is loaded into `ElevenLabsService` and then ignored — the synthesis model is chosen by the debate's language (`eleven_multilingual_v2` for Bangla, `eleven_turbo_v2_5` for English). Setting the variable has no effect; the language split is the real switch.
 
 ## Author
 Developed by [Atia Farha](https://github.com/atia-farha).
 
-> See `rostrum-prd.md` for the full product specification document.
+> See `[rostrum-prd.md](/rostrum-prd.md)` for the full product specification document.

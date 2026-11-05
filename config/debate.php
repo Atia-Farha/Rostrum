@@ -13,8 +13,21 @@ return [
     |--------------------------------------------------------------------------
     | ElevenLabs
     |--------------------------------------------------------------------------
+    |
+    | `elevenlabs_model` is the general model. It is the fallback for a voice
+    | the account cannot speak with its own model, and the model for a
+    | premade voice, which has no model of its own.
+    |
+    | The cloned voices carry their character in the model they were
+    | fine-tuned on, so the model is looked up per voice at synthesis time
+    | (see ElevenLabsService::modelsFor). `tts_language` is the language a
+    | cloned voice is expected to be verified in — the app's cloned voices
+    | are Bangla.
+    |
     */
     'elevenlabs_model' => env('ELEVENLABS_MODEL', 'eleven_multilingual_v2'),
+
+    'tts_language' => env('ELEVENLABS_TTS_LANGUAGE', 'bn'),
 
     /*
     |--------------------------------------------------------------------------

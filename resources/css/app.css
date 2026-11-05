@@ -88,6 +88,25 @@
             0 10px 30px -5px rgba(0, 0, 0, 0.5),
             0 4px 6px -4px rgba(0, 0, 0, 0.5);
         --shadow-glow: 0 0 20px rgba(99, 102, 241, 0.3);
+
+        /* ---- Scrollbars ----
+           One scrollbar for the whole app, so the page and every
+           pane inside it read as one surface.
+
+           The track is the app's own background rather than a second
+           grey, which keeps the scrollbar from painting a stripe
+           across a dark page. The thumb sits idle on the card border
+           and brightens to the accent on hover, matching how the rest
+           of the theme treats a resting control and an active one.
+
+           Firefox reads these directly; WebKit and Blink ignore the
+           standard properties and need the ::-webkit- rules below,
+           so both sets are kept in step. */
+        --scrollbar-width: 10px;
+        --scrollbar-track: transparent;
+        --scrollbar-thumb: #2d3566;
+        --scrollbar-thumb-hover: var(--card-accent);
+        --scrollbar-thumb-active: var(--card-accent-soft);
     }
 
     * {
@@ -115,6 +134,62 @@
         line-height: 1.6;
         min-height: 100vh;
         letter-spacing: -0.011em;
+    }
+
+    /* ---- Custom scrollbar (global) ----
+       The rule is applied to the universal selector, so it reaches the
+       document scroller and every scrollable pane inside it — the rail,
+       the arena's transcript and podium, the history table, the report.
+       A pane that is scrollable but too short to need a thumb simply
+       does not draw one.
+
+       `scrollbar-width: thin` is the Firefox equivalent of the narrow
+       WebKit track, and `scrollbar-color` gives Firefox the same
+       thumb and transparent track. */
+    * {
+        scrollbar-width: thin;
+        scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
+    }
+
+    /* WebKit / Blink. The standard properties above are ignored here,
+       so these carry the same values explicitly. The corner is
+       transparent so the track and the thumb meet cleanly at the
+       end of the scroll axis. */
+    ::-webkit-scrollbar {
+        width: var(--scrollbar-width);
+        height: var(--scrollbar-width);
+    }
+
+    ::-webkit-scrollbar-track {
+        background: var(--scrollbar-track);
+    }
+
+    ::-webkit-scrollbar-thumb {
+        background-color: var(--scrollbar-thumb);
+        border-radius: var(--radius-pill);
+        border: 2px solid transparent;
+        background-clip: padding-box;
+        transition:
+            background-color 0.15s ease,
+            border-color 0.15s ease;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+        background-color: var(--scrollbar-thumb-hover);
+    }
+
+    ::-webkit-scrollbar-thumb:active {
+        background-color: var(--scrollbar-thumb-active);
+    }
+
+    ::-webkit-scrollbar-corner {
+        background: var(--scrollbar-track);
+    }
+
+    /* A pane that is being dragged should not also show a hover
+       highlight from the pointer sitting over it. */
+    ::-webkit-scrollbar-thumb:active:hover {
+        background-color: var(--scrollbar-thumb-active);
     }
 
     h1,

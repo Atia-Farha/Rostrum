@@ -118,6 +118,12 @@
             padding: 0.5in !important;
         }
 
+        /* The app-wide scrollbar is a dark thumb for a dark screen. On
+           white paper it would print as a bar across the sheet, so it
+           is dropped for the printed copy. */
+        ::-webkit-scrollbar { display: none !important; }
+        * { scrollbar-width: none !important; }
+
         .app-nav, .app-side, .app-side-bar,
         .skip-link, .rpt-toolbar, .rpt-toc, .rpt-footer,
         .rpt-record-tools, .toast-container {
