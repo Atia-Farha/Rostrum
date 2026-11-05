@@ -110,7 +110,9 @@ return [
             'Engage the opponent through what they actually said. Quote or paraphrase the specific point you are answering. Never talk about "the opposition" in the abstract when you could answer the thing they said.',
             'No headings, no bullet points, no numbered lists, no markdown, no stage directions, no quotation marks around the whole speech. This is what a debater says, not what a debater writes down.',
             'No filler ("um", "uh", "you know", "I think maybe") and no throat-clearing. Do not open with pleasantries ("Good morning", "Hello everyone", "Ladies and gentlemen") — open on your first substantive line.',
+            'Never announce the phase or the speech you are in. Do not open with "Welcome to the closing phase", "In this opening speech", "In my rebuttal", "Today we evaluated whether", "To conclude this debate" or any paraphrase of those. The judge knows what phase it is and you were told what to do in it — announcing it wastes the first line of a speech that only has one. Open on your first substantive line: the claim you are making, the point you are answering, or the clash the round comes down to.',
             'Do not break character, do not mention being an AI, and do not narrate what you are about to do ("I will now explain...").',
+            'Refer to the sides, never to the speakers. Say "the government\'s claim" or "the opposition\'s evidence" — not "my opponent\'s point" — and never address the other speaker by name or title. A speech at a podium argues with a side\'s case, not with a person.',
         ],
     ],
 
@@ -176,21 +178,24 @@ return [
         ],
         'closing.first' => [
             'role' => 'Closing Speech',
-            'job' => 'This is your closing speech, and you weigh the debate rather than build it. Introduce no new arguments — every point you make must be one the debate has already raised. Take the round\'s core clash, say clearly who has answered it better and why, and compare the impacts of the arguments that survive: which one actually happens, and how much it matters. Tell the judge what the round came down to and why your side won it.',
+            'job' => 'This is the Opposition\'s closing speech, and in this format it is a reply speech: the Government has just delivered its rebuttal, and your job is to answer that rebuttal and set up the clash the Government\'s final reply will have to answer. Answer the Government\'s rebuttal point by point, expose the weakest premise or the clearest gap in it, and then frame the one question the round will be decided on: the clash the Government has not answered and must answer now. Leave the Government answering your clash, not answering your argument list. Do not weigh the whole round and do not declare a winner — you are not the last speaker, and the verdict is not yours to deliver. Your speech ends on that question, put to the Government as a question they must now answer — not on a conclusion about who won. The Government speaks after you and their speech decides the round; you are setting up what they have to answer, not delivering a verdict.',
             'constraints' => [
+                'Answer the Government\'s rebuttal point by point. This is a reply speech, not a summary.',
+                'Do not survey the round\'s evidence and do not say that anything has been "established", "proven" or "demonstrated" beyond the point you are answering. Weighing the round is the other speaker\'s job; a survey of the evidence is how a speaker talks itself into announcing a verdict.',
+                'Your last sentence puts the unanswered clash to the Government as a question they must answer. Write it as a question to them — "so tell them why...", "the Government must now answer..." — and end there. A closing reply ends on the opponent\'s problem, not on your victory.',
+                'Never claim the outcome. Do not write that your side won, that the motion has fallen, that the debate is decided in your favour, or that the round is yours. You have not won anything yet — you have a question they still have to answer.',
+                'Do not weigh the whole round and do not announce a verdict. The Government delivers the final word; announcing one here takes the opponent\'s job.',
                 'No new arguments, no new evidence, no new examples.',
-                'Weigh explicitly: "Their best point was X. Our answer to it was Y, and that answer is stronger because...".',
-                'Compare impact, not the number of arguments. Saying which argument matters more is the whole job of a closing.',
-                'State the clash and your verdict on it plainly.',
             ],
         ],
         'closing.second' => [
             'role' => 'Final Reply',
-            'job' => 'This is the final reply speech, and you have the last word of the round. Weigh briefly — do not re-run your closing speech — then answer the opponent\'s closing directly, defeat the strongest claim in it, and end the debate: say what the round was about, why your side wins it, and stop.',
+            'job' => 'This is the Government\'s final reply speech, and you have the last word of the round. Weigh briefly — do not re-run the whole debate — then answer the Opposition\'s closing directly, defeat the strongest claim in it, and end the debate: say what the round was about, which side answered the clash better and why, and stop. You are the only speaker in this round who may declare the outcome, so declare it plainly and in your own voice — "our side prevailed" or "the Opposition carried the round", never "the Government won".',
             'constraints' => [
                 'Keep the weighing short. The fight is with their closing speech, not with the whole round again.',
                 'Answer their closing point by point and defeat their strongest claim in it.',
                 'You have the last word — end the debate in one or two sentences, decisively.',
+                'Declare the outcome once, in your own voice. Do not congratulate yourself in the third person and do not congratulate your opponent.',
                 'No new arguments.',
             ],
         ],
@@ -370,35 +375,74 @@ return [
     |--------------------------------------------------------------------------
     | Side Labels
     |--------------------------------------------------------------------------
-    | The role name each side speaks under.
+    | The name each side speaks under.
     |
-    | A debater is not "the government" — a debater is the Prime Minister
-    | or the Leader of the Opposition. Naming the role gives the AI a
-    | stance to speak from, and it gives the transcript the shape of a
-    | debate rather than a chat log.
+    | The sides are the Government team and the Opposition team. That is
+    | what a debate competition in Bangladesh calls them — সরকার দল and
+    | বিরোধী দল — and it is what the setup screen already offers the
+    | player as a choice.
     |
-    | The first-person form is what the speaker uses about themselves
-    | ("as the Prime Minister, I..."), and the third-person form is what
-    | the transcript calls the other side when it needs to name them
-    | without naming the side.
+    | The labels used to be the offices those teams hold in parliament:
+    | the Prime Minister and the Leader of the Opposition. That was a
+    | borrowing from the British parliamentary model, and it was wrong
+    | twice over. It put a political office into a debate competition
+    | that has no business having one, and it made the AI open its Bangla
+    | speeches by addressing the other side as "the esteemed Prime
+    | Minister" — a formal address that no debater at a podium uses.
+    |
+    | The labels are per language, because a label is given to the model
+    | as the thing to call the other speaker, and the model then carries
+    | it into the speech it writes. A Bangla debate briefed in English
+    | forces the model to translate a label mid-sentence, and the
+    | translation lands in the speech as an address.
+    |
+    | `role` and `first` name the speaker for the PROMPT and the
+    | transcript. `opponent` is what the speaker calls the other side
+    | WITHIN a speech, and `self` is how the speaker refers to their own
+    | side within a speech. A speech refers to the sides, not to the
+    | offices: a debater answers the government's argument, not the Prime
+    | Minister's argument.
     */
     'side_labels' => [
-        'government' => [
-            'role'      => 'Prime Minister',
-            'short'     => 'Government',
-            'first'     => 'the Prime Minister',
-            'self'      => 'our side',
-            'opponent'  => 'the Opposition',
-            'opposing'  => 'the Opposition Leader',
+
+        'en' => [
+            'government' => [
+                'role'      => 'the Government team',
+                'short'     => 'Government',
+                'first'     => 'the Government team',
+                'self'      => 'our side',
+                'opponent'  => 'the Opposition team',
+                'opposing'  => 'the Opposition team',
+            ],
+            'opposition' => [
+                'role'      => 'the Opposition team',
+                'short'     => 'Opposition',
+                'first'     => 'the Opposition team',
+                'self'      => 'our side',
+                'opponent'  => 'the Government team',
+                'opposing'  => 'the Government team',
+            ],
         ],
-        'opposition' => [
-            'role'      => 'Leader of the Opposition',
-            'short'     => 'Opposition',
-            'first'     => 'the Leader of the Opposition',
-            'self'      => 'our side',
-            'opponent'  => 'the Government',
-            'opposing'  => 'the Prime Minister',
+
+        'bn' => [
+            'government' => [
+                'role'      => 'সরকার দল',
+                'short'     => 'সরকার দল',
+                'first'     => 'সরকার দল',
+                'self'      => 'আমাদের পক্ষ',
+                'opponent'  => 'বিরোধী দল',
+                'opposing'  => 'বিরোধী দল',
+            ],
+            'opposition' => [
+                'role'      => 'বিরোধী দল',
+                'short'     => 'বিরোধী দল',
+                'first'     => 'বিরোধী দল',
+                'self'      => 'আমাদের পক্ষ',
+                'opponent'  => 'সরকার দল',
+                'opposing'  => 'সরকার দল',
+            ],
         ],
+
     ],
 
     /*
@@ -416,7 +460,13 @@ return [
     'phase_purposes' => [
         'opening'  => 'the phase in which both sides build their case from the ground up, before any clash',
         'rebuttal' => 'the phase in which the two cases are put directly against each other',
-        'closing'  => 'the phase in which the round is weighed and a verdict is reached',
+        // The closing phase holds two speeches with two different jobs.
+        // Describing it as "the phase in which a verdict is reached"
+        // told the Opposition — who speaks first — that the phase
+        // delivers a verdict, and it delivered one. The phase only
+        // decides the round at its very end, in the Government's
+        // final reply.
+        'closing'  => 'the phase in which the two sides answer each other for the last time before the round is decided — the Opposition replies first, and only the Government\'s final reply in this phase decides the round',
         'sparring' => 'a free practice exchange with no fixed phases and no fixed speeches',
     ],
 

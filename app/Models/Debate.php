@@ -93,14 +93,14 @@ class Debate extends Model
      * Returns the full transcript as a flat string for Gemini context,
      * with each turn labeled with its phase (tournament mode only).
      *
-     * The speakers are labelled by the role they speak under — the
-     * Prime Minister and the Leader of the Opposition — rather than as
-     * "You" and "AI Opponent". A model that reads "You (government)" in
-     * a transcript it was told it was writing has to work out, every
-     * time it reads a turn, which of the two voices "You" is. Naming
-     * the roles makes the transcript read the way the round was
-     * actually fought, and makes "the opponent's last speech" mean one
-     * specific thing.
+     * The speakers are labelled by the team they speak for — the
+     * Government team and the Opposition team — rather than as "You" and
+     * "AI Opponent". A model that reads "You (government)" in a
+     * transcript it was told it was writing has to work out, every time
+     * it reads a turn, which of the two voices "You" is. Naming the
+     * teams makes the transcript read the way the round was actually
+     * fought, and makes "the opponent's last speech" mean one specific
+     * thing.
      */
     public function buildTranscript(): string
     {
@@ -122,10 +122,25 @@ class Debate extends Model
     }
 
     /**
-     * The role a side speaks under.
+     * The role a side speaks under, in the language of the debate.
+     *
+     * The transcript is read by the model, so its labels are in the
+     * language the model is writing in. A Bangla debate's transcript is
+     * labelled in Bangla, and a model reading it does not have to work
+     * out which voice is which from a title in another language.
      */
     public function sideLabel(string $side): string
     {
-        return config('debate.side_labels.'.$side.'.role', ucfirst($side));
+        $language = $this->language ?: 'en';
+
+        $label = config('debate.side_labels.'.$language.'.'.$side.'.role');
+
+        if (is_string($label) && $label !== '') {
+            return $label;
+        }
+
+        $label = config('debate.side_labels.en.'.$side.'.role');
+
+        return is_string($label) && $label !== '' ? $label : ucfirst($side);
     }
 }

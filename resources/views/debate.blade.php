@@ -1648,7 +1648,7 @@
                 // Show a ChatGPT-style "Thinking / Generating response" bubble in chat feed
                 showAiThinking(customMsg = null) {
                     const msg = customMsg || 'Thinking & crafting response…';
-                    
+
                     // If an AI error row is currently displayed, replace its contents in-place!
                     const existingErrRow = document.getElementById('status-ai-error-row');
                     if (existingErrRow) {
@@ -1690,7 +1690,7 @@
                 },
 
                 // Show AI-side error bubble — Gemini failure, independent of STT
-                showAiError(message, retryCallback = null) {
+                showAiError(message, retryCallback = null, userTurnSaved = true) {
                     this.removeStatusBubbles();
                     const container = document.getElementById('dynamic-turns');
                     if (!container) return;
@@ -1698,6 +1698,12 @@
                     // Remove existing error bubble if retrying
                     const oldErr = document.getElementById('status-ai-error-row');
                     if (oldErr) oldErr.remove();
+
+                    // When the opponent opens the round the user has not
+                    // spoken yet, so there is no saved speech to point at.
+                    const savedNote = userTurnSaved
+                        ? 'Your speech was saved.'
+                        : 'The opponent has not spoken yet.';
 
                     const row = document.createElement('div');
                     row.id = 'status-ai-error-row';
@@ -1713,7 +1719,7 @@
                         <span style="font-size:0.8rem; font-weight:500; color:var(--color-text-muted);">${message}</span>
                     </div>
                     <div style="display:flex; align-items:center; justify-content:space-between; gap:1rem; padding-top:0.4rem; border-top:1px solid rgba(239,68,68,0.15);">
-                        <span style="font-size:0.7rem; color:var(--color-text-dim);">Your speech was saved.</span>
+                        <span style="font-size:0.7rem; color:var(--color-text-dim);">${savedNote}</span>
                         <button type="button" id="btn-retry-ai-response" class="btn btn-sm" style="background:var(--color-danger); color:#fff; border:none; padding:0.2rem 0.6rem; font-size:0.7rem; font-weight:600; display:inline-flex; align-items:center; gap:4px; border-radius:var(--radius-sm);">
                             <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.5 2v6h-6"/><path d="M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
                             Retry
@@ -1999,7 +2005,7 @@
                 state: cfg.nextSpeaker === 'user' ? 'idle' : 'ai_thinking',
                 showRetry: false,
                 errorMsg: '',
-                aiThinkingMsg: `${cfg.personaName} is preparing their opening…`,
+                aiThinkingMsg: `${cfg.personaName} is preparing their opening`,
                 timeLeft: cfg.phaseDuration,
                 timerHandle: null,
                 mediaRecorder: null,
@@ -2290,9 +2296,11 @@
                                 data.ai_error
                                 || (data.errors ? Object.values(data.errors).flat()[0] : null)
                                 || 'The opponent could not respond right now. Please try again.',
-                                () => this.retryAiGeneration()
+                                () => this.retryAiGeneration(),
+                                false
                             );
                             this.state = 'idle';
+                            this.showRetry = true;
                         }
                     } catch (err) {
                         console.error('AI retry failed:', err);
@@ -2320,17 +2328,37 @@
                             body: formData
                         });
                         const data = await res.json();
-                        if (!data.error && !data.errors) {
+
+                        // The opponent's failure is reported in `ai_error` with
+                        // `ai_text` left null — it is NOT a validation error,
+                        // so `data.error` and `data.errors` are both absent.
+                        // Checking only those would render an EMPTY speech
+                        // bubble and hand the microphone back with no word of
+                        // explanation, which is what a failed opening looked
+                        // like on the page.
+                        const failed = !data.ai_text
+                            || data.error
+                            || data.errors
+                            || data.ai_error;
+
+                        if (!failed) {
                             window.debateArena?.appendAiTurn(data, () => {
                                 this.state = 'idle';
                                 this.timeLeft = this.durationFor(cfg.currentPhase);
                             });
                         } else {
-                            window.debateArena?.removeStatusBubbles();
-                            this.errorMsg = data.message
+                            const message = data.ai_error
+                                || data.message
                                 || (data.errors ? Object.values(data.errors).flat()[0] : null)
                                 || 'Could not load opponent response.';
+
+                            window.debateArena?.showAiError(
+                                message,
+                                () => this.retryAiGeneration(),
+                                false
+                            );
                             this.state = 'idle';
+                            this.showRetry = true;
                         }
                     } catch (err) {
                         window.debateArena?.removeStatusBubbles();

@@ -93,13 +93,17 @@ class GeminiService
     /**
      * The system prompt for a debate turn.
      *
-     * Three layers, in the order they matter:
+     * Four layers, in the order they matter:
      *
      *   1. The persona — who is speaking.
      *   2. The debate register — how a speech is delivered at a podium.
      *      Without this the model writes an essay, and the TTS voice
      *      then reads an essay aloud.
-     *   3. The difficulty tier — how strong the speaker is.
+     *   3. The language — the instructions are in English even when the
+     *      speech is not, and without saying so the model translates the
+     *      instructions mid-sentence and the translation lands in the
+     *      speech.
+     *   4. The difficulty tier — how strong the speaker is.
      *
      * The persona comes first so the register is applied inside the
      * character's voice rather than flattening it.
@@ -117,10 +121,35 @@ class GeminiService
                 fn (string $rule) => '- '.$rule,
                 $style['rules'] ?? []
             )),
+            $this->languageDirective($debate),
             $difficultyPrompt,
         ]);
 
         return implode("\n\n", $layers);
+    }
+
+    /**
+     * The language the speech is written in.
+     *
+     * The instructions are always in English, but the speech is not
+     * always in English. A model told to write a Bangla speech by
+     * English instructions will, when it needs a label mid-sentence,
+     * translate it — and the translation ends up spoken aloud as
+     * something like "the esteemed Prime Minister". Saying plainly
+     * that the instructions are English and only the speech is not
+     * stops the instruction text leaking into the speech.
+     */
+    private function languageDirective(Debate $debate): string
+    {
+        if (($debate->language ?: 'en') === 'bn') {
+            return 'These instructions are written in English, but the speech itself must be written in Bangla. '
+                .'Keep the instruction text out of the speech: do not quote these instructions, do not translate a label '
+                .'from English inside a Bangla sentence, and do not address anyone by an English title. '
+                .'Use the Bangla side names exactly as they are given to you.';
+        }
+
+        return 'These instructions are written in English, and the speech must be written in English. '
+            .'Keep the instruction text out of the speech.';
     }
 
     /**
@@ -141,11 +170,32 @@ class GeminiService
         $sections[] = "YOU ARE: {$stage['side_role']}, arguing the {$stage['side']} side."
             ." The opponent is {$stage['opponent_first']}, arguing the {$stage['opponent']} side.";
 
+        // The roles are for the model's own bookkeeping. The speech itself
+        // refers to the SIDES, not to the offices — and the model has to be
+        // told so, because it has just been handed two team names and a
+        // transcript labelled with them, and left alone it opens by
+        // addressing the other side by name. That is not how a speech at a
+        // podium works, and in Bangla it comes out as a formal address
+        // in the first line.
+        $sections[] = "IN YOUR SPEECH, REFER TO THE SIDES, NOT TO THE SPEAKERS: "
+            ."call your own side \"{$stage['side_self']}\" and the other side \"{$stage['opponent_in_speech']}\". "
+            ."Do not name either speaker, and do not address anyone directly. "
+            ."A speech answers the other side's ARGUMENT — \"their claim\", \"their evidence\" — "
+            ."not \"the last speaker said\" or \"my opponent's point\".";
+
         // Where this speech sits in the round.
         $position = "THIS SPEECH: your {$stage['role']} — the {$stage['slot']} speech of the "
             ."{$stage['phase']} phase, which is {$stage['phase_purpose']}.";
 
         $sections[] = $position;
+
+        // What this speaker gets to decide. The format gives the last
+        // word to one speaker only, and the model has to be told which
+        // one it is — in the same breath as the phase, before it starts
+        // reasoning about what the phase is for.
+        if (! empty($stage['authority']['note'])) {
+            $sections[] = 'YOUR AUTHORITY IN THIS SPEECH: '.$stage['authority']['note'];
+        }
 
         // What this speech has to do. This is the phase-aware,
         // slot-aware instruction — the thing that makes a reply a reply
@@ -504,6 +554,9 @@ PROMPT;
         );
 
         $payload = [
+            'system_instruction' => [
+                'parts' => [['text' => $this->buildDebateSystemPrompt($debate)]],
+            ],
             'contents' => [[
                 'parts' => [
                     [
@@ -534,7 +587,7 @@ PROMPT;
             $status = $response->status();
             Log::error('Gemini audio turn failed', ['status' => $status, 'body' => $response->body()]);
             if ($status === 429) {
-                throw new \RuntimeException('The AI server is experiencing high traffic right now. Please wait a few seconds and try again.');
+                throw new \RuntimeException($this->rateLimitMessage($response->body()));
             }
             throw new \RuntimeException('Unable to process the audio with the AI service. Please try again.');
         }
@@ -572,8 +625,21 @@ PROMPT;
         $sections[] = "YOU ARE: {$stage['side_role']}, arguing the {$aiSide} side. "
             ."The opponent is {$stage['opponent_first']}.";
 
+        // The roles are for the model's own bookkeeping. The speech itself
+        // refers to the SIDES, not to the speakers — see the same
+        // instruction in the text-turn prompt.
+        $sections[] = "IN YOUR SPEECH, REFER TO THE SIDES, NOT TO THE SPEAKERS: "
+            ."call your own side \"{$stage['side_self']}\" and the other side \"{$stage['opponent_in_speech']}\". "
+            ."Do not name either speaker, and do not address anyone directly. "
+            ."A speech answers the other side's ARGUMENT — \"their claim\", \"their evidence\" — "
+            ."not \"the last speaker said\" or \"my opponent's point\".";
+
         $sections[] = "THIS SPEECH: your {$stage['role']} — the {$stage['slot']} speech of the "
             ."{$stage['phase']} phase, which is {$stage['phase_purpose']}.";
+
+        if (! empty($stage['authority']['note'])) {
+            $sections[] = 'YOUR AUTHORITY IN THIS SPEECH: '.$stage['authority']['note'];
+        }
 
         $job = "YOUR JOB IN THIS SPEECH:\n".$stage['job'];
         $constraints = $stage['constraints'];
@@ -661,7 +727,7 @@ PROMPT;
             Log::error('Gemini generateText failed', ['status' => $response->status(), 'body' => $response->body()]);
             $status = $response->status();
             if ($status === 429) {
-                throw new \RuntimeException('The AI server is experiencing high traffic right now. Please wait a few seconds and try again.');
+                throw new \RuntimeException($this->rateLimitMessage($response->body()));
             }
             throw new \RuntimeException('Unable to connect to the AI service. Please try again in a moment.');
         }
@@ -700,7 +766,7 @@ PROMPT;
             Log::error('Gemini generateTextWithSystem failed', ['status' => $response->status(), 'body' => $response->body()]);
             $status = $response->status();
             if ($status === 429) {
-                throw new \RuntimeException('The AI server is experiencing high traffic right now. Please wait a few seconds and try again.');
+                throw new \RuntimeException($this->rateLimitMessage($response->body()));
             }
             throw new \RuntimeException('Unable to connect to the AI service. Please try again in a moment.');
         }
@@ -711,6 +777,58 @@ PROMPT;
     private function extractText(array $response): string
     {
         return $response['candidates'][0]['content']['parts'][0]['text'] ?? '';
+    }
+
+    /**
+     * The message to show when Gemini answers 429.
+     *
+     * A 429 is not always the same thing. A transient per-minute rate limit
+     * clears in seconds and "please wait a few seconds" is honest. A daily
+     * free-tier quota does NOT clear in seconds — Google says so in the
+     * response body, with the time until the quota resets — and telling the
+     * reader to wait a few seconds for a quota that resets tomorrow is how a
+     * broken app looks like a working one.
+     *
+     * The two are told apart by the upstream body: a quota exhaustion names
+     * a daily limit ("per day", "per day limit exceeded", "free tier") and
+     * usually carries a "retry in <duration>" hint.
+     *
+     * @param  string  $body  The raw response body from Gemini.
+     */
+    private function rateLimitMessage(string $body): string
+    {
+        $body = strtolower($body);
+
+        $isDailyQuota = str_contains($body, 'per day')
+            || str_contains($body, 'per day limit exceeded')
+            || str_contains($body, 'free_tier_requests')
+            || str_contains($body, 'free tier');
+
+        if (! $isDailyQuota) {
+            return 'The AI server is experiencing high traffic right now. Please wait a few seconds and try again.';
+        }
+
+        // Google states when the quota resets — "Please retry in
+        // 17h18m8.03626646s". The seconds carry a fractional part, so
+        // the pattern has to allow it or the whole match is lost.
+        if (preg_match('/please retry in\s+([0-9]+h[0-9]+m[0-9]+(?:\.[0-9]+)?s)/i', $body, $m)) {
+            // Drop the fractional part — "17h18m8.03626646s" reads as
+            // noise in a message meant for a debater.
+            $wait = preg_replace('/\.([0-9]+)s$/', 's', $m[1]);
+
+            return "The AI's daily request limit has been reached, so it cannot speak right now. "
+                ."The limit resets in about {$wait}.";
+        }
+
+        if (preg_match('/please retry in\s+([0-9]+h[0-9]+m)/i', $body, $m)) {
+            $wait = $m[1];
+
+            return "The AI's daily request limit has been reached, so it cannot speak right now. "
+                ."The limit resets in about {$wait}.";
+        }
+
+        return "The AI's daily request limit has been reached, so it cannot speak right now. "
+            ."Please try again later today.";
     }
 
     /**

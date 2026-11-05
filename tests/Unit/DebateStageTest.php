@@ -275,7 +275,131 @@ class DebateStageTest extends TestCase
 
         $brief = $this->stage()->brief($debate, $round, 'ai', 'opposition');
 
-        $this->assertStringContainsString('no new arguments', strtolower($brief['job']));
+        $this->assertStringContainsString('no new arguments', strtolower(implode(' ', $brief['constraints'])));
+    }
+
+    /**
+     * The Opposition's closing is a reply speech, not a verdict.
+     *
+     * The Closing phase reverses in this format: the Opposition speaks
+     * first, answering the Government's rebuttal, and the Government
+     * delivers the final word. The first closing profile used to ask
+     * the speaker to announce which side won, which the Opposition —
+     * being the first speaker — read as congratulating itself in the
+     * third person.
+     */
+    public function test_the_first_closing_speech_is_a_reply_and_not_a_verdict(): void
+    {
+        $debate = $this->makeDebate('government');
+        $round = $this->makeRound($debate, 'closing', 3);
+
+        $brief = $this->stage()->brief($debate, $round, 'ai', 'opposition');
+
+        $this->assertSame('closing.first', $brief['slot_key']);
+
+        // It answers the Government's rebuttal rather than weighing.
+        $this->assertStringContainsString('reply speech', strtolower($brief['job']));
+        $this->assertStringContainsString('answer that rebuttal', strtolower($brief['job']));
+
+        // And it does not hand out the verdict — the Government does.
+        $this->assertStringContainsString('do not declare a winner', strtolower($brief['job']));
+
+        $constraints = strtolower(implode(' ', $brief['constraints']));
+        $this->assertStringContainsString('do not announce a verdict', $constraints);
+        $this->assertStringContainsString('the government delivers the final word', $constraints);
+
+        // The speech must not claim a win either. Telling the model
+        // "the clash your side has won" invited exactly that — it
+        // ended the Bangla closing by announcing its own victory.
+        $this->assertStringContainsString('never claim the outcome', $constraints);
+        $this->assertStringContainsString('that your side won', $constraints);
+    }
+
+    /**
+     * The brief states who decides the round.
+     *
+     * The first closing speaker kept announcing its own victory, and
+     * the cause was structural rather than a matter of tone: the
+     * closing phase was described as "the phase in which the round is
+     * weighed and a verdict is reached", and both closing speeches
+     * were given that description. The Opposition, speaking first,
+     * read it as a licence to reach the verdict. The authority of each
+     * slot is now stated as a fact of the slot, and the phase no
+     * longer claims a verdict is reached in it.
+     */
+    public function test_the_brief_states_who_decides_the_round(): void
+    {
+        $debate = $this->makeDebate('government');
+        $round = $this->makeRound($debate, 'closing', 3);
+
+        $first = $this->stage()->brief($debate, $round, 'ai', 'opposition');
+
+        $this->assertFalse($first['authority']['decides']);
+        $this->assertStringContainsString('not the last speaker', strtolower($first['authority']['note']));
+        $this->assertStringContainsString('do not say who won', strtolower($first['authority']['note']));
+
+        $round->turns()->create([
+            'id' => 'turn-ai-1',
+            'speaker' => 'ai',
+            'transcript' => 'The clash is whether the harm is decisive.',
+        ]);
+
+        $second = $this->stage()->brief($debate, $round, 'user', 'government');
+
+        $this->assertTrue($second['authority']['decides']);
+        $this->assertStringContainsString('last speaker', strtolower($second['authority']['note']));
+    }
+
+    /**
+     * An earlier speech does not decide the round either.
+     */
+    public function test_an_earlier_speech_has_no_authority_to_decide(): void
+    {
+        $debate = $this->makeDebate('government');
+        $round = $this->makeRound($debate, 'opening', 1);
+
+        $brief = $this->stage()->brief($debate, $round, 'ai', 'opposition');
+
+        $this->assertFalse($brief['authority']['decides']);
+        $this->assertStringContainsString('does not decide it', strtolower($brief['authority']['note']));
+    }
+
+    /**
+     * The closing phase does not claim that a verdict is reached in it.
+     */
+    public function test_the_closing_phase_does_not_advertise_a_verdict(): void
+    {
+        $purpose = strtolower(config('debate.phase_purposes.closing'));
+
+        $this->assertStringNotContainsString('a verdict is reached', $purpose);
+        $this->assertStringContainsString('opposition replies first', $purpose);
+    }
+
+    public function test_the_second_closing_speech_is_the_final_reply(): void
+    {
+        $debate = $this->makeDebate('government');
+        $round = $this->makeRound($debate, 'closing', 3);
+
+        // The AI (Opposition) has taken the first slot, so the user
+        // (Government) holds the second — the final word.
+        $round->turns()->create([
+            'id' => 'turn-ai-1',
+            'speaker' => 'ai',
+            'transcript' => 'The clash is whether the harm is decisive.',
+        ]);
+
+        $brief = $this->stage()->brief($debate, $round, 'user', 'government');
+
+        $this->assertSame('closing.second', $brief['slot_key']);
+        $this->assertSame('Final Reply', $brief['role']);
+        $this->assertStringContainsString('last word', strtolower($brief['job']));
+
+        // It is the only speaker allowed to declare the outcome, and it
+        // has to do so in its own voice rather than in the third
+        // person.
+        $constraints = strtolower(implode(' ', $brief['constraints']));
+        $this->assertStringContainsString('declare the outcome once', $constraints);
+        $this->assertStringContainsString('do not congratulate yourself in the third person', $constraints);
     }
 
     public function test_the_brief_reports_which_phases_are_left(): void
@@ -349,7 +473,7 @@ class DebateStageTest extends TestCase
         $this->assertSame('100–160', $brief['word_count']);
     }
 
-    public function test_the_brief_names_the_role_each_side_speaks_under(): void
+    public function test_the_brief_names_the_team_each_side_speaks_for(): void
     {
         $debate = $this->makeDebate('government');
         $round = $this->makeRound($debate, 'opening', 1);
@@ -357,15 +481,15 @@ class DebateStageTest extends TestCase
         $ai = $this->stage()->brief($debate, $round, 'ai', 'opposition');
         $user = $this->stage()->brief($debate, $round, 'user', 'government');
 
-        $this->assertSame('Leader of the Opposition', $ai['side_role']);
-        $this->assertSame('Prime Minister', $user['side_role']);
+        $this->assertSame('the Opposition team', $ai['side_role']);
+        $this->assertSame('the Government team', $user['side_role']);
 
         // The AI's opponent is the user, who is Government.
         $this->assertSame('Government', $ai['opponent']);
-        $this->assertSame('the Prime Minister', $ai['opponent_first']);
+        $this->assertSame('the Government team', $ai['opponent_first']);
 
         // The user's opponent is the AI, which is the Opposition.
         $this->assertSame('Opposition', $user['opponent']);
-        $this->assertSame('the Leader of the Opposition', $user['opponent_first']);
+        $this->assertSame('the Opposition team', $user['opponent_first']);
     }
 }

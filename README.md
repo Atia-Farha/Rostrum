@@ -844,9 +844,9 @@ All IDs are UUIDs (`HasUuids`) except `users` (auto-increment). All child tables
 
 ## Known Limitations
 
-- **Bangla Text-to-Speech Quality:** While Bangla text generation, motion parsing, transcription, and adjudication work accurately, the synthesized Bangla voice audio using ElevenLabs (`eleven_multilingual_v2`) can sound unnaturally accented, unclear, or non-native. The underlying TTS models currently struggle with native Bengali phonetics and cadence, making spoken Bangla AI responses difficult to understand at times. Text transcripts remain fully readable and clear.
+- The live site is hosted on Render's free tier and may take a while to load on the first request due to cold starts.
 
-- **The report's derived prose is not localised:** the brief, band summaries, phase notes and delivery commentary are English in a Bangla report. The judge's own findings, the mark and the transcript *are* in Bangla — only the scaffolding around them is English. See §12.
+- As the live site is using free tiers of Gemini and ElevenLabs, the demo may run out of credits anytime and fail to generate speeches.
 
 ## Author
 Developed by [Atia Farha](https://github.com/atia-farha).

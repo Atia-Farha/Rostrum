@@ -87,9 +87,9 @@ class DebateStage
             ?? config('debate.stage_profiles', [])['sparring']
             ?? [];
 
-        $labels = config('debate.side_labels.'.$side, []);
+        $labels = $this->labelsFor($debate, $side);
         $opponent = $debate->user_side === $side ? $debate->aiSide() : $debate->user_side;
-        $oppoLabels = config('debate.side_labels.'.$opponent, []);
+        $oppoLabels = $this->labelsFor($debate, $opponent);
 
         [$answering, $answeringLabel] = $this->resolveOpponentSpeech($debate, $round, $speaker);
         [$ownLast, $ownLastLabel] = $this->ownLastSpeech($debate, $round, $speaker);
@@ -102,12 +102,15 @@ class DebateStage
             'role' => $profile['role'] ?? 'Speech',
             'job' => $profile['job'] ?? '',
             'constraints' => $profile['constraints'] ?? [],
+            'authority' => $this->authority($key),
             'word_count' => $this->wordCount($phase, $slot),
             'side' => $side,
             'side_role' => $labels['role'] ?? $side,
             'side_first' => $labels['first'] ?? $side,
+            'side_self' => $labels['self'] ?? 'our side',
             'opponent' => $oppoLabels['short'] ?? $opponent,
             'opponent_first' => $oppoLabels['first'] ?? 'the opponent',
+            'opponent_in_speech' => $oppoLabels['opponent'] ?? $opponent,
             'answering' => $answering,
             'answering_label' => $answeringLabel,
             'own_last' => $ownLast,
@@ -116,6 +119,69 @@ class DebateStage
             'phases_done' => $this->phasesDone($debate, $round),
             'phases_left' => $this->phasesLeft($debate, $round),
         ];
+    }
+
+    /**
+     * What this speaker is allowed to decide, and what they are not.
+     *
+     * The format gives the last word of the round to one speaker and
+     * one only. Telling the others not to weigh the round in the
+     * constraints was not enough — the model still ended the Opposition's
+     * closing by announcing its own victory, because the constraints
+     * read as advice and the phase's own description said a verdict
+     * was reached in this phase. This states the authority as a fact
+     * of the slot, so the model cannot read the phase description and
+     * conclude that a verdict is its to give.
+     *
+     * @return array{decides: bool, note: string}
+     */
+    private function authority(string $slotKey): array
+    {
+        if ($slotKey === 'closing.second') {
+            return [
+                'decides' => true,
+                'note' => 'You are the last speaker of the round. This speech is the one that decides it, so you may weigh the round and say which side carried it. Nobody after you will speak.',
+            ];
+        }
+
+        if ($slotKey === 'closing.first') {
+            return [
+                'decides' => false,
+                'note' => 'You are not the last speaker of the round. Someone else speaks after you and their speech decides the round. Do not weigh the round, do not say who won, do not say the motion has fallen, and do not congratulate your own side — you have a question they still have to answer, and putting it to them is your whole job.',
+            ];
+        }
+
+        return [
+            'decides' => false,
+            'note' => 'You are not the last speaker of the round, and this speech does not decide it. Make your case; do not announce a winner.',
+        ];
+    }
+
+    /**
+     * The labels for a side, in the language the debate is being held in.
+     *
+     * The labels are the names the model is given for the two speakers, and
+     * the model carries them into the speech it writes. A Bangla debate
+     * briefed with English titles therefore produces a Bangla speech that
+     * opens by addressing the other side by an English parliamentary title,
+     * translated into Bangla in the middle of the sentence.
+     *
+     * An untranslated label set is the fallback, so a debate in a language
+     * with no labels of its own still gets consistent labels.
+     *
+     * @return array<string, string>
+     */
+    private function labelsFor(Debate $debate, string $side): array
+    {
+        $language = $debate->language ?: 'en';
+
+        $labels = config('debate.side_labels.'.$language.'.'.$side);
+
+        if (is_array($labels)) {
+            return $labels;
+        }
+
+        return (array) config('debate.side_labels.en.'.$side, []);
     }
 
     /**
