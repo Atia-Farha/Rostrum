@@ -2,7 +2,9 @@
 
 **AI-Powered Debate Practice Simulator**
 Build target: Build With AI Hack Days @EMK, Aug 17, 2026
-Status: Draft for hackathon build
+Status: Shipped — hackathon MVP plus the post-hackathon accounts, practice-analytics and stage-brief pass
+
+> **How to read this document.** §1–§17 and §22–§23 are the specification as written for the 6-hour hackathon build, then revised where the shipped product diverged from it. Where a change was a deliberate departure from the original plan, the original is kept and the new behaviour is described alongside it. §18 carries a status note listing everything that shipped after the hackathon window. Section numbers are stable: nothing was renumbered, so cross-references still hold.
 
 ---
 
@@ -11,6 +13,8 @@ Status: Draft for hackathon build
 Rostrum is a web application that lets a student practice competitive debate against an AI opponent. The user picks or generates a motion, selects a side, an AI persona, and a difficulty level, then debates through a structured round format (Opening → Rebuttal → Closing) by speaking aloud. The AI opponent argues in character using Gemini and speaks back using a distinct ElevenLabs voice. After the round, Gemini acts as an adjudicator and produces a structured feedback sheet modeled on real debate judging (Matter / Manner / Method), including fallacy detection and a score. At any point during the round, the user can also ask Gemini to **rewrite one of their own arguments**, seeing a live before/after that demonstrates stronger reasoning — one of the product's strongest live-demo moments.
 
 The product supports **English and Bangla** debate modes, end to end — motions, AI arguments, spoken voice, rewrite suggestions, and adjudication feedback.
+
+Every practice belongs to an account. The Overview page turns a record of debates into a picture of a debater's practice — a score trend over time, where the marks are won, and how much of each phase's time was actually used. See §6.10.
 
 The entire application is a single Laravel app: **Laravel Blade views styled with Tailwind CSS**, with light client-side interactivity (mic recording, timers, live transcript updates) handled by Alpine.js and small fetch calls back to the same Laravel app. There is no separate frontend framework or API domain.
 
@@ -33,6 +37,11 @@ Debate is a major extracurricular activity at universities in Bangladesh (Asian 
 - The system produces a structured, rubric-based feedback sheet at the end of the round.
 - Full parity between English and Bangla for every user-facing step.
 
+### Goals (added after the hackathon build)
+- A practice record that outlives a browser session: an account owns its debates, and the Overview page shows what the record says about the debater's progress.
+- A report that tells a debater what to do next, not only where the points went.
+- A debate engine whose speeches fit the round: the AI's reply answers the speech it is answering, and its closing weighs rather than introduces.
+
 ### Stretch Goal (design-in-now, build-if-time)
 - **Sparring Mode**: an alternative, more conversational round format where the AI can ask follow-up questions, spot contradictions, and issue live challenges instead of trading fixed-length speeches. See §6.3a. This is architected as a `mode` selection from the start so it isn't a bolt-on later, but it is **not required for the hackathon submission** — Tournament Mode (the structured Opening/Rebuttal/Closing format) is the P0 default and must work end-to-end regardless of whether Sparring Mode ships.
 
@@ -40,9 +49,13 @@ Debate is a major extracurricular activity at universities in Bangladesh (Asian 
 - Multiplayer / human-vs-human debate.
 - Team debates (this is 1v1 solo practice, not full Asian Parliamentary 4-team format).
 - Points of Information (POIs) / live interruptions during speeches — noted as a post-hackathon feature.
-- Persistent user accounts, login, or cross-device history (session-based only for MVP).
 - Mobile native apps (responsive web only, server-rendered).
 - Leaderboards / social features.
+
+**Deliberately descoped for the hackathon build, and shipped afterwards.** These were listed as non-goals when this document was written for the 6-hour window. They were built in the post-hackathon pass and are specified in full in §6.10:
+
+- **Persistent user accounts, login, and cross-device history** — session-based only for the hackathon submission; accounts, an account-scoped history and a practice dashboard shipped afterwards.
+- **A shared public sample debate** — the seeded demo debate was originally pushed into every visitor's history. It is now owned by the seeded demo account alone, because an account's record is a record of that account's own practice (see §6.10).
 
 ---
 
@@ -58,16 +71,17 @@ Debate is a major extracurricular activity at universities in Bangladesh (Asian 
 
 ## 5. Core User Journey
 
-1. **Land on home screen** → short product pitch, stats (3 phases / 3 personas / 100-point rubric / 2 languages), "Begin a Debate Session" CTA.
-2. **Set up the round**: choose **language** (English / Bangla — affects audio, transcription, and AI responses), enter a motion manually, or tap "Generate Motion" (Gemini generates one, optionally by topic/category).
-3. **Choose side**: Government (Proposition) or Opposition — manual pick, or "Surprise me" (random assignment).
-4. **Choose AI persona**: Calm Logician / Aggressive Cross-Examiner / Devil's Advocate — this controls *style*.
-5. **Choose difficulty**: Beginner / Intermediate / Advanced / World Champion — this controls *skill level*, independent of persona (see §6.2a).
-6. **Choose mode**: Tournament (structured, timed speeches — default) or Sparring (adaptive, conversational — see §6.3a). A standards note under the mode cards explains which debating format each mode follows (WSDC/AP for Tournament — including the Closing-order reversal — no fixed format for Sparring).
-7. **Debate begins** — phase indicator shows Opening → Rebuttal → Closing (Tournament Mode), with a timer per speech.
-8. Each phase: user taps mic, speaks, taps stop → sees their live transcript → optionally taps **"Improve my argument"** to see a Gemini rewrite of what they just said (§6.4a) → AI's turn plays automatically (text appears + voice plays).
-9. After Closing phase completes both sides → **Adjudication screen** loads: scores, fallacies flagged, written feedback, verdict.
-10. User can **download the transcript** as a `.txt` file, view the feedback sheet again, or **start a new round**. Past debates appear on the **History screen** (visible in the nav), where any session can be reopened or deleted.
+1. **Land on home screen** → short product pitch, stats (3 phases / 3 personas / 100-point rubric / 2 languages), "Begin a Debate Session" CTA. The landing page is public; everything behind it needs an account.
+2. **Register or sign in** → `/register` or `/login`. A password-policy meter shows the requirements live. The sign-in screen carries a "Try the demo account" panel that fills the seeded credentials. On success the user lands on the **Overview** page (see §6.10).
+3. **Set up the round**: choose **language** (English / Bangla — affects audio, transcription, and AI responses), enter a motion manually, or tap "Generate Motion" (Gemini generates one, optionally by topic/category).
+4. **Choose side**: Government (Proposition) or Opposition — manual pick, or "Surprise me" (random assignment).
+5. **Choose AI persona**: Calm Logician / Aggressive Cross-Examiner / Devil's Advocate — this controls *style*.
+6. **Choose difficulty**: Beginner / Intermediate / Advanced / World Champion — this controls *skill level*, independent of persona (see §6.2a).
+7. **Choose mode**: Tournament (structured, timed speeches — default) or Sparring (adaptive, conversational — see §6.3a). A standards note under the mode cards explains which debating format each mode follows (WSDC/AP for Tournament — including the Closing-order reversal — no fixed format for Sparring).
+8. **Debate begins** — phase indicator shows Opening → Rebuttal → Closing (Tournament Mode), with a timer per speech.
+9. Each phase: user taps mic, speaks, taps stop → sees their live transcript → optionally taps **"Improve my argument"** to see a Gemini rewrite of what they just said (§6.4a) → AI's turn plays automatically (text appears + voice plays).
+10. After Closing phase completes both sides → **Adjudication screen** loads: scores, fallacies flagged, written feedback, verdict.
+11. User can **download the transcript** as a `.txt` file, view the feedback sheet again, or **start a new round**. Past debates appear on the **History screen** (visible in the nav), where any session can be reopened or deleted. The **Overview** page shows the account's practice record — score trend, rubric averages, reports by difficulty (see §6.10).
 
 ---
 
@@ -139,8 +153,8 @@ Selected instead of Tournament Mode at setup. Trades the fixed timed-speech stru
 This is one of the product's headline features: a way to *show* Gemini improving reasoning, not just score it.
 
 - After the user's transcript for a turn appears on screen, an **"Improve my argument"** button sits next to it — available at any point during the round, on any of the user's own turns, not just at the end.
-- Tapping it sends the user's transcript (plus motion, side, and current phase for context — persona/difficulty are not needed here, since this is coaching the user, not the AI opponent) to Gemini with an explicit "strengthen this argument" instruction.
-- The rewrite prompt is **phase-aware**: in Opening it rebuilds the constructive case (framework, definitions, mechanisms); in Rebuttal it sharpens surgical clash (targets the opponent's weakest link); in Closing it focuses on impact comparison and persuasive framing (see §12.1).
+- Tapping it sends the user's transcript (plus motion, side, and the turn's phase **and slot** for context — persona/difficulty are not needed here, since this is coaching the user, not the AI opponent) to Gemini with an explicit "strengthen this argument" instruction.
+- The rewrite prompt is **slot-aware**, not merely phase-aware: a phase holds two speeches and the rewrite has to fit the one being rewritten. In Opening it rebuilds the constructive case (framework, definitions, mechanisms); in Rebuttal it sharpens surgical clash (targets the opponent's weakest link); in Closing it focuses on impact comparison and persuasive framing (see §12.1). Within a phase, the second speaker's rewrite is held to a *reply* — it answers the speech it is answering rather than delivering a fresh constructive case, and the Closing's final reply is written to defeat the opponent's closing rather than to re-weigh the whole round. A reply that stays a reply; an opening that stays an opening.
 - Response renders as a **full-width rewrite card** directly below the user's turn actions bar:
   - Header badge: "Enhanced Version"
   - Main text: Gemini's rewritten version of the argument.
@@ -150,7 +164,9 @@ This is one of the product's headline features: a way to *show* Gemini improving
 - Designed to be fast to trigger live on stage: presenter picks a deliberately weak Opening statement, taps the button, and the before/after appears in a few seconds — this is the single best "show, don't tell" moment for demonstrating Gemini's reasoning quality.
 
 ### 6.5 AI Opponent (Gemini)
-- One Gemini call per AI turn, given: motion, AI's side, persona system prompt, difficulty modifier, mode (tournament/sparring), full debate transcript so far, current phase (or, in Sparring Mode, the last few turns and any detected contradiction), and target language.
+- One Gemini call per AI turn, given: motion, AI's side, persona system prompt, the **debate register**, difficulty modifier, mode (tournament/sparring), full debate transcript so far, the **stage brief** (phase + slot + the speech being answered + what the speaker's own side has already established), and target language.
+- The prompt is built from a **stage brief** (`App\Services\DebateStage`) rather than from the phase name alone. A phase holds two speeches and the two are not the same speech, so the brief answers four questions: which phase this is and what the phase is FOR in the round; which **slot** within the phase the speaker holds (first or second); which speech they are **answering**, quoted verbatim; and what their own side has already established. See §12.1 B.
+- The slot is derived from the round's **actual turns**, not from a counter, so a round that was resumed, retried, or partly failed still produces a brief that describes the round as it actually is.
 - Output: in-character spoken-style argument text (concise, spoken-register, not essay-style) in the selected language.
 - Response should explicitly reference at least one point the user made when in Rebuttal or Closing phase (Tournament Mode) or in any turn after the first (Sparring Mode), to feel like real engagement, not a canned speech.
 
@@ -186,16 +202,52 @@ This is one of the product's headline features: a way to *show* Gemini improving
 - "Copy transcript" and "Download transcript" actions (plain-text `.txt`, served by the transcript route).
 - "Start new round" resets state and returns to setup screen.
 
+### 6.10 Accounts, Ownership & Practice Tracking (shipped post-hackathon)
+The hackathon build scoped the app to a browser session. Accounts were built afterwards, and they changed the shape of the product: a debate is no longer a row keyed to a session, it is a record belonging to a person, and that record is worth reading over time.
+
+**6.10a Account lifecycle**
+- **Register / Sign In / Sign Out.** Registration creates the account and signs the user in; sign-in regenerates the session ID (no session fixation); sign-out invalidates the session and regenerates the CSRF token.
+- **Password policy** — at least 10 characters with an upper case letter, a lower case letter and a digit, enforced on registration *and* on password change, with the requirements shown live on the credential screens.
+- **Email normalisation** — addresses are lower-cased and trimmed before validation and before storage, so `Ada@Example.com` and `ada@example.com` cannot become two accounts.
+- **Guest-session adoption** — the guest session id is captured *before* authentication (which regenerates it) and any debate created in that session under a null owner is claimed by the account. Debates with an existing owner are never claimed.
+- **Account settings** (`/dashboard/settings`) — profile (name, email), password change, and account deletion. The page carries **no statistics**: a settings page that also reports your numbers asks for attention it has not earned, and the Overview already owns the full stat display.
+- **Account deletion** cascades to every debate, round, turn, rewrite and adjudication the account owns.
+
+**6.10b Ownership and authorisation**
+- Every debate belongs to exactly one owner (`debates.user_id`). `debates.user_id` is **nullable at the schema level** so debates created before accounts existed are not lost — `SeedAccountSeeder` adopts those orphans and gives them an owner.
+- Authorisation is enforced in one place — `App\Policies\DebatePolicy` — and applied as route middleware (`can:view,debate`, `can:participate,debate`, `can:adjudicate,debate`, `can:rewrite,debate`, `can:delete,debate`) as well as inside the controllers. Laravel resolves a policy method before a string gate of the same name, so all five abilities land on the policy.
+- **There is no shared sample.** The seeded demo debate is owned by the demo account like any other debate; it is not pushed into anybody else's history. A newly registered account opens on an empty ledger.
+- **Rate limiting is per account, not per IP** for the AI-backed endpoints, so one abusive account cannot exhaust the shared Gemini/ElevenLabs quota. Sign-in is additionally protected by a per-account lockout (5 failures → 15 minutes) counted in the cache, with route-level throttles as the backstop against a spray across many addresses.
+
+**6.10c The Overview page**
+- Every figure is scoped to the signed-in account, so a stat never counts somebody else's debate.
+- **Metric strip** — debates, reports, average score and best score. The reports tile is counted from the *reports*, not from the debates: a debate in progress has no mark, and a note sitting under the reports count has to describe the same set the count names.
+- **Score trend** — every scored debate plotted oldest-first, so the line reads left-to-right as time passing. Only scored debates carry a point, so an unfinished debate is a *gap* rather than a zero; plotting it as zero would draw a collapse in performance that never happened. The chart is drawn by `App\Support\ScoreTrend` as an SVG plot over a fixed 640 × 200 coordinate space, with gridlines at 0/25/50/75/100, each reading placed as real text above (or below) its point.
+- **Rubric averages** — where the marks are won, each criterion read against its own maximum (Matter /40, Manner /30, Method /30) rather than against 100.
+- **Reports by difficulty** — every difficulty is listed even when it has no reports yet, because a bar chart whose axis changes shape between visits is harder to read, not easier.
+- **Readable without colour** — the trend's scale sits outside the plot and the readings are real text laid over it, so the chart never depends on colour alone, and it carries an `aria-label` stating the range and every score in the series.
+
+**6.10d The report analysis engine**
+`App\Support\ReportAnalysis` reads the adjudication and the transcript and returns everything the report page renders. Nothing in it is invented and nothing in it is stored — it is all derived at request time.
+
+- **The brief** — four lines of ordinary language at the top: what the mark means, what worked, what cost the round the most, and the one thing to change. A reader who wants only the brief never has to scroll past it.
+- **The grade ladder** — the whole scale with the mark placed on it, so the reader sees the round in the context of the rubric rather than as a bare number. Each band shows the points it starts at, how far through the band the mark sits, and how many points short of the band above it is.
+- **Per-criterion ladders** — Matter, Manner and Method each carry their own band scale, because the criteria have different weights (40 / 30 / 30). Each score is shown as a *percentage of its own maximum*, so a 22/30 is correctly read as a stronger showing than a 22/40.
+- **Findings, grouped and anchored** — the judge's bullets are parsed into `[STRENGTH]` / `[ISSUE]` / `[TIP]` / `[DRILL]` groups (an unrecognised tag becomes a *note* rather than being dropped) and each is anchored to the phase it refers to, so the reader knows which speech to reopen. A closing recommendation without a `[DRILL]` tag is promoted to the drill, since the prompt's contract puts the practice plan last.
+- **Verified quotes only** — a quoted phrase is shown as the speaker's words only if it can actually be found in the speaker's own turns. The judge quotes the opponent often enough that an unverified attribution would put words in the speaker's mouth.
+- **Delivery analysis** — estimated speaking time against each phase's budget, at 140 wpm. A phase answered in forty seconds out of a three-minute budget is a fact about the round the mark alone does not carry. Under 55% is reported as a shortfall, over 105% as an overrun.
+- **Bangla-aware word counts** — Bangla is written without spaces between words, so a whitespace count would report one word for a whole paragraph. Counts fall back to characters (scaled by the ~5-character average Bangla word) when the debate is in Bangla.
+
 ---
 
 ## 7. Non-Functional Requirements
 
 - **Latency:** target under ~8–10 seconds from end of user speech to AI voice starting playback (transcription + generation + TTS combined); rewrite suggestions target under ~5 seconds since they're a shorter, single-purpose Gemini call. Show a clear "opponent is thinking" / "sharpening your argument" loading state during these gaps.
-- **Security:** Gemini and ElevenLabs API keys live only in the Laravel `.env` and are used only inside Laravel controllers/services. Because there is no separate JS frontend or client-side API layer, keys and third-party calls never touch the browser — all requests from the page (audio upload, rewrite requests, polling) hit same-origin Laravel routes only.
+- **Security:** Gemini and ElevenLabs API keys live only in the Laravel `.env` and are used only inside Laravel controllers/services. Because there is no separate JS frontend or client-side API layer, keys and third-party calls never touch the browser — all requests from the page (audio upload, rewrite requests, polling) hit same-origin Laravel routes only. **Outbound TLS verification is enabled** for every Gemini and ElevenLabs request (`Http::withoutVerifying()` was removed) — the Docker image installs `ca-certificates` so the chain can actually be validated. Every response carries `X-Content-Type-Options`, `X-Frame-Options`, `Referrer-Policy`, `Cross-Origin-Opener-Policy` and `Permissions-Policy` from `App\Http\Middleware\SecurityHeaders`. A Content-Security-Policy is deliberately **not** set: the app loads Google Fonts and uses inline Alpine.js expressions, so a strict CSP would need nonces threaded through every view.
 - **Browser support:** modern Chromium-based browsers required for `MediaRecorder`; graceful fallback messaging if unsupported.
 - **Accessibility:** every spoken AI turn has a visible text transcript; UI is keyboard-navigable; sufficient color contrast.
 - **Reliability:** every third-party failure has a defined recovery path — STT: ElevenLabs Scribe → Gemini multimodal audio → turn saved with empty transcript + note (round continues); TTS: ElevenLabs (incl. quota-trim retry) → Google Translate TTS → text-only; Gemini text generation → friendly error message with retry, round state preserved. Partial results are always returned to the page; a single failed call never breaks the round.
-- **Data retention:** for MVP, debate sessions can be stored server-side keyed to a session ID with no PII required (no login).
+- **Data retention:** debate sessions are stored server-side against the owning account, keyed by `debates.user_id`. `debates.session_id` is still recorded — it identifies the browser that started the debate, not the owner — and is kept for the guest-adoption path (see §6.10a). Voice recordings are stored on the **private** disk and are streamed back only through an ownership-checked endpoint; they are never served off the public disk, and the response is marked `Cache-Control: private`.
 
 ---
 
@@ -225,6 +277,19 @@ Rostrum is a **single Laravel application**. There is no separate frontend frame
                                   └─────────────────────┘
 ```
 
+**Application layers (as shipped):**
+
+| Layer | Class | Responsibility |
+|---|---|---|
+| Controllers | `DebateController`, `SetupController`, `HistoryController`, `DashboardController`, `AccountController`, `AuthController`, `HomeController` | The HTTP surface; every write route is behind `auth`, and every debate route behind `can:*` |
+| Authorisation | `App\Policies\DebatePolicy` | Per-debate ownership — the only way to reach a debate |
+| Round engine | `App\Services\DebateRoundEngine` | Phase order, the Closing reversal, round completion |
+| Stage brief | `App\Services\DebateStage` | Phase **and slot** — which speech this speaker is making, which speech they are answering, what their own side has already said, what is left of the round |
+| Prompting | `App\Services\GeminiService` | The five prompt modes (A/B/B2/C/D), the debate register, and the rubric written into the adjudication prompt |
+| Voice | `App\Services\ElevenLabsService`, `App\Services\GoogleTtsService` | Scribe STT, TTS with quota-trim retry, and the free fallback |
+| Analysis | `App\Support\ReportAnalysis`, `App\Support\ScoreTrend` | The report's derived brief/ladders/findings/delivery, and the SVG trend chart's geometry |
+| Storage | Private disk | `storage/app/private/audio/` — user WebM and AI MP3, served only through the ownership-checked audio route |
+
 **Per-turn flow (Tournament Mode):**
 1. User speaks → Alpine.js component (on the Blade debate page) records audio via `MediaRecorder`.
 2. Alpine `fetch`es the audio blob + phase to a Laravel route (same origin, no CORS needed).
@@ -235,7 +300,7 @@ Rostrum is a **single Laravel application**. There is no separate frontend frame
 7. Laravel stores the turns (user transcript + AI text + AI audio URL), advances the phase if the round is complete, and returns JSON — **partial results always included** (e.g. `stt_error`/`ai_error` fields alongside whatever succeeded).
 8. Alpine.js swaps the new transcript HTML into the page and plays the AI audio — no full page reload, no SPA framework.
 
-**Rewrite-suggestion flow** follows the same shape: Alpine posts the turn's transcript to a Laravel route → Laravel calls Gemini (phase-aware, see §12.1) → returns the before/after JSON → Alpine renders the full-width rewrite card in place. Rewrites are cached per turn, so repeat requests are instant.
+**Rewrite-suggestion flow** follows the same shape: Alpine posts the turn's transcript to a Laravel route → Laravel calls Gemini (slot-aware, see §12.1) → returns the before/after JSON → Alpine renders the full-width rewrite card in place. Rewrites are cached per turn, so repeat requests are instant.
 
 ---
 
@@ -245,15 +310,15 @@ Rostrum is a **single Laravel application**. There is no separate frontend frame
 - **Laravel Blade** for all views/templates — no Nuxt, no Vue, no React, no separate SPA.
 - **Tailwind CSS v4.x** (latest stable, e.g. 4.3.x) for styling, via the official Vite/Tailwind integration Laravel ships with.
 - **Alpine.js** for the light client-side interactivity Blade alone can't do: `MediaRecorder`-based mic capture, countdown timers, and swapping server-returned HTML/JSON into the page after each turn. No client-side state library (no Pinia/Redux) — state lives in the Laravel session/DB and is re-rendered server-side.
-- **No charting library.** The Matter/Manner/Method + total score visualization on the feedback sheet is plain Tailwind (e.g. width-animated `<div>` bars driven by the score values the Blade view already has server-side). This avoids pulling in Chart.js just to draw three bars and a total — one less dependency to wire up in a 6-hour build, and it stays consistent with the "no unnecessary JS" spirit of dropping the SPA framework in the first place.
+- **No charting library.** The Matter/Manner/Method + total score visualization on the feedback sheet is plain Tailwind (e.g. width-animated `<div>` bars driven by the score values the Blade view already has server-side). The Overview page's score trend is likewise drawn by hand — `App\Support\ScoreTrend` computes the coordinates and the view emits the SVG. This avoids pulling in Chart.js just to draw three bars and a total — one less dependency to wire up in a 6-hour build, and it stays consistent with the "no unnecessary JS" spirit of dropping the SPA framework in the first place.
 - Noto Sans Bengali (or similar) web font for Bangla rendering.
 
 **Backend**
 - **Laravel 13.x** (latest stable, PHP 8.3+ required).
-- Laravel's HTTP Client (Guzzle) for calling Gemini and ElevenLabs REST APIs — always from server-side controllers/services, never from the browser.
+- Laravel's HTTP Client (Guzzle) for calling Gemini and ElevenLabs REST APIs — always from server-side controllers/services, never from the browser. **TLS verification is enabled** on every outbound request.
 - SQLite for hackathon simplicity (swap to MySQL/Postgres post-hackathon).
-- Session-token-based debate identification for MVP (no full auth, no Sanctum needed since there's no separate API client). A `session_id` column on `debates` scopes the History screen; a seeded demo debate uses a reserved session id (`config/debate.php` → `seed_session_id`) so it appears in every visitor's history.
-- File storage (local disk) for cached TTS audio per turn and for user recordings (both saved under `storage/app/public/audio/`).
+- **Session-guard authentication** with a `users` table and a `debates.user_id` owner column. There is no Sanctum and no third-party auth provider — there is no separate API client, so the session guard is the whole of it. Authorization is a `DebatePolicy` applied as route middleware. A `session_id` column is still kept on `debates`: it identifies the browser that started the debate and is what the guest-adoption path matches on (see §6.10).
+- File storage on the **private** disk for user recordings and cached TTS audio per turn (`storage/app/private/audio/`). The file name alone is stored on the turn row, and the audio is streamed back through `GET /debates/{debate}/audio/{file}`, which checks ownership — the public disk holds no private media.
 - UI strings hardcoded in English; debate content language (en/bn) is data-driven per debate and threaded into every Gemini/ElevenLabs call — no i18n library, no `lang/` files (see §6.8, §17).
 
 **Third-party APIs**
@@ -264,9 +329,20 @@ Rostrum is a **single Laravel application**. There is no separate frontend frame
 
 ## 10. Data Model (Laravel schema)
 
-All models use Laravel's `HasUuids` trait (auto-generated UUID primary keys — no manual ID assignment). Child tables (`rounds`, `turns`, `turn_rewrites`, `adjudications`) declare **`ON DELETE CASCADE`** foreign keys, so deleting a debate removes its entire tree automatically (applied via migration `2026_08_17_000008_harden_schema_constraints` on existing SQLite DBs and in the base migrations for fresh installs).
+All models use Laravel's `HasUuids` trait (auto-generated UUID primary keys — no manual ID assignment), except `users`, which uses Laravel's default auto-incrementing integer id. Child tables (`rounds`, `turns`, `turn_rewrites`, `adjudications`) declare **`ON DELETE CASCADE`** foreign keys, so deleting a debate removes its entire tree automatically (applied via migration `2026_08_17_000008_harden_schema_constraints` on existing SQLite DBs and in the base migrations for fresh installs).
 
 ```php
+// users (Laravel's default auth table)
+Schema::create('users', function (Blueprint $table) {
+    $table->id();
+    $table->string('name');
+    $table->string('email')->unique();
+    $table->timestamp('email_verified_at')->nullable();
+    $table->string('password');
+    $table->rememberToken();
+    $table->timestamps();
+});
+
 // motions
 Schema::create('motions', function (Blueprint $table) {
     $table->uuid('id')->primary();
@@ -284,13 +360,15 @@ Schema::create('personas', function (Blueprint $table) {
     $table->text('description');
     $table->text('system_prompt');           // persona behavior instructions (style)
     $table->string('elevenlabs_voice_id');
+    $table->string('elevenlabs_voice_id_bn')->nullable();  // Bangla voice; falls back to the English one
     $table->timestamps();
 });
 
 // debates
 Schema::create('debates', function (Blueprint $table) {
     $table->uuid('id')->primary();
-    $table->string('session_id');            // anonymous session key, no login required
+    $table->string('session_id');            // the browser that started the debate
+    $table->unsignedBigInteger('user_id')->nullable();  // the owning account; null = pre-account row
     $table->uuid('motion_id');
     $table->enum('user_side', ['government', 'opposition']);
     $table->uuid('persona_id');
@@ -303,6 +381,7 @@ Schema::create('debates', function (Blueprint $table) {
 
     $table->foreign('motion_id')->references('id')->on('motions');
     $table->foreign('persona_id')->references('id')->on('personas');
+    $table->foreign('user_id')->references('id')->on('users')->cascadeOnDelete();
 });
 
 // rounds (one row per phase per debate — Tournament Mode; Sparring Mode uses a single
@@ -359,7 +438,11 @@ Schema::create('adjudications', function (Blueprint $table) {
 });
 ```
 
-*Note: difficulty tiers are implemented as prompt-fragment constants in `config/debate.php` (see §14), not a DB table — this keeps the difficulty axis cheap to build (no admin UI needed) while still being fully data-driven for the persona side, which does benefit from DB-backed editable prompts. Tuning knobs also live in `config/debate.php`: `phase_duration` (180/120/120s), `ai_word_count` (150–220 opening, 100–160 rebuttal/closing/sparring), `tts_max_chars`, and `seed_session_id`.*
+*Note: difficulty tiers are implemented as prompt-fragment constants in `config/debate.php` (see §14), not a DB table — this keeps the difficulty axis cheap to build (no admin UI needed) while still being fully data-driven for the persona side, which does benefit from DB-backed editable prompts. Tuning knobs also live in `config/debate.php`: `phase_duration` (180/120/120s), `ai_word_count` (keyed by phase **and slot** — Opening 150–220, replies 110–170, Rebuttal/Closing 100–160, the Closing's final reply 90–140), `debate_style` (the shared debate register), `stage_profiles` (the per-slot job and constraints), `side_labels` (the role each side speaks under), `phase_purposes`, `move_type_tags`, `rubric`, `tts_max_chars`, `words_per_minute` (140), `seed_session_id` and `seed_account_*`.*
+
+*Note on `debates.user_id`: the column is **nullable**, so a debate created before accounts existed is never lost — `SeedAccountSeeder` adopts those orphans and gives them an owner. On SQLite the column is added by rebuilding the table with raw SQL, because Laravel's table rebuild silently drops the CHECK constraints and indexes the earlier `harden_schema_constraints` migration installed; the rebuild restores them explicitly.*
+
+*Note on `turns.audio_path`: the column holds a bare **file name**, not a URL. The file lives on the private disk and is streamed back through the ownership-checked audio endpoint.*
 
 ---
 
@@ -367,20 +450,53 @@ Schema::create('adjudications', function (Blueprint $table) {
 
 All of these are ordinary Laravel routes on the same app that serves the Blade pages — there is no separate API host, no CORS configuration, and no client-side API client library. Alpine.js components call these via `fetch()` (or plain form posts) and swap the returned HTML/JSON into the current page. Route parameters use implicit model binding (`/debates/{debate}`).
 
+**Route names were deliberately left unchanged when the URLs moved** under `/dashboard` — only the URLs moved, so every `route()` call in the views and controllers kept working.
+
+### 11a Public routes
+
 | Method | Route | Purpose |
 |---|---|---|
 | `GET` | `/` | Home / landing (Blade view) |
-| `GET` | `/setup` | Setup screen: language, motion, side, persona, difficulty, mode (Blade view) |
+| `GET` | `/healthz` | Liveness check — app + database reachable; returns `{"status":"ok"}` or a 500 |
+| `GET` | `/register` | Registration screen (Blade view) |
+| `POST` | `/register` | Creates the account, signs in, adopts guest-session debates → redirects to the dashboard |
+| `GET` | `/login` | Sign-in screen (Blade view) |
+| `POST` | `/login` | Authenticates; regenerates the session ID; per-account lockout after 5 failures |
+| `POST` | `/logout` | Signs out, invalidates the session, regenerates the CSRF token |
+
+### 11b Authenticated routes (`auth` middleware)
+
+| Method | Route | Purpose |
+|---|---|---|
+| `GET` | `/dashboard/overview` | The Overview page: metric strip, score trend, rubric averages, reports by difficulty, the four most recent debates |
+| `GET` | `/dashboard/settings` | Account settings: profile, password, account deletion |
+| `PATCH` | `/dashboard/settings` | Update the profile (name, email) |
+| `PATCH` | `/dashboard/settings/password` | Change the password (current password required) |
+| `DELETE` | `/dashboard/settings` | Delete the account and every debate it owns |
+| `GET` | `/dashboard/setup` | Setup screen: language, motion, side, persona, difficulty, mode (Blade view) |
 | `POST` | `/motions/generate` | Body: `{ category?, language }` → returns `{ motion }` (Gemini, with offline fallback sample motions) |
-| `POST` | `/debates` | Body: `{ motion_text or motion_id, user_side or "auto", persona_id, difficulty, mode, language }` → creates debate (incl. seeded first round), redirects to `/debates/{id}` |
+| `POST` | `/debates` | Body: `{ motion_text or motion_id, user_side or "auto", persona_id, difficulty, mode, language }` → creates the debate (incl. seeded first round) owned by the signed-in account, redirects to `/debates/{id}` |
 | `GET` | `/debates/{debate}` | Debate screen (Blade view) with full current state: motion, side, persona, difficulty, mode, all rounds/turns so far |
-| `POST` | `/debates/{debate}/turns` | Multipart: audio blob + `{ phase, ai_first? }` → transcribes user speech (Scribe → Gemini audio fallback), generates AI counter-turn, synthesizes AI voice (ElevenLabs → Google TTS → silent); returns `{ user_transcript, user_audio_url, stt_error, ai_text, ai_audio_url, ai_error, round_complete, debate_complete, new_phase, next_speaker }` — partial results always included |
+| `POST` | `/debates/{debate}/turns` | Multipart: audio blob → transcribes user speech (Scribe → Gemini audio fallback), generates the AI counter-turn from the stage brief, synthesizes the AI voice (ElevenLabs → Google TTS → silent); returns `{ user_transcript, user_audio_url, stt_error, ai_text, ai_audio_url, ai_error, round_complete, debate_complete, new_phase, next_speaker }` — partial results always included |
 | `POST` | `/debates/{debate}/turns/{turn}/rewrite` | No body needed beyond the turn ID → returns `{ original_text, rewritten_text, explanation_bullets }` (cached per turn; only user turns) |
-| `POST` | `/debates/{debate}/adjudicate` | Triggered after final phase (or user ends a Sparring round) → creates the adjudication row, marks debate `adjudicated`, redirects to feedback screen |
+| `POST` | `/debates/{debate}/adjudicate` | Triggered after the final phase (or the user ends a Sparring round) → creates the adjudication row, marks the debate `adjudicated`, redirects to the feedback screen |
 | `GET` | `/debates/{debate}/feedback` | Adjudication feedback sheet (Blade view) |
-| `GET` | `/debates/{debate}/transcript` | Returns full plain-text transcript as a downloadable `.txt` file |
-| `GET` | `/history` | History screen: session's debates + the seeded demo debate (Blade view) |
+| `GET` | `/debates/{debate}/transcript` | Returns the full plain-text transcript as a downloadable `.txt` file |
+| `GET` | `/debates/{debate}/audio/{file}` | Streams a stored recording from the **private** disk; checks ownership; `Cache-Control: private` |
+| `GET` | `/dashboard/history` | History screen: the signed-in account's debates (Blade view) |
 | `DELETE` | `/debates/{debate}` | Delete a debate (children removed via `ON DELETE CASCADE`), redirects back to history |
+
+### 11c Middleware applied
+
+| Route group | Middleware |
+|---|---|
+| `/register`, `/login` | `guest` — a signed-in visitor is redirected to the dashboard |
+| `/logout` | `auth` |
+| Every `/dashboard/*` route | `auth` |
+| `/debates/{debate}` and its sub-routes | `auth` + `can:view,debate` / `can:participate,debate` / `can:adjudicate,debate` / `can:rewrite,debate` / `can:delete,debate` |
+| `/motions/generate`, turn submission, rewrite, adjudication | `throttle:api` — 20/min and 300/hour per account, with a 60/min per-IP ceiling |
+| `/register` | `throttle:register` — 5/min and 20/hour per IP |
+| `/login` | `throttle:login` — 12/min per account+IP and 20/min per IP |
 
 ---
 
@@ -392,23 +508,46 @@ Five distinct prompt "modes," all going through the same Gemini endpoint but wit
 **A. Motion generation**
 > "Generate one debatable, balanced motion in the style of '{category}' for a university debate. Phrase it as 'This House believes...'. Respond in {language}. Output only the motion, no preamble."
 
-**B. Debate turn (opponent response)**
-System prompt assembled from: persona's `system_prompt` (style) + the difficulty tier's prompt fragment (skill level, see §14) + fixed instructions:
-> "You are debating the motion: '{motion}'. You are arguing the {ai_side} side. {phase_or_mode_instruction}. Respond as your persona would, at your assigned skill level — in spoken debate register, {word_count_range} words, in {language}. Directly engage with the user's most recent point where relevant. Do not break character or mention you are an AI."
->
-> In Tournament Mode, `{phase_or_mode_instruction}` is an explicit, phase-specific strategy block (`buildPhaseInstruction`): **Opening** = deliver a constructive opening speech (establish framework/principles, define or scope the motion, 2–3 fully developed constructive arguments — do not reply to the opposition yet); **Rebuttal** = second-speaker clash (engage the opposing speaker's points point-by-point, attack their weakest premise or clearest logical gap, reinforce your own core case — do not repeat the opening); **Closing** = final reply speech (no new arguments; crystallize the core clash, compare whose arguments survive scrutiny, settle outstanding opposition points, close on why your side won). `{word_count_range}` scales to that phase's time budget: **Opening ~150–220 words, Rebuttal/Closing ~100–160 words** (config-driven in `config/debate.php`). In Sparring Mode, `{phase_or_mode_instruction}` instructs the model to pick one move type — follow-up question, contradiction callout, live challenge, or standard rebuttal — based on the transcript so far, to tag which one it used by opening with `[FOLLOW-UP]` / `[CONTRADICTION]` / `[CHALLENGE]` / `[REBUTTAL]` (the tag is parsed out and stored in `turns.ai_move_type`), and `{word_count_range}` stays at the shorter range (~100–160 words) throughout.
+**The debate register (shared by B, B2 and C)**
 
-Input includes the full prior transcript (all turns so far, each labeled with its phase via `Debate::buildTranscript()` — e.g. `[OPENING PHASE] You (government): ...`) plus the user's transcript for this turn.
+The persona prompt says *who* the speaker is and the difficulty fragment says *how strong* they are. Neither says anything about the **register**, and a model with no register instruction writes in prose paragraphs with headings — which is not what a debater does at a podium, and which the TTS voice then reads aloud like a report being presented to a board. The register lives in `config('debate.debate_style')` and is appended to the system prompt:
+
+> "You are speaking at the podium in a live one-on-one debate round. Your speech is spoken, not written: it must sound like a debater talking to a room, not like an essay being read out. Write in full sentences as they would be spoken aloud, and cut anything that a listener would have to read twice to follow."
+>
+> Its rules: signpost every part out loud, so a listener can follow the case without seeing it; every argument is a chain — claim, mechanism, impact; engage the opponent through what they actually said, never "the opposition" in the abstract; no headings, bullet points, numbered lists, markdown, stage directions or quotation marks around the speech; no filler and no throat-clearing, and no pleasantries ("Good morning", "Ladies and gentlemen") — open on the first substantive line; never break character, never mention being an AI, never narrate what you are about to do.
+
+**B. Debate turn (opponent response)**
+The prompt is built from a **stage brief** (`App\Services\DebateStage`) rather than from the phase name alone. A phase holds two speeches and the two are not the same speech, so the brief answers four questions: which phase this is and what the phase is FOR in the round; which **slot** within the phase the speaker holds (first or second); which speech they are **answering**, verbatim; and what their own side has already established.
+
+System prompt assembled from: persona's `system_prompt` (style) + the **debate register** (the shared rules that make the output a spoken speech rather than an essay) + the difficulty tier's prompt fragment (skill level, see §14):
+> "You are debating the motion: '{motion}'. You are arguing the {ai_side} side as {side_role}. {stage_brief}. Respond as your persona would, at your assigned skill level — in spoken debate register, {word_count_range} words, in {language}. Directly engage with the user's most recent point where relevant. Do not break character or mention you are an AI."
+>
+> The **stage brief** carries a slot-specific job from `config('debate.stage_profiles')`, keyed `"{phase}.{first|second}"` — because the phase alone does not determine the speech:
+>
+> | Slot | Role | Job |
+> |---|---|---|
+> | `opening.first` | Opening Speech | Build the case from the ground up: framework, definition/scoping, 2–3 developed arguments (claim → mechanism → impact). No rebuttal — nothing has been said yet. |
+> | `opening.second` | Reply to the Opening | Answer the opponent's opening argument by argument — extend, undercut or rebut each — then re-anchor your own case. Not a second opening. |
+> | `rebuttal.first` | Rebuttal Speech | Take the point they have not yet answered and finish it; press the weakness in any answer they have given. |
+> | `rebuttal.second` | Final Rebuttal | Answer their rebuttal point by point, resolve the clash, and leave the closing its ground. |
+> | `closing.first` | Closing Speech | Weigh the debate: no new arguments, compare the impacts of the arguments that survive, state the clash and the verdict. |
+> | `closing.second` | Final Reply | Weigh briefly, then defeat the strongest claim in their closing and take the last word. |
+>
+> The brief also states which phases are already argued and which are still to come, so a speech does not spend material belonging to a later phase — a closing introduces no new arguments, and a reply does not rebuild a case already made. The speech being answered is quoted verbatim and labelled by the phase it was SPOKEN in, not the phase the speaker is standing in (the first rebuttal answers the *opening* speech). In Sparring Mode the brief instead asks the model to pick one move type — follow-up question, contradiction callout, live challenge, or standard rebuttal — and open with `[FOLLOW-UP]` / `[CONTRADICTION]` / `[CHALLENGE]` / `[REBUTTAL]`; the tag is parsed out and stored in `turns.ai_move_type`.
+>
+> `{word_count_range}` is keyed by phase **and slot** (config-driven in `config/debate.php`): the second speaker of a phase is never delivering the same speech as the first, so a reply is not given an opening's word budget — **Opening ~150–220 words, replies ~110–170, Rebuttal/Closing ~100–160**, with the Closing's final reply shortest at ~90–140.
+
+Input includes the full prior transcript (all turns so far, each labeled with its phase via `Debate::buildTranscript()` — e.g. `[OPENING PHASE] Prime Minister: ...`). The speakers are labelled by the role they speak under (`config('debate.side_labels')`) rather than as "You" and "AI Opponent": a model that reads "You (government)" in a transcript it was told it was writing has to re-derive, on every turn, which of the two voices "You" is.
 
 **B2. Audio fallback (Gemini multimodal — single-call transcribe + respond)**
 > "The following audio is from a student speaking in a debate on the motion: '{motion}'... First, transcribe exactly what the student said... Then, as the opponent ({ai_side} side), generate your debate response... Output ONLY valid JSON: { transcript, ai_text }"
 
-Used only when ElevenLabs Scribe STT fails or returns near-empty text (§6.4). The raw audio (base64, `audio/webm`) is sent inline with the same phase-aware instruction; Gemini returns both the user's exact words and the AI's response in one multimodal call, so the round loses no latency and the AI turn can still be generated.
+Used only when ElevenLabs Scribe STT fails or returns near-empty text (§6.4). The raw audio (base64, `audio/webm`) is sent inline carrying **the same stage brief** as the text path — phase, slot, the speech being answered and the debate register; Gemini returns both the user's exact words and the AI's response in one multimodal call, so the round loses no latency and the AI turn can still be generated.
 
 **C. Argument rewrite suggestion**
 > "The following is one turn from a student practicing debate on the motion '{motion}'. Rewrite it to be a meaningfully stronger version of the *same* argument — same core position, sharper structure, better evidence or examples, clearer logic. Do not change what side they're arguing. Respond in {language}. Output ONLY valid JSON matching this schema: { rewritten_text: string, explanation_bullets: [string] } — explanation_bullets should be 2–3 short phrases naming what changed."
 
-The prompt is phase-aware (see §6.4a): it names the phase the turn belongs to and re-targets the rewrite accordingly (Opening → strengthen framework/constructive case; Rebuttal → sharper surgical clash; Closing → impact comparison and persuasive framing).
+The prompt is **slot-aware** (see §6.4a): it names the phase *and* the slot the turn was delivered in, and re-targets the rewrite accordingly (Opening → strengthen framework/constructive case; Rebuttal → sharper surgical clash; Closing → impact comparison and persuasive framing; the second speaker of a phase → answer the speech it answers rather than opening fresh). A reply stays a reply; an opening stays an opening.
 
 **D. Adjudication** — must request strict JSON output:
 > "You are an experienced debate adjudicator scoring the {user_side} speaker on the motion '{motion}'. Score Matter (/40), Manner (/30), Method (/30). Identify any logical fallacies used by the user speaker, citing the phase. Give 3–5 concise, actionable feedback bullets that quote the exact user phrase from the transcript and explain what to improve. Include a final bullet prescribing one specific daily practice drill. Give a one-line verdict. Respond in {language}. Output ONLY valid JSON matching this schema: { matter_score, manner_score, method_score, total_score, fallacies: [{phase, type, explanation}], feedback_bullets: [string], verdict: string }"
@@ -416,9 +555,14 @@ The prompt is phase-aware (see §6.4a): it names the phase the turn belongs to a
 Laravel parses this JSON directly into the `adjudications` / `turn_rewrites` tables; a `parseJson` repair helper strips stray markdown code fences, and on decode failure it falls back to defaults (logged) rather than crashing the request.
 
 ### 12.2 ElevenLabs — voice mapping & TTS pipeline
-- Each `persona` row stores one `elevenlabs_voice_id` (e.g. Calm Logician → `pNInz6obpgDQGcFmaJgB`, Aggressive Cross-Examiner → `EXAVITQu4vr4xnSDxMaL`, Devil's Advocate → `TX3LPaxmHKxFdv7VOQHJ`), selected ahead of time from the team's ElevenLabs voice library to match the character described in §6.2. Difficulty does not affect voice selection.
-- Model is chosen per language: `eleven_multilingual_v2` for Bangla (best Bangla phonetics with any voice), `eleven_turbo_v2_5` for English — the same voice ID works for both, no voice switching.
-- Laravel calls ElevenLabs' text-to-speech endpoint with the AI's generated text (pre-trimmed to `tts_max_chars` at a sentence boundary; retried with a credit-budget-trimmed text on `quota_exceeded`) and stores the returned audio locally under `storage/app/public/audio/`, returning a URL the Blade page can stream immediately.
+- Each `persona` row stores **two** voice IDs — `elevenlabs_voice_id` (English) and `elevenlabs_voice_id_bn` (Bangla, nullable) — selected ahead of time from the team's ElevenLabs voice library to match the character described in §6.2. Difficulty does not affect voice selection.
+  - Calm Logician → Adam `pNInz6obpgDQGcFmaJgB` / Fahad Mir `d532cgnzlrx7AWL3CD9i`
+  - Aggressive Cross-Examiner → Bella `EXAVITQu4vr4xnSDxMaL` / Rayhan `vvOYlSJHf8lTWIG4tDNP`
+  - Devil's Advocate → Liam `TX3LPaxmHKxFdv7VOQHJ` / Rakib `VizHiwkPO7hXc967v4tE`
+- The Bangla voices are native Bangla recordings, so a Bangla debate is spoken by someone who actually speaks Bangla rather than by an English voice reading Bangla aloud. The debate's `language` column selects the voice; a persona with no Bangla voice falls back to its English one, so synthesis never fails on a missing voice.
+- Model is chosen per language: `eleven_multilingual_v2` for Bangla (best Bangla phonetics with any voice), `eleven_turbo_v2_5` for English.
+- Laravel calls ElevenLabs' text-to-speech endpoint with the AI's generated text (pre-trimmed to `tts_max_chars` at a sentence boundary; retried with a credit-budget-trimmed text on `quota_exceeded`) and stores the returned audio on the **private** disk under `storage/app/private/audio/`, returning a bare file name. The Blade page streams it back through the ownership-checked audio endpoint.
+- The user's own recording is written to the same private disk by the turn endpoint. `turns.audio_path` holds the **bare file name**, not a URL, and the file is reduced to a basename and matched against a strict pattern before it is read — so the endpoint cannot be used to traverse outside the audio directory.
 - **STT:** ElevenLabs Scribe (`scribe_v1`) transcribes the user's audio; `language_code` is pinned for en/bn.
 
 ### 12.3 Resilience & Fallback Chain (applies to every third-party call)
@@ -427,6 +571,16 @@ Laravel parses this JSON directly into the `adjudications` / `turn_rewrites` tab
 3. **TTS:** ElevenLabs fails (or quota can't fit) → Google Translate TTS (free endpoint, pure PHP, chunked at ~190 chars) → silent text-only fallback with a visible notice; the AI's text is always shown regardless.
 4. **Gemini text generation:** transient errors are retried automatically (up to 5 retries with backoff on 429/5xx); persistent failure returns a friendly, human-readable error message to the page — never a raw exception — and the round state stays intact for retry.
 5. **Turns are persisted independently:** user turn, AI text, AI audio, phase advancement, and the JSON response each succeed or fail on their own; whatever succeeded is returned to the client (`stt_error` / `ai_error` fields carry the rest).
+
+**Cost control.** The Gemini and ElevenLabs endpoints cost money per call, so they are capped **per account** rather than per IP — one abusive account must not be able to exhaust the shared quota. The limiters are registered in `AppServiceProvider`:
+
+| Limiter | Limits | Applies to |
+|---|---|---|
+| `api` | 20/min and 300/hour per account, 60/min per IP | Motion generation, turn submission, rewrite, adjudication |
+| `login` | 12/min per account+IP, 20/min per IP | Sign-in |
+| `register` | 5/min and 20/hour per IP | Registration |
+
+Sign-in additionally carries a **per-account lockout** in the cache — five failed attempts lock that account for 15 minutes, and a successful sign-in clears the counter. The lockout is counted per account so one attacker cannot lock every account out by hammering a single address; the route throttle is the backstop against a spray across many addresses from one host.
 
 ---
 
@@ -458,6 +612,8 @@ Laravel parses this JSON directly into the `adjudications` / `turn_rewrites` tab
 
 Persona and difficulty are independent selections — the persona card grid and the difficulty selector are separate, unlinked UI controls (see §16).
 
+**Side roles (`config('debate.side_labels')`)** — a debater is not "the government": a debater is the Prime Minister or the Leader of the Opposition. Naming the role gives the AI a stance to speak from, and it gives the transcript the shape of a debate rather than a chat log. Each side carries a `role` (how the speaker names itself: "Prime Minister", "Leader of the Opposition"), a `first` form ("the Prime Minister"), a `short` form for the transcript ("Government"), and the third-person form used to name the other side ("the Opposition"). The transcript therefore reads `[OPENING PHASE] Prime Minister: ...` rather than `You (government): ...` — a model told it is writing one of the two voices in a transcript it is also reading would otherwise have to re-derive, on every turn, which voice "You" is.
+
 ---
 
 ## 15. Adjudication Rubric
@@ -472,16 +628,21 @@ Fallacy detection covers common types relevant to debate (e.g. strawman, ad homi
 
 Use of the rewrite assistant (§6.4a) during the round does not affect scoring — it's scored on what the user actually said, not on rewritten versions they viewed but didn't (and can't) resubmit.
 
+**One rubric, not two.** `config('debate.rubric')` holds the three criteria, their weights, their band descriptors and the overall grade bands, and it is the single source of truth for both sides of the rubric. `GeminiService::rubricPromptText()` writes that config into the adjudication prompt — the judge is told where each band starts, so it does not invent its own thresholds — and the report (`App\Support\ReportAnalysis`) renders the same bands. A report that describes a rubric the judge never scored against is a document that misrepresents its own method.
+
 ---
 
 ## 16. UI/UX Screens
 
-1. **Home / Landing** — hero headline, one-line pitch, stats row (3 phases / 3 AI personas / 100-point rubric / 2 languages), "How it works" four-step grid, "Begin a Debate Session" CTA.
-2. **Setup screen** — language cards (English / বাংলা — "Affects audio, transcription & AI responses"), motion input/generate (with category dropdown), side picker (Government / Opposition / Surprise me), persona card grid (clean border highlight selection without checkmarks), difficulty selector (Beginner → World Champion, each with a short descriptor), mode toggle (Tournament / Sparring) with a live **standards note** under it explaining the format, submit CTA.
-3. **Debate screen** — motion banner (persistent), phase indicator (Opening/Rebuttal/Closing with progress dots in Tournament Mode; a simple turn counter in Sparring Mode), timer (Tournament Mode), big mic button, live transcript area (user + AI), an **"Improve my argument"** button next to each of the user's own turns that opens the before/after rewrite panel, "opponent is thinking" loading state, auto-playing AI audio with a replay button, status bubbles that are cleared between turns. Responsive: stacks into a single column below 900px.
-4. **Adjudication / Feedback sheet** — score bars (Matter/Manner/Method + total, plain Tailwind, no charting library), fallacies list, feedback bullets, verdict banner, transcript download action, "Start new round" CTA.
-5. **History screen** (nav link) — list of the session's past debates (plus the seeded demo debate), each showing motion, persona, difficulty, mode, language, status, and score when adjudicated; reopen a debate, download its transcript, or delete the session (cascading).
-6. **Global UI Components** — Global confirmation modal centered in middle of viewport, and Toast notification container fixed in bottom-right corner across all views.
+1. **Home / Landing** — hero headline, one-line pitch, stats row (3 phases / 3 AI personas / 100-point rubric / 2 languages), "How it works" four-step grid, "Begin a Debate Session" CTA. Public, and it keeps the horizontal nav rather than the workspace rail — a rail on a marketing page would be a false affordance. A signed-in visitor's nav carries one button (back to the dashboard); the other destinations are in the rail on every working page.
+2. **Sign in / Register screens** — standalone, full-height, with their own brand treatment and no site nav. A live password-policy meter shows the requirements as you type; the sign-in screen carries a "Try the demo account" panel that fills the seeded credentials.
+3. **Overview** (`/dashboard/overview`) — the landing page after sign-in, and a report rather than a launcher. It opens with a metric strip, then three analytics — the **score trend**, **rubric averages** and **reports by difficulty** — then the four most recent debates. A brand-new account is never a blank screen: it gets a "Start Your First Debate" call to action. Nothing is shown twice: the four recent debates are the only list of sessions on the page, and an unscored session is labelled *In progress* rather than given a zero.
+4. **Setup screen** — language cards (English / বাংলা — "Affects audio, transcription & AI responses"), motion input/generate (with category dropdown), side picker (Government / Opposition / Surprise me), persona card grid (clean border highlight selection without checkmarks), difficulty selector (Beginner → World Champion, each with a short descriptor), mode toggle (Tournament / Sparring) with a live **standards note** under it explaining the format, submit CTA.
+5. **Debate screen** — motion banner (persistent), phase indicator (Opening/Rebuttal/Closing with progress dots in Tournament Mode; a simple turn counter in Sparring Mode), timer (Tournament Mode, reset to the current phase's own budget on every phase change), big mic button, live transcript area (user + AI), an **"Improve my argument"** button next to each of the user's own turns that opens the before/after rewrite panel, "opponent is thinking" loading state, auto-playing AI audio with a replay button, status bubbles that are cleared between turns. Two panes with a switcher below 900px; the mic docks at the foot of the screen on a phone, with the phase clock beside it. Attribution (the logic model, the transcriber, the voice) lives once, in a single *AI Stack* panel in the podium. The opponent's speech is placed into the bubble in one go rather than typed out, so the reader can read the argument while it is being spoken.
+6. **Adjudication / Feedback sheet** — the four-line brief at the top, then the scorecard, the grade ladder and the per-criterion ladders, the findings grouped by kind and anchored to a phase, the fallacies, the verdict, the delivery analysis against each phase's time budget, a transcript download action, and a printable/PDF export.
+7. **History screen** (`/dashboard/history`) — list of the account's past debates, each showing motion, persona, difficulty, mode, language, status, and score when adjudicated; format tabs (Tournament / Sparring) that open on the format the reader has records for; search by motion text; filter by status; sort by newest, oldest, highest or lowest score; reopen a debate, download its transcript, or delete the session (cascading).
+8. **Account settings** (`/dashboard/settings`) — the account stated once (name, email, and when it was opened), then the four things that can be changed about it: name, email, password, and the account itself. Deliberately carries **no statistics** — the Overview owns the full stat display.
+9. **Global UI Components** — the workspace nav rail (new debate, the four pages, sign-out), a global confirmation modal centered in the middle of the viewport, and a toast notification container fixed in the bottom-right corner across all views.
 
 Use the `frontend-design` conventions for visual polish (typography, spacing, avoiding generic templated look) when this is actually built. Everything here is a Blade view — no separate component library or client router.
 
@@ -494,6 +655,8 @@ Use the `frontend-design` conventions for visual polish (typography, spacing, av
 - Every backend call that touches Gemini/ElevenLabs takes an explicit `language` parameter driven by the debate's `language` column (`en` / `bn`) — never auto-detected from speech, to avoid inconsistent mid-debate language switches.
 - Bangla rendering is verified across all screens via the Noto Sans Bengali web font (Inter + Noto Sans Bengali loaded from Google Fonts in the layout), including the feedback sheet's score labels.
 - Natural Bangla/English code-switching within a single spoken turn (common among Bangladeshi debaters) is handled natively when Gemini's multimodal audio fallback transcribes it (see §12.1).
+- **The derived analysis prose is English in both languages.** The report's brief, the grade ladder's band summaries, the phase notes and the delivery commentary are derived in PHP rather than generated by Gemini, so they are written in English. A Bangla report therefore has Bangla *judging* inside English *scaffolding* — the findings, the mark and the transcript are Bangla; the four-line brief around them is not. Localising that scaffolding is the obvious next step, and it is a matter of translating a fixed set of strings rather than of changing any logic.
+- **Bangla word counts are a heuristic.** Bangla does not space its words, so the report counts characters and divides by five (the average Bangla word length). It is close enough to be useful but it is an estimate, and it is the input to the delivery analysis.
 ---
 
 ## 18. MVP Build Plan (6-hour hackathon window, 10:00–16:00)
@@ -515,6 +678,17 @@ Use the `frontend-design` conventions for visual polish (typography, spacing, av
 
 *Status note: this section is the original as-written hackathon plan. Every P0 line item shipped, plus Sparring Mode and the History screen (neither a P0). Live captions, PDF feedback, and voice preview clips did not ship and remain P1.*
 
+**Shipped after the hackathon build** (see §6.10 for the full specification):
+
+- **Accounts** — registration, sign-in, sign-out, per-account brute-force lockout, password policy, email normalisation, and guest-session adoption.
+- **Ownership and authorisation** — `DebatePolicy` as the single authority on every debate route; per-account rate limiting on the AI-backed endpoints; the seeded demo debate owned by the demo account alone.
+- **The Overview page** — metric strip, score-trend chart, rubric averages, reports by difficulty, recent debates.
+- **The report analysis engine** (`App\Support\ReportAnalysis`) — the four-line brief, the grade ladder, the per-criterion ladders, phase-anchored findings, verified quotes, delivery analysis, and Bangla-aware word counts.
+- **The stage brief** (`App\Services\DebateStage`) — the phase-**and-slot**-aware prompt architecture described in §12.1 B, plus the shared debate register, the side role labels, and the slot-aware rewrite.
+- **Native Bangla voices** — each persona carries a second, native Bangla voice ID.
+- **Private audio** — voice recordings moved off the public disk onto the private one, streamed back through an ownership-checked endpoint; outbound TLS verification re-enabled.
+- **The workspace shell** — the nav rail, the credential screens, the account settings page, and a rebuilt dark design system in `resources/css/app.css`.
+
 ---
 
 ## 19. Post-Hackathon Roadmap (not for the event submission)
@@ -522,9 +696,10 @@ Use the `frontend-design` conventions for visual polish (typography, spacing, av
 - Full Sparring Mode refinement (better contradiction detection across a longer transcript, tunable aggressiveness).
 - Points of Information (POIs) — AI can interject briefly during user speeches.
 - Full 4-speaker team format (multi-agent, one Gemini persona per bench position).
-- User accounts + practice history/progress tracking over time, including tracking whether a user's later arguments start to resemble past rewrite suggestions (a genuine "did you learn from this" signal).
+- **Deeper practice analytics.** Accounts, account-scoped history and a first cut of progress tracking over time shipped in §6.10. Still open: tracking whether a user's later arguments start to resemble past rewrite suggestions (a genuine "did you learn from this" signal), and comparing a user's own delivery across the six slots rather than only the total mark.
 - Prosody-aware Manner scoring (analyzing actual vocal delivery, not just transcript).
 - Tournament-style ladder against increasingly difficult AI personas (natural extension of the difficulty axis).
+- Localising the report's derived prose — the brief, the band summaries, the phase notes and the delivery commentary are English in a Bangla report. The judge's own findings, the mark and the transcript are already Bangla; only the scaffolding around them is not. It is a matter of translating a fixed set of strings, not of changing any logic.
 
 ---
 
@@ -541,7 +716,7 @@ Use the `frontend-design` conventions for visual polish (typography, spacing, av
 
 | Risk | Mitigation |
 |---|---|
-| Gemini/ElevenLabs latency breaks the "live sparring" feel | Clear "opponent is thinking" state; keep AI responses short (100–220 words depending on phase, see §12.1) to reduce TTS generation time |
+| Gemini/ElevenLabs latency breaks the "live sparring" feel | Clear "opponent is thinking" state; keep AI responses short (90–220 words, keyed by phase **and slot** — see §12.1) to reduce TTS generation time |
 | Rewrite-suggestion calls add a second latency point mid-round | Keep the rewrite prompt short and single-purpose (no TTS involved), target <5s; make it fully optional/on-demand so it never blocks the round's critical path; results are cached per turn |
 | Bangla speech transcription accuracy lower than English | Rely on Scribe (pinned Bangla language code) with Gemini multimodal audio as an automatic fallback; the user's recording is always saved for review even when transcription fails |
 | ElevenLabs outage / API key expiry / quota exhaustion mid-demo | Full TTS fallback chain: quota-aware text trimming + retry → free Google Translate TTS (pure PHP, no key) → silent text-only playback with a visible notice. A demo never runs fully silent |
@@ -549,18 +724,21 @@ Use the `frontend-design` conventions for visual polish (typography, spacing, av
 | Live demo mic/audio failure in front of judges | Always have a pre-recorded 3-min demo video as backup, per submission requirements; plus the in-app "we didn't catch that" retry state |
 | Sparring Mode's added branching logic eats into build time | Explicitly P1/P2 (§18) — Tournament Mode ships first and stands alone as a complete, demoable product even if Sparring Mode doesn't make it in |
 | Scope too large for 6 hours | P0/P1/P2 triage in §18; a working English-only, one-persona, Beginner-difficulty-only, no-Sparring-Mode version (with the rewrite assistant intact, since it's the standout demo moment) is the true minimum fallback |
+| A shared API quota is exhausted by one account | The AI-backed endpoints are rate-limited **per account** (20/min, 300/hour) with a per-IP ceiling, not per IP alone — one abusive account cannot exhaust the shared Gemini/ElevenLabs quota. TTS degrades through the quota-trim retry to the free Google Translate endpoint before it ever goes silent (§12.3) |
+| A voice recording leaks to another account | Recordings live on the **private** disk, are served only through an ownership-checked route, are reduced to a bare filename matched against a strict pattern, and are returned with `Cache-Control: private` (§12.2) |
+| The account model makes a debate unreachable | `debates.user_id` is nullable, and the `SeedAccountSeeder` adopts every pre-account orphan so no debate is ever orphaned by the ownership change (§10) |
 
 ---
 
 ## 22. Appendix A: System Prompt Fragments (shipped — see `PersonaSeeder` and `config/debate.php`)
 
-**Calm Logician (persona system_prompt, voice `pNInz6obpgDQGcFmaJgB`):**
+**Calm Logician (persona system_prompt, voice `pNInz6obpgDQGcFmaJgB` / Bangla `d532cgnzlrx7AWL3CD9i`):**
 > "You debate in a calm, analytical, and structured manner. Frame your response with clear premise-conclusion structures. Rely on empirical evidence, logical deduction, and structured points (e.g. 'First... Second...'). Never raise your tone or sound flustered. Maintain an unshakeable academic composure."
 
-**Aggressive Cross-Examiner (voice `EXAVITQu4vr4xnSDxMaL`):**
+**Aggressive Cross-Examiner (voice `EXAVITQu4vr4xnSDxMaL` / Bangla `vvOYlSJHf8lTWIG4tDNP`):**
 > "You debate assertively and directly. Open by challenging the weakest part of your opponent's last point. Use short, punchy sentences. Do not soften your language, but stay respectful and never personal. Your pace is fast and your tone is high-energy — you are here to win, and you show it."
 
-**Devil's Advocate (voice `TX3LPaxmHKxFdv7VOQHJ`):**
+**Devil's Advocate (voice `TX3LPaxmHKxFdv7VOQHJ` / Bangla `VizHiwkPO7hXc967v4tE`):**
 > "You deliberately argue the least comfortable, most contrarian defensible position. Use a wry, ironic tone. Point out inconvenient implications of your opponent's stance. You enjoy intellectual provocation — not to be annoying, but to expose the assumptions everyone is quietly ignoring."
 
 **Difficulty fragments (all four, from `config/debate.php`, appended to whichever persona is selected):**
@@ -568,6 +746,13 @@ Use the `frontend-design` conventions for visual polish (typography, spacing, av
 - **Intermediate:** "Argue at a solid club-level standard. Engage directly with your opponent's main points, use one or two concrete examples, and maintain a clear logical structure throughout your speech."
 - **Advanced:** "Argue at a competitive tournament standard. Use precise evidence and real-world examples. Identify and target the weakest premise in your opponent's case. Employ sophisticated rhetorical structures (e.g. link-turns, impact calculus). Leave no major claim by your opponent unaddressed."
 - **World Champion:** "Argue at a tournament-champion skill level. Use precise evidence and examples. Actively identify the single weakest link in your opponent's most recent point and target it directly. Employ advanced debate techniques: pre-empting likely responses, framing the round's core clash, and making explicit impact comparisons. Your arguments should be airtight."
+
+**The debate register** (from `config('debate.debate_style')`, appended to every debate-turn and rewrite prompt — see §12.1):
+> "You are speaking at the podium in a live one-on-one debate round. Your speech is spoken, not written: it must sound like a debater talking to a room, not like an essay being read out. Write in full sentences as they would be spoken aloud, and cut anything that a listener would have to read twice to follow."
+
+Its six rules: signpost every part out loud; every argument is claim → mechanism → impact; engage the opponent through what they actually said; no headings, bullets, numbered lists, markdown, stage directions or quotation marks around the speech; no filler, no throat-clearing, no pleasantries; never break character, never mention being an AI, never narrate what you are about to do.
+
+**The stage profiles** (from `config('debate.stage_profiles')`, keyed `"{phase}.{first|second}"` — the full table is in §12.1 B). Each profile names the role the speech plays, the job it has to do, and the constraints that keep it inside the speech it is meant to be. The slot key is read as a **flat array key**, not through Laravel's dot-notation lookup — `config('debate.stage_profiles.opening.first')` would resolve to the `first` key *inside* `opening`, and every profile would silently fall back to `sparring`.
 
 ## 23. Appendix B: Sample Motions
 

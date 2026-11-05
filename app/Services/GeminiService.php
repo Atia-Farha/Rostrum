@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\Debate;
+use App\Models\Round;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
@@ -12,8 +13,9 @@ class GeminiService
     private string $model;
     private string $baseUrl;
 
-    public function __construct()
-    {
+    public function __construct(
+        private DebateStage $stage,
+    ) {
         $this->apiKey  = (string) config('services.gemini.key', env('GEMINI_API_KEY', ''));
         $this->model   = (string) config('debate.gemini_model', 'gemini-2.0-flash');
         $this->baseUrl = 'https://generativelanguage.googleapis.com/v1beta';
@@ -54,52 +56,182 @@ class GeminiService
 
     /**
      * Generate the AI opponent's debate turn response.
-     * Accepts the user's transcript text (already transcribed from audio).
+     *
+     * The prompt is built from the stage brief (see DebateStage), which
+     * knows not just which phase this is but which slot within it the
+     * AI holds, which speech it is answering, and what the AI's own
+     * side has already established. That is what makes the speech read
+     * as a debater's turn in a round rather than as a reply to the
+     * last message received.
      */
     public function generateDebateTurn(
         Debate $debate,
+        Round  $round,
         string $userTranscript,
-        string $currentPhase
     ): string {
         $debate->load(['motion', 'persona']);
 
-        $personaPrompt     = $debate->persona->system_prompt;
-        $difficultyPrompts = config('debate.difficulty_prompts', []);
-        $difficultyPrompt  = $difficultyPrompts[$debate->difficulty] ?? '';
-        $wordCounts        = config('debate.ai_word_count', []);
-        $wordCount         = $wordCounts[$currentPhase] ?? '100–160';
-        $lang = $debate->language === 'bn'
-            ? 'Bangla'
-            : 'English';
-        $motionText       = $debate->motion->textFor($debate->language);
-        $aiSide           = $debate->aiSide();
-        $priorTranscript  = $debate->buildTranscript();
+        $stage   = $this->stage->brief($debate, $round, 'ai', $debate->aiSide());
+        $aiSide  = $debate->aiSide();
+        $lang    = $this->languageName($debate->language);
+        $motion  = $debate->motion->textFor($debate->language);
+        $transcript = $debate->buildTranscript();
 
-        $phaseInstruction = $this->buildPhaseInstruction($debate, $currentPhase);
+        $systemPrompt = $this->buildDebateSystemPrompt($debate);
 
-        $systemPrompt = implode("\n\n", array_filter([
-            $personaPrompt,
-            $difficultyPrompt,
-        ]));
-
-        $userMessage = <<<PROMPT
-Motion: "{$motionText}"
-You are arguing the {$aiSide} side.
-
-{$phaseInstruction}
-
-Full debate transcript so far:
-{$priorTranscript}
-
-User's most recent speech:
-{$userTranscript}
-
-Respond as your persona would, at your assigned skill level — in spoken debate register, {$wordCount} words, in {$lang}.
-Directly engage with the user's most recent point where relevant.
-Do not break character or mention you are an AI. Do not use markdown formatting.
-PROMPT;
+        $userMessage = $this->buildDebateUserMessage(
+            $stage,
+            $motion,
+            $transcript,
+            $userTranscript,
+            $lang,
+        );
 
         return $this->generateTextWithSystem($systemPrompt, $userMessage);
+    }
+
+    /**
+     * The system prompt for a debate turn.
+     *
+     * Three layers, in the order they matter:
+     *
+     *   1. The persona — who is speaking.
+     *   2. The debate register — how a speech is delivered at a podium.
+     *      Without this the model writes an essay, and the TTS voice
+     *      then reads an essay aloud.
+     *   3. The difficulty tier — how strong the speaker is.
+     *
+     * The persona comes first so the register is applied inside the
+     * character's voice rather than flattening it.
+     */
+    private function buildDebateSystemPrompt(Debate $debate): string
+    {
+        $personaPrompt     = $debate->persona->system_prompt;
+        $difficultyPrompt  = config('debate.difficulty_prompts', [])[$debate->difficulty] ?? '';
+        $style             = config('debate.debate_style', []);
+
+        $layers = array_filter([
+            $personaPrompt,
+            $style['register'] ?? '',
+            implode("\n", array_map(
+                fn (string $rule) => '- '.$rule,
+                $style['rules'] ?? []
+            )),
+            $difficultyPrompt,
+        ]);
+
+        return implode("\n\n", $layers);
+    }
+
+    /**
+     * The user message for a debate turn.
+     *
+     * @param  array<string, mixed>  $stage
+     */
+    private function buildDebateUserMessage(
+        array  $stage,
+        string $motion,
+        string $transcript,
+        string $userTranscript,
+        string $lang,
+    ): string {
+        $sections = [];
+
+        $sections[] = "MOTION: \"{$motion}\"";
+        $sections[] = "YOU ARE: {$stage['side_role']}, arguing the {$stage['side']} side."
+            ." The opponent is {$stage['opponent_first']}, arguing the {$stage['opponent']} side.";
+
+        // Where this speech sits in the round.
+        $position = "THIS SPEECH: your {$stage['role']} — the {$stage['slot']} speech of the "
+            ."{$stage['phase']} phase, which is {$stage['phase_purpose']}.";
+
+        $sections[] = $position;
+
+        // What this speech has to do. This is the phase-aware,
+        // slot-aware instruction — the thing that makes a reply a reply
+        // rather than a second opening.
+        $job = "YOUR JOB IN THIS SPEECH:\n".$stage['job'];
+
+        $constraints = $stage['constraints'];
+        if ($constraints !== []) {
+            $job .= "\n\nRULES FOR THIS SPEECH:\n"
+                .implode("\n", array_map(fn (string $c) => '- '.$c, $constraints));
+        }
+
+        $sections[] = $job;
+
+        // The speech being answered. Without this the model has to guess
+        // what it is responding to, and it guesses the last thing in
+        // the transcript rather than the speech its slot is for.
+        if (! empty($stage['answering'])) {
+            $sections[] = "YOU ARE ANSWERING {$stage['answering_label']}.\n"
+                ."Here it is, verbatim:\n\"{$stage['answering']}\"";
+        }
+
+        // The speaker's own position.
+        if (! empty($stage['own_last'])) {
+            $sections[] = "YOUR OWN LAST SPEECH ({$stage['own_last_label']}):\n"
+                ."\"{$stage['own_last']}\"";
+        }
+
+        if (! empty($stage['own_summary'])) {
+            $sections[] = $stage['own_summary'];
+        }
+
+        // The full round so far.
+        if (trim($transcript) !== '') {
+            $sections[] = "THE ROUND SO FAR:\n".$transcript;
+        }
+
+        // The speech that prompted this one.
+        if (trim($userTranscript) !== '') {
+            $sections[] = "THE SPEECH YOU HAVE JUST HEARD:\n\"{$userTranscript}\"";
+        }
+
+        // Where the round has got to, and what is left of it.
+        $arc = $this->phaseArc($stage);
+        if ($arc !== '') {
+            $sections[] = $arc;
+        }
+
+        $sections[] = "DELIVER YOUR SPEECH NOW. {$stage['word_count']} words, in {$lang}. "
+            ."Speak it — no headings, no bullet points, no markdown, no stage directions. "
+            ."Output only the speech itself, nothing before or after it.";
+
+        return implode("\n\n", $sections);
+    }
+
+    /**
+     * Where the round has got to and what is left of it.
+     *
+     * This is what keeps a closing speech from introducing new
+     * arguments and a reply from rebuilding the case — the model can
+     * see that the opening is behind it and the weighing is coming.
+     *
+     * @param  array<string, mixed>  $stage
+     */
+    private function phaseArc(array $stage): string
+    {
+        $done = $stage['phases_done'] ?? [];
+        $left = $stage['phases_left'] ?? [];
+
+        if ($done === [] && $left === []) {
+            return '';
+        }
+
+        $arc = [];
+
+        if ($done !== []) {
+            $arc[] = 'Phases already argued: '.implode(', ', $done).'.';
+        }
+
+        if ($left !== []) {
+            $arc[] = 'Phases still to come after this speech: '.implode(', ', $left)
+                .'. Do not spend material that belongs to a later phase — '
+                .'in particular, do not introduce new arguments if the closing is still to come.';
+        }
+
+        return "WHERE THE ROUND STANDS:\n".implode("\n", $arc);
     }
 
     // -------------------------------------------------------------------------
@@ -112,30 +244,27 @@ PROMPT;
      *
      * @return array{rewritten_text: string, explanation_bullets: string[]}
      */
-    public function rewriteArgument(string $transcript, Debate $debate, ?string $phase = null): array
+    public function rewriteArgument(string $transcript, Debate $debate, ?Round $round = null): array
     {
         $debate->load('motion');
         $motionText = $debate->motion->textFor($debate->language);
-        $lang = $debate->language === 'bn'
-            ? 'Bangla'
-            : 'English';
-        $motionText = $debate->motion->textFor($debate->language);
+        $lang = $this->languageName($debate->language);
 
-        $stageInstruction = match ($phase) {
-            'opening'  => 'This speech is in the OPENING phase. It should establish a strong, principled framework, define the motion\'s key terms in the speaker\'s favor, explain clear mechanisms, and introduce fully developed constructive arguments. Focus the rewrite on building that case with maximum clarity and impact.',
-            'rebuttal' => 'This speech is in the REBUTTAL phase. It must engage the opponent\'s case directly: dismantle the strongest opposing point, expose unproven premises or logical gaps, and reinforce the speaker\'s own core case. Focus the rewrite on sharper, more surgical clash — target the opponent\'s weakest link.',
-            'closing'  => 'This speech is in the CLOSING phase — the final reply speech. It should weigh the debate: crystallize the core clash, compare the strength of each side\'s arguments and impacts, settle any outstanding opposition points, and end with a persuasive summary of why the speaker\'s side has won. Focus the rewrite on impact comparison and persuasive framing.',
-            default    => 'Focus the rewrite on sharper structure, better evidence or examples, and clearer logic.',
-        };
+        // The speech being rewritten is the USER's, so the slot that
+        // matters is the one the user held in that round. A rewrite that
+        // knows only the phase will strengthen an opening speech the way
+        // you strengthen a rebuttal, and vice versa.
+        $stageInstruction = $this->rewriteStageInstruction($debate, $round);
 
         $prompt = <<<PROMPT
-The following is one turn from a student practicing debate on the motion: "{$motionText}".
+The following is one speech from a student practicing debate on the motion: "{$motionText}".
 They are arguing the {$debate->user_side} side.
 
 {$stageInstruction}
 
-Rewrite it to be a meaningfully stronger version of the *same* argument — aligned with this specific debate stage, retaining the user's core position while elevating its quality.
-Do not change what side they're arguing.
+Rewrite it to be a meaningfully stronger version of the *same* speech — aligned with this specific debate stage, retaining the student's core position while elevating its quality.
+Do not change what side they're arguing, and do not change what the speech is for. A reply stays a reply; an opening stays an opening.
+Write it as it would be spoken at the podium: signposted, in full spoken sentences, with no headings, bullet points or markdown.
 Respond in {$lang}.
 
 Output ONLY valid JSON matching this schema (no markdown fences, no preamble):
@@ -154,6 +283,45 @@ PROMPT;
             'rewritten_text'       => $data['rewritten_text']       ?? $raw,
             'explanation_bullets'  => $data['explanation_bullets']  ?? [],
         ];
+    }
+
+    /**
+     * What a speech in this stage is for, for the rewrite prompt.
+     *
+     * It reuses the same stage profiles the debate turn uses, so the
+     * coaching and the opponent are working from one description of
+     * what each speech is meant to do. A rewrite that told the student
+     * to build an opening case while the opponent was answering their
+     * opening would teach them the wrong thing.
+     */
+    private function rewriteStageInstruction(Debate $debate, ?Round $round): string
+    {
+        $phase = $round?->phase ?? 'opening';
+
+        if ($phase === 'sparring' || $round === null) {
+            return 'This is a sparring exchange. Sharpen the structure, the evidence and the logic of the point being made, and make it land harder on the opponent. Keep it the same move and the same point.';
+        }
+
+        $slot = $this->stage->slotOf($debate, $round, 'user');
+        $key  = "{$phase}.{$slot}";
+
+        $profile = config('debate.stage_profiles', [])[$key] ?? null;
+
+        if (! $profile) {
+            return 'Focus the rewrite on sharper structure, better evidence or examples, and clearer logic.';
+        }
+
+        $instruction = "This is the student's {$profile['role']} — the {$slot} speech of the {$phase} phase. "
+            ."A {$profile['role']} should: {$profile['job']} "
+            .'Focus the rewrite on making this speech do its job more effectively.';
+
+        $constraints = $profile['constraints'] ?? [];
+        if ($constraints !== []) {
+            $instruction .= "\nWhat this speech must respect:\n"
+                .implode("\n", array_map(fn (string $c) => '- '.$c, $constraints));
+        }
+
+        return $instruction;
     }
 
     // -------------------------------------------------------------------------
@@ -175,20 +343,27 @@ PROMPT;
         };
         $fullTranscript  = $debate->buildTranscript();
 
+        // The rubric is written out from the shared config rather than
+        // typed into the prompt. The report prints the same rubric back
+        // to the reader, and a report that describes a rubric the judge
+        // never scored against would be a document that misrepresents its
+        // own method.
+        $rubricText = $this->rubricPromptText();
+
         $prompt = <<<PROMPT
 You are an experienced debate adjudicator scoring the user speaker on the motion: "{$motionText}".
 The user argued the {$debate->user_side} side.
 
 Scoring rubric:
-- Matter (/40): Quality, relevance, and logical soundness of arguments and evidence.
-- Manner (/30): Persuasiveness, clarity, and rhetorical delivery (infer from language in the transcript).
-- Method (/30): Structure, organization, and how directly the speaker rebutted the opponent.
+{$rubricText}
 
 Also identify any logical fallacies used by the user speaker (e.g. strawman, ad hominem, false dichotomy, slippery slope, appeal to emotion), citing the phase.
 
 Give 3–5 concise, actionable feedback bullets. Ground every bullet in the user's ACTUAL words: quote the exact phrase or sentence from the transcript you are commenting on, then explain what to change. A bullet should look like: 'You said "X" — better to Y because Z.'
 
-End the feedback with a final bullet that is a short practice plan: one specific, doable drill the user can run today (e.g. a 2-minute timed speaking drill on a specific weakness, or a specific argument structure to practise).
+Name the phase each bullet refers to, so the reader knows where in the round to look. Write it as a capitalised phase name in the bullet text, for example "In the Opening, ..." or "Your Closing ...".
+
+End the feedback with a final bullet that is a short practice plan: one specific, doable drill the user can run today (e.g. a 2-minute timed speaking drill on a specific weakness, or a specific argument structure to practise). Begin that final bullet with the tag [DRILL].
 
 Give a one-line verdict.
 
@@ -228,54 +403,105 @@ PROMPT;
     // -------------------------------------------------------------------------
 
     /**
+     * The rubric, written out as prompt lines.
+     *
+     * The criteria come from config('debate.rubric.criteria'), which is
+     * the same source the report renders its scorecard from. Each line
+     * carries the criterion's question — what the judge is looking at —
+     * so the judge and the reader are working from one description.
+     *
+     * The bands go in too, for the same reason. If the judge is not told
+     * where 27/40 on Matter stops being "Solid", the judge will invent
+     * its own thresholds, and the report will then show a band the judge
+     * did not apply. The judge and the report have to be working from
+     * one rubric, or one of them is describing a round that did not
+     * happen.
+     */
+    private function rubricPromptText(): string
+    {
+        $criteria = config('debate.rubric.criteria', []);
+        $grades   = config('debate.rubric.grades', []);
+
+        $lines = [];
+
+        foreach ($criteria as $key => $criterion) {
+            $lines[] = sprintf(
+                '- %s (/%d): %s.',
+                $criterion['label'] ?? ucfirst((string) $key),
+                (int) ($criterion['weight'] ?? 0),
+                $criterion['question'] ?? ''
+            );
+
+            foreach (($criterion['bands'] ?? []) as $band) {
+                $lines[] = sprintf(
+                    '    · %d+ %s — %s',
+                    (int) ($band['min'] ?? 0),
+                    $band['label'] ?? '',
+                    $band['note'] ?? ''
+                );
+            }
+        }
+
+        // The overall bands, highest first so the ladder reads the way
+        // the report shows it.
+        $overall = [];
+
+        foreach (collect($grades)->sortByDesc('min') as $grade) {
+            $overall[] = sprintf(
+                '%d+ %s — %s',
+                (int) ($grade['min'] ?? 0),
+                $grade['label'] ?? '',
+                $grade['summary'] ?? ''
+            );
+        }
+
+        if ($overall !== []) {
+            $lines[] = '';
+            $lines[] = 'Overall band (out of 100):';
+            $lines[] = implode("\n", array_map(fn (string $line) => '    · ' . $line, $overall));
+        }
+
+        return implode("\n", $lines);
+    }
+
+    /**
      * Fallback: when ElevenLabs STT fails, send the raw audio file directly
      * to Gemini. Gemini will transcribe it AND generate the debate response
      * in one multimodal call.
+     *
+     * The response is built from the same stage brief as the text path,
+     * so a debate that falls back to the audio route does not get a
+     * weaker, phase-blind opponent. The one thing that changes is the
+     * shape of the response: the transcript and the speech have to
+     * come back together, so this call asks for JSON.
      *
      * Returns an array: ['transcript' => '...', 'ai_text' => '...']
      *
      * @throws \RuntimeException on API failure
      */
     public function generateDebateTurnFromAudio(
-        Debate  $debate,
-        string  $audioFilePath,
-        string  $currentPhase
+        Debate $debate,
+        Round  $round,
+        string $audioFilePath,
     ): array {
         $debate->load(['motion', 'persona']);
 
-        $personaPrompt    = $debate->persona->system_prompt;
-        $difficultyPrompt = config('debate.difficulty_prompts', [])[$debate->difficulty] ?? '';
-        $wordCount        = config('debate.ai_word_count', [])[$currentPhase] ?? '100–160';
-        $lang = $debate->language === 'bn'
-            ? 'Bangla'
-            : 'English';
-        $motionText      = $debate->motion->textFor($debate->language);
-        $aiSide          = $debate->aiSide();
-        $priorTranscript = $debate->buildTranscript();
-        $phaseInstruction = $this->buildPhaseInstruction($debate, $currentPhase);
+        $stage      = $this->stage->brief($debate, $round, 'ai', $debate->aiSide());
+        $aiSide     = $debate->aiSide();
+        $lang       = $this->languageName($debate->language);
+        $motionText = $debate->motion->textFor($debate->language);
+        $transcript = $debate->buildTranscript();
 
         $audioContent = base64_encode(file_get_contents($audioFilePath));
         $mimeType     = 'audio/webm';
 
-        $prompt = <<<PROMPT
-The following audio is from a student speaking in a debate on the motion: "{$motionText}".
-They are arguing the {$debate->user_side} side.
-
-First, transcribe exactly what the student said in the audio (their exact words, nothing else).
-Then, as the opponent ({$aiSide} side), generate your debate response.
-
-Debate context so far:
-{$priorTranscript}
-
-{$personaPrompt}
-{$difficultyPrompt}
-{$phaseInstruction}
-
-Respond in {$lang} in approximately {$wordCount} words.
-
-Output ONLY valid JSON (no markdown fences, no preamble):
-{"transcript": "exact words the student said", "ai_text": "your opponent response here"}
-PROMPT;
+        $prompt = $this->buildAudioTurnPrompt(
+            $stage,
+            $motionText,
+            $transcript,
+            $aiSide,
+            $lang,
+        );
 
         $payload = [
             'contents' => [[
@@ -292,8 +518,7 @@ PROMPT;
             'generationConfig' => ['temperature' => 0.7],
         ];
 
-        $response = Http::withoutVerifying()
-            ->timeout(90)
+        $response = Http::timeout(90)
             ->retry(3, 3000, function (\Exception $exception) {
                 if ($exception instanceof \Illuminate\Http\Client\RequestException) {
                     return in_array($exception->response->status(), [429, 500, 502, 503, 504]);
@@ -323,6 +548,91 @@ PROMPT;
         ];
     }
 
+    /**
+     * The prompt for the multimodal audio fallback.
+     *
+     * It carries the same stage brief as the text path — the same
+     * phase, the same slot, the same speech being answered — because
+     * a fallback that produces a phase-blind speech is worse than no
+     * fallback: the round keeps going with an opponent that has
+     * stopped following the format.
+     *
+     * @param  array<string, mixed>  $stage
+     */
+    private function buildAudioTurnPrompt(
+        array  $stage,
+        string $motion,
+        string $transcript,
+        string $aiSide,
+        string $lang,
+    ): string {
+        $sections = [];
+
+        $sections[] = "MOTION: \"{$motion}\"";
+        $sections[] = "YOU ARE: {$stage['side_role']}, arguing the {$aiSide} side. "
+            ."The opponent is {$stage['opponent_first']}.";
+
+        $sections[] = "THIS SPEECH: your {$stage['role']} — the {$stage['slot']} speech of the "
+            ."{$stage['phase']} phase, which is {$stage['phase_purpose']}.";
+
+        $job = "YOUR JOB IN THIS SPEECH:\n".$stage['job'];
+        $constraints = $stage['constraints'];
+        if ($constraints !== []) {
+            $job .= "\n\nRULES FOR THIS SPEECH:\n"
+                .implode("\n", array_map(fn (string $c) => '- '.$c, $constraints));
+        }
+        $sections[] = $job;
+
+        if (! empty($stage['answering'])) {
+            $sections[] = "YOU ARE ANSWERING {$stage['answering_label']}.\n"
+                ."Here it is, verbatim:\n\"{$stage['answering']}\"";
+        }
+
+        if (! empty($stage['own_last'])) {
+            $sections[] = "YOUR OWN LAST SPEECH ({$stage['own_last_label']}):\n"
+                ."\"{$stage['own_last']}\"";
+        }
+
+        if (! empty($stage['own_summary'])) {
+            $sections[] = $stage['own_summary'];
+        }
+
+        if (trim($transcript) !== '') {
+            $sections[] = "THE ROUND SO FAR:\n".$transcript;
+        }
+
+        $arc = $this->phaseArc($stage);
+        if ($arc !== '') {
+            $sections[] = $arc;
+        }
+
+        $sections[] = "DELIVER YOUR SPEECH NOW. {$stage['word_count']} words, in {$lang}. "
+            ."Speak it — no headings, no bullet points, no markdown, no stage directions.";
+
+        $instructions = implode("\n\n", $sections);
+
+        return <<<PROMPT
+The following audio is from a student speaking in a debate on the motion: "{$motion}".
+They are the opposing speaker, arguing the {$stage['opponent']} side.
+
+First, transcribe exactly what the student said in the audio (their exact words, nothing else).
+Then, as the opponent ({$aiSide} side), deliver your speech.
+
+{$instructions}
+
+Output ONLY valid JSON (no markdown fences, no preamble):
+{"transcript": "exact words the student said", "ai_text": "your speech here"}
+PROMPT;
+    }
+
+    /**
+     * The name of a language, as the model should be asked to write it.
+     */
+    private function languageName(string $language): string
+    {
+        return $language === 'bn' ? 'Bangla' : 'English';
+    }
+
     private function generateText(string $prompt): string
     {
         $payload = [
@@ -334,8 +644,7 @@ PROMPT;
             ],
         ];
 
-        $response = Http::withoutVerifying()
-            ->timeout(60)
+        $response = Http::timeout(60)
             ->retry(5, 3000, function (\Exception $exception, $request) {
                 // Exponential sleep / retry on rate limit (429) or temporary server errors (5xx)
                 if ($exception instanceof \Illuminate\Http\Client\RequestException) {
@@ -374,8 +683,7 @@ PROMPT;
             ],
         ];
 
-        $response = Http::withoutVerifying()
-            ->timeout(60)
+        $response = Http::timeout(60)
             ->retry(5, 3000, function (\Exception $exception, $request) {
                 // Exponential sleep / retry on rate limit (429) or temporary server errors (5xx)
                 if ($exception instanceof \Illuminate\Http\Client\RequestException) {
@@ -423,20 +731,36 @@ PROMPT;
         return $decoded;
     }
 
-    private function buildPhaseInstruction(Debate $debate, string $currentPhase): string
+    /**
+     * Strip the move tag off a sparring reply and name the move.
+     *
+     * In Sparring Mode the model opens its reply with a tag — [FOLLOW-UP],
+     * [CONTRADICTION], [CHALLENGE] or [REBUTTAL] — which says which move it
+     * has chosen. The tag is stripped before the speech is spoken, and the
+     * move is stored on the turn so the reader can see what was done.
+     *
+     * The tag set is closed. The old parser matched any run of capitals in
+     * square brackets, so a speech that opened with a bracketed aside had
+     * that aside silently cut off the front of it. Only the four known
+     * tags are recognised now; anything else stays in the speech where it
+     * was written.
+     *
+     * @return array{0: ?string, 1: string} The move and the speech without it.
+     */
+    public function extractMoveType(string $text): array
     {
-        if ($debate->mode === 'sparring') {
-            return 'This is a Sparring Mode debate. After reviewing the full transcript, choose the most appropriate move type: '
-                . 'a follow-up question probing an unsupported claim, a contradiction callout if the user contradicts themselves, '
-                . 'a live challenge ("give me one piece of evidence for that"), or a standard rebuttal. '
-                . 'Begin your response by stating which move type you are using (e.g. [FOLLOW-UP] or [REBUTTAL]).';
+        $tags = config('debate.move_type_tags', []);
+
+        if (preg_match('/^\s*\[([A-Z\-]+)\]/', $text, $matches)) {
+            $tag = $matches[1];
+
+            if (isset($tags[$tag])) {
+                $remainder = trim(substr($text, strlen($matches[0])));
+
+                return [$tags[$tag], $remainder];
+            }
         }
 
-        return match ($currentPhase) {
-            'opening'  => 'This is the OPENING phase. You are delivering a constructive opening speech: establish the framework and principles your side stands on, define or scope the motion in your favor if needed, and present 2–3 fully developed constructive arguments with reasoning and concrete examples. Build your case from the ground up — do not reply to the opposition yet.',
-            'rebuttal' => 'This is the REBUTTAL phase. You are a second speaker: directly engage with the main points the opposing speaker just made, point-by-point. Identify and attack their weakest premise or clearest logical gap, and reinforce your own core case in the process. Do not merely repeat your opening speech.',
-            'closing'  => 'This is the CLOSING phase — the final reply speech of the debate. Do not introduce new arguments. Weigh the debate: crystallize the core clash, compare whose arguments survive scrutiny, address any outstanding opposition points, and deliver a powerful closing statement of why your side has won the round.',
-            default    => 'Respond as appropriate for the current phase of the debate.',
-        };
+        return [null, trim($text)];
     }
 }

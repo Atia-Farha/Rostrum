@@ -10,8 +10,13 @@ sed -i "s/listen \[::\]:8080/listen \[::\]:${PORT}/g" /etc/nginx/nginx.conf
 rm -f /var/www/html/public/hot
 
 # Ensure storage subdirectories exist with proper permissions
+#
+# NOTE: turn audio (voice recordings) lives on the PRIVATE disk
+# (storage/app/private/audio) and is streamed back through an
+# ownership-checked controller. The public disk holds no private media.
 mkdir -p \
-    /var/www/html/storage/app/public/audio \
+    /var/www/html/storage/app/public \
+    /var/www/html/storage/app/private/audio \
     /var/www/html/storage/framework/cache/data \
     /var/www/html/storage/framework/sessions \
     /var/www/html/storage/framework/views \
@@ -21,6 +26,8 @@ mkdir -p \
 
 chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache /var/www/html/database
 chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache /var/www/html/database
+# Lock the private disk down — only the web user may read it.
+chmod -R 750 /var/www/html/storage/app/private
 
 # Setup SQLite database if DB_CONNECTION is sqlite (or fallback default)
 rm -f /var/www/html/bootstrap/cache/packages.php /var/www/html/bootstrap/cache/services.php /var/www/html/bootstrap/cache/config.php /var/www/html/bootstrap/cache/routes.php

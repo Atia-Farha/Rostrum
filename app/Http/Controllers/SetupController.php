@@ -19,7 +19,7 @@ class SetupController extends Controller
     ) {}
 
     /**
-     * GET /setup — render the setup screen.
+     * GET /dashboard/setup — render the setup screen.
      */
     public function index(Request $request)
     {
@@ -113,10 +113,13 @@ class SetupController extends Controller
         $mode = $request->input('mode', 'tournament');
 
         try {
-            // Create the debate
+            // Create the debate. The route is behind `auth`, so the account
+            // always exists; the session id is still stored so the debate
+            // can be attributed to the browser that started it.
             $debate = Debate::create([
                 'id'         => (string) Str::uuid(),
                 'session_id' => $request->session()->getId(),
+                'user_id'    => $request->user()->id,
                 'motion_id'  => $motion->id,
                 'user_side'  => $userSide,
                 'persona_id' => $request->input('persona_id'),

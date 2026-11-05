@@ -21,7 +21,11 @@ class ElevenLabsService
 
     /**
      * Synthesize text to speech for a given persona voice.
-     * Stores the audio file in storage/app/public/audio/ and returns its public URL.
+     *
+     * Stores the audio file on the PRIVATE disk and returns the file NAME.
+     * The caller turns that into a URL; the file is streamed back through
+     * DebateController::audio(), which checks debate ownership, so a debate's
+     * audio is never world-readable off the public disk.
      *
      * The text is trimmed to fit the account's remaining character quota so a
      * speech is always audible even when credits run low. The full transcript
@@ -61,15 +65,16 @@ class ElevenLabsService
             throw new \RuntimeException('ElevenLabs TTS API call failed: ' . $response->status());
         }
 
-        // Store the audio file locally. We store the RELATIVE URL so the file
-        // keeps working no matter which host/port serves the app (absolute
-        // URLs bake in APP_URL and break on other machines).
+        // Store the audio file on the private disk. We return only the file
+        // name — the caller builds the URL, so the file keeps working no
+        // matter which host/port serves the app (absolute URLs bake in
+        // APP_URL and break on other machines).
         $filename = 'audio/' . Str::uuid() . '.mp3';
         /** @var \Illuminate\Filesystem\FilesystemAdapter $disk */
-        $disk = Storage::disk('public');
+        $disk = Storage::disk('local');
         $disk->put($filename, $response->body());
 
-        return '/storage/' . $filename;
+        return basename($filename);
     }
 
     /**
@@ -77,11 +82,10 @@ class ElevenLabsService
      */
     private function callTts(string $text, string $voiceId, string $model): \Illuminate\Http\Client\Response
     {
-        return Http::withoutVerifying()
-            ->withHeaders([
-                'xi-api-key'   => $this->apiKey,
-                'Content-Type' => 'application/json',
-            ])
+        return Http::withHeaders([
+            'xi-api-key'   => $this->apiKey,
+            'Content-Type' => 'application/json',
+        ])
             ->timeout(60)
             ->post("{$this->baseUrl}/text-to-speech/{$voiceId}", [
                 'text'     => $text,
@@ -166,8 +170,7 @@ class ElevenLabsService
             $params['language_code'] = $langCode;
         }
 
-        $request = Http::withoutVerifying()
-            ->withHeaders(['xi-api-key' => $this->apiKey])
+        $request = Http::withHeaders(['xi-api-key' => $this->apiKey])
             ->timeout(60)
             ->attach('file', $fileStream, basename($audioFilePath))
             ->post("{$this->baseUrl}/speech-to-text", $params);

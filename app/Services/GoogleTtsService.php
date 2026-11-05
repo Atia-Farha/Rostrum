@@ -18,7 +18,10 @@ class GoogleTtsService
 
     /**
      * Synthesize speech via the Google Translate TTS endpoint.
-     * Stores the audio in storage/app/public/audio/ and returns its public URL.
+     *
+     * Stores the audio on the PRIVATE disk and returns the file NAME. The
+     * caller turns that into a URL; the file is streamed back through
+     * DebateController::audio(), which checks debate ownership.
      *
      * @throws \RuntimeException on HTTP failure
      */
@@ -61,10 +64,10 @@ class GoogleTtsService
         }
 
         $filename = 'audio/google_tts_' . Str::uuid() . '.mp3';
-        Storage::disk('public')->put($filename, $audio);
+        Storage::disk('local')->put($filename, $audio);
 
-        // Relative URL — portable across hosts (see ElevenLabsService).
-        return '/storage/' . $filename;
+        // File name only — the caller builds the URL.
+        return basename($filename);
     }
 
     /**

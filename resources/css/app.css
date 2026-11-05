@@ -13,6 +13,29 @@
         --color-border: rgba(255, 255, 255, 0.08);
         --color-border-hover: rgba(255, 255, 255, 0.18);
 
+        /* ---- Card & container theme ----
+           One theme for every page. These are the values the debate
+           setup screen was drawn with, promoted here so that the
+           overview, the history ledger, the settings panels and the
+           credential screens all sit on the same card.
+
+           The card is a step darker than the surface it is cut from,
+           and its border is a defined hairline rather than a faint
+           white wash — a container you can actually see the edge of. */
+        --card-surface: #0a0d16;
+        --card-surface-2: #06080f;
+        --card-border: #1e2535;
+        --card-border-hover: #2d3566;
+        --card-border-accent: rgba(99, 102, 241, 0.3);
+
+        /* The inks that sit on a card. */
+        --card-text: #f0f4ff;
+        --card-label: #c8d5f0;
+        --card-muted: #7b91b3;
+        --card-dim: #687b99;
+        --card-accent: #6675f5;
+        --card-accent-soft: #818cf8;
+
         --color-accent: #4f5edd; /* Indigo accent with 4.5+:1 contrast */
         --color-accent-glow: rgba(99, 102, 241, 0.25);
         --color-accent-2: #38bdf8; /* Sky 400 */
@@ -30,6 +53,34 @@
         --radius-lg: 4px;
         --radius-xl: 6px;
         --radius-pill: 3px;
+
+        /* ---- Form controls ----
+           The input family, shared by the credential screens and the
+           account settings page. These are the values the sign-in and
+           registration forms were already drawn with, lifted out of the
+           auth shell so a settings field can be the same control rather
+           than a lookalike.
+
+           The credentials themselves keep their own shell (--auth-*):
+           that shell has its own surfaces and inks, and a settings page
+           sitting on the app's surfaces must not inherit them. */
+        --form-surface-2: #06080f;
+        --form-surface-focus: #080b13;
+        --form-border: #1e2535;
+        --form-border-hover: #2d3566;
+        --form-accent-hi: #6675f5;
+        --form-accent-glow: rgba(102, 117, 245, 0.14);
+        --form-text: #f0f4ff;
+        --form-label: #c8d5f0;
+        --form-icon: #5c7090;
+        --form-muted: #7b91b3;
+        /* The dim ink for helper text. The auth shell's own #687b99 was
+           tuned for the shell's panel; on the app's surfaces it drops
+           under 4.5:1, so the app's own dim value is used instead.
+           Both clear the ratio against the input they sit on. */
+        --form-dim: #8492a8;
+        --form-danger: #f87171;
+        --form-success: #6ee7b7;
 
         --shadow-subtle:
             0 1px 3px 0 rgba(0, 0, 0, 0.3), 0 1px 2px -1px rgba(0, 0, 0, 0.3);
@@ -117,6 +168,12 @@
         padding-top: 61px;
     }
 
+    /* The credential screens have no site nav, so they reclaim that offset
+       and own the full viewport height. */
+    body.is-auth #main-content {
+        padding-top: 0;
+    }
+
     .nav-header-bar {
         display: flex;
         align-items: center;
@@ -167,6 +224,15 @@
             gap: 0.5rem;
         }
 
+        /* The expanded menu is a full-width panel, so it needs an opaque
+           background — the page behind it must not show through. */
+        .nav.is-open {
+            background: #090b10;
+            backdrop-filter: none;
+            -webkit-backdrop-filter: none;
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.55);
+        }
+
         .nav-actions.is-open {
             display: flex !important;
         }
@@ -174,6 +240,39 @@
         .nav-actions .btn {
             width: 100%;
             justify-content: center;
+        }
+
+        /* The four main links stack into a full-width column on mobile. */
+        .nav-main {
+            flex-direction: column;
+            align-items: stretch;
+            gap: 0.15rem;
+            width: 100%;
+        }
+
+        .nav-main-link {
+            width: 100%;
+            padding: 0.6rem 0.75rem;
+            font-size: 0.9rem;
+        }
+
+        .nav-account {
+            width: 100%;
+        }
+
+        .nav-account-trigger {
+            width: 100%;
+            max-width: none;
+            justify-content: flex-start;
+            padding: 0.5rem 0.75rem;
+        }
+
+        .nav-account-menu {
+            position: static;
+            width: 100%;
+            min-width: 0;
+            margin-top: 0.4rem;
+            box-shadow: none;
         }
     }
 
@@ -288,7 +387,7 @@
 
     .badge-accent {
         background: rgba(99, 102, 241, 0.12);
-        color: #a5b4fc;
+        color: var(--card-accent-soft);
         border: 1px solid rgba(99, 102, 241, 0.25);
     }
 
@@ -357,6 +456,41 @@
         gap: 0.75rem;
     }
 
+    /* ---- NAV — Main dashboard links (Overview / New Debate / History / Settings) ---- */
+    .nav-main {
+        display: flex;
+        align-items: center;
+        gap: 0.15rem;
+    }
+
+    .nav-main-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        font-size: 0.8rem;
+        font-weight: 600;
+        color: var(--color-text-muted);
+        padding: 0.4rem 0.65rem;
+        border-radius: var(--radius);
+        white-space: nowrap;
+        transition: color 0.15s ease, background-color 0.15s ease;
+    }
+
+    .nav-main-link:hover {
+        color: var(--color-text);
+        background: rgba(255, 255, 255, 0.05);
+        opacity: 1;
+    }
+
+    .nav-main-link.is-active {
+        color: var(--color-text);
+        background: rgba(79, 94, 221, 0.16);
+    }
+
+    .nav-main-link.is-active svg {
+        color: var(--color-accent-2);
+    }
+
     .btn-ghost {
         background: transparent;
         color: var(--color-text-muted);
@@ -366,6 +500,137 @@
     .btn-ghost:hover {
         color: var(--color-text);
         background: rgba(255, 255, 255, 0.04);
+    }
+
+    /* ============================================================
+        NAV — Account Menu
+       ============================================================ */
+    .nav-account {
+        position: relative;
+    }
+
+    .nav-account-trigger {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.3rem 0.6rem 0.3rem 0.35rem;
+        border: 1px solid var(--color-border);
+        border-radius: 999px;
+        background: var(--color-surface);
+        color: var(--color-text-muted);
+        font-size: 0.8rem;
+        font-weight: 600;
+        font-family: inherit;
+        cursor: pointer;
+        transition: border-color 0.15s ease, background 0.15s ease, color 0.15s ease;
+        max-width: 190px;
+    }
+
+    .nav-account-trigger:hover {
+        border-color: var(--color-border-hover);
+        background: var(--color-surface-2);
+        color: var(--color-text);
+    }
+
+    .nav-account-name {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .nav-account-avatar {
+        width: 26px;
+        height: 26px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #4f5edd, #7c6cf5);
+        color: #fff;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.68rem;
+        font-weight: 800;
+        letter-spacing: 0.02em;
+        flex-shrink: 0;
+    }
+
+    .nav-account-avatar.is-large {
+        width: 34px;
+        height: 34px;
+        font-size: 0.78rem;
+    }
+
+    .nav-account-menu {
+        position: absolute;
+        right: 0;
+        top: calc(100% + 0.5rem);
+        min-width: 230px;
+        background: var(--card-surface);
+        border: 1px solid var(--card-border);
+        border-radius: 6px;
+        padding: 0.4rem;
+        z-index: 100;
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
+    }
+
+    .nav-account-meta {
+        display: flex;
+        align-items: center;
+        gap: 0.65rem;
+        padding: 0.6rem 0.6rem 0.75rem;
+        margin-bottom: 0.35rem;
+        border-bottom: 1px solid #111827;
+    }
+
+    .nav-account-meta-body {
+        display: flex;
+        flex-direction: column;
+        min-width: 0;
+    }
+
+    .nav-account-meta-name {
+        font-size: 0.85rem;
+        font-weight: 700;
+        color: var(--color-text);
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .nav-account-meta-email {
+        font-size: 0.72rem;
+        color: var(--color-text-dim);
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .nav-account-link {
+        display: flex;
+        align-items: center;
+        gap: 0.6rem;
+        width: 100%;
+        padding: 0.55rem 0.6rem;
+        border: none;
+        border-radius: 4px;
+        background: none;
+        color: var(--color-text-muted);
+        font-size: 0.83rem;
+        font-weight: 500;
+        font-family: inherit;
+        text-align: left;
+        text-decoration: none;
+        cursor: pointer;
+        transition: background 0.15s ease, color 0.15s ease;
+    }
+
+    .nav-account-link:hover {
+        background: rgba(255, 255, 255, 0.05);
+        color: var(--color-text);
+    }
+
+    .nav-account-link.is-danger:hover {
+        background: rgba(239, 68, 68, 0.1);
+        color: var(--form-danger);
     }
 
     /* ============================================================
@@ -439,11 +704,56 @@
         letter-spacing: 0.14em;
         text-transform: uppercase;
         color: var(--landing-accent);
-        border: 1px solid #2d3566;
+        border: 1px solid var(--form-border-hover);
         background: rgba(79, 94, 221, 0.08);
         padding: 0.3rem 0.85rem;
         border-radius: var(--landing-radius);
         margin-bottom: 1.75rem;
+    }
+
+    /* The provenance stack: the badge is the credential, the eyebrow
+       labels the product. They are stacked rather than set side by side
+       because the badge is a wide, detailed graphic and the eyebrow is a
+       thin pill — on one line neither gets the space it needs. */
+    .landing-hero-provenance {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 1.1rem;
+        margin-bottom: 1.75rem;
+    }
+
+    .landing-hero-provenance .landing-eyebrow {
+        margin-bottom: 0;
+    }
+
+    /* The badge artwork ships as a light card with its own rounded edge.
+       On the dark hero it needs a defined outline and a soft lift, or the
+       white background reads as a hole punched in the page. The outline is
+       a cool tint rather than pure white so the card sits inside the
+       page's palette instead of blowing out of it. */
+    .landing-badge {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.2rem;
+        border-radius: 10px;
+        background: rgba(255, 255, 255, 0.92);
+        border: 1px solid rgba(45, 53, 102, 0.9);
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+        line-height: 0;
+    }
+
+    .landing-badge img {
+        display: block;
+        width: 168px;
+        height: auto;
+        border-radius: 8px;
+    }
+
+    @media (max-width: 640px) {
+        .landing-badge img {
+            width: 150px;
+        }
     }
 
     .landing-display {
@@ -914,7 +1224,7 @@
     }
 
     .landing-persona-chip.is-highlight {
-        color: #a5b4fc;
+        color: var(--card-accent-soft);
         border-color: rgba(99, 102, 241, 0.4);
         background: rgba(99, 102, 241, 0.15);
     }
@@ -1080,50 +1390,138 @@
         box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.7);
     }
 
-    /* Footer */
+    /* ---- Footer ----
+       Three columns over a legal bar: the brand and what to do next on the
+       left, the two link groups on the right. The bar sits below a hairline
+       so the legal line reads as a separate register from the links. */
     .landing-footer {
-        border-top: 1px solid #111827;
-        padding: 2rem 0 3rem;
+        border-top: 1px solid var(--landing-border);
+        background: linear-gradient(180deg, rgba(10, 13, 22, 0) 0%, rgba(10, 13, 22, 0.85) 100%);
+        padding-top: 3.5rem;
     }
 
     .landing-footer-inner {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr);
+        gap: 2.5rem;
+        padding-bottom: 3rem;
+    }
+
+    @media (min-width: 768px) {
+        .landing-footer-inner {
+            /* Brand takes the slack; the link groups keep a fixed measure so
+               the columns line up regardless of brand text length. */
+            grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr) minmax(0, 1fr);
+            gap: 3rem;
+        }
+    }
+
+    /* ---- Brand column ---- */
+    .landing-footer-brand-col {
+        max-width: 22rem;
+    }
+
+    .landing-footer-logo {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 0.95rem;
+        font-weight: 800;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+        color: var(--color-text);
+        text-decoration: none;
+    }
+
+    .landing-footer-logo:hover {
+        opacity: 1;
+        color: var(--color-text);
+    }
+
+    .landing-footer-blurb {
+        margin: 0.9rem 0 0;
+        font-size: 0.82rem;
+        line-height: 1.7;
+        color: var(--color-text-dim);
+    }
+
+    /* ---- Link columns ---- */
+    .landing-footer-col {
+        /* The heading is a label, not a page title. It is kept small and
+           quiet so it groups the links without competing with them. */
+    }
+
+    .landing-footer-heading {
+        font-size: 0.68rem;
+        font-weight: 700;
+        letter-spacing: 0.11em;
+        text-transform: uppercase;
+        color: var(--color-text-dim);
+        margin: 0 0 0.9rem;
+    }
+
+    .landing-footer-list {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 0.6rem;
+    }
+
+    .landing-footer-list a {
+        font-size: 0.83rem;
+        color: var(--color-text-muted);
+        text-decoration: none;
+        transition: color 0.15s ease;
+    }
+
+    .landing-footer-list a:hover {
+        color: var(--color-text);
+        opacity: 1;
+    }
+
+    /* The sign-out action is a button, not a link, so it has to be styled
+       to match the links around it rather than like a control. */
+    .landing-footer-link-button {
+        background: none;
+        border: none;
+        padding: 0;
+        font-family: inherit;
+        font-size: 0.83rem;
+        color: var(--color-text-muted);
+        cursor: pointer;
+        text-align: left;
+        transition: color 0.15s ease;
+    }
+
+    .landing-footer-link-button:hover {
+        color: var(--color-text);
+    }
+
+    /* ---- Legal bar ---- */
+    .landing-footer-bar {
         display: flex;
         flex-wrap: wrap;
         align-items: center;
         justify-content: space-between;
-        text-align: center;
-        gap: 1rem;
+        gap: 0.75rem;
+        padding-top: 1.5rem;
+        padding-bottom: 1.75rem;
+        border-top: 1px solid rgba(255, 255, 255, 0.06);
     }
 
-    @media (max-width: 640px) {
-        .landing-footer-inner {
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            text-align: center;
-        }
-        .landing-footer-links {
-            justify-content: center;
-            text-align: center;
-        }
+    .landing-footer-legal,
+    .landing-footer-tech {
+        margin: 0;
+        font-size: 0.74rem;
+        line-height: 1.6;
+        color: var(--color-text-dim);
     }
 
-    .landing-footer-brand {
-        font-weight: 800;
-        font-size: 0.95rem;
-        letter-spacing: 0.05em;
-        text-transform: uppercase;
-        color: var(--color-text);
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-    }
-
-    .landing-footer-copy {
-        display: flex;
-        gap: 1.5rem;
-        font-size: 0.75rem;
-        color: #687b99;
+    .landing-footer-tech strong {
+        font-weight: 600;
+        color: #7b91b3;
     }
 
     /* Reveal animations */
@@ -1154,6 +1552,6014 @@
         .landing-reveal {
             opacity: 1;
             transform: none;
+        }
+    }
+}
+
+/* ============================================================
+   FORM CONTROLS — the shared input family
+   ------------------------------------------------------------
+   One control, drawn once. The sign-in form, the registration
+   form and the account settings page all type into the same
+   input, so they all get the same look: the same recessed
+   surface, the same border, the same leading icon, the same
+   show/hide toggle, the same focus ring.
+
+   This used to live inside the auth shell, which meant the
+   settings page had to invent a second, similar-looking input
+   of its own — and the two drifted. The tokens below are the
+   credential form's own values, lifted to the root so both
+   surfaces can read them.
+
+   The credential screens keep their own shell (--auth-*) for
+   everything that is not a control: the brand rail, the panel,
+   the copy. Only the controls themselves are shared.
+   ============================================================ */
+@layer components {
+    /* A field is a label, the control, and whatever the control needs to
+       say about itself (an error, a hint, the rules). The internal gap
+       is tighter than the gap between fields, so each field reads as one
+       block. */
+    .form-field {
+        display: flex;
+        flex-direction: column;
+        gap: 0.4rem;
+    }
+
+    .form-label {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: 0.75rem;
+        font-size: 0.76rem;
+        font-weight: 600;
+        letter-spacing: 0.01em;
+        color: var(--form-label);
+    }
+
+    .form-label-optional {
+        font-size: 0.68rem;
+        font-weight: 500;
+        color: var(--form-dim);
+    }
+
+    /* Input shell: icon on the left, optional control on the right. */
+    .form-input-wrap {
+        position: relative;
+        display: flex;
+        align-items: center;
+    }
+
+    .form-input-icon {
+        position: absolute;
+        left: 0.85rem;
+        color: var(--form-icon);
+        pointer-events: none;
+        transition: color 0.15s ease;
+    }
+
+    .form-input {
+        width: 100%;
+        background: var(--form-surface-2);
+        border: 1px solid var(--form-border);
+        border-radius: 4px;
+        color: var(--form-text);
+        font-size: 0.9rem;
+        font-family: inherit;
+        padding: 0.72rem 0.85rem 0.72rem 2.6rem;
+        outline: none;
+        transition:
+            border-color 0.15s ease,
+            box-shadow 0.15s ease,
+            background-color 0.15s ease;
+        box-sizing: border-box;
+    }
+
+    .form-input:hover:not(:focus) {
+        border-color: var(--form-border-hover);
+    }
+
+    .form-input:focus {
+        border-color: var(--form-accent-hi);
+        background: var(--form-surface-focus);
+        box-shadow: 0 0 0 3px var(--form-accent-glow);
+    }
+
+    .form-input::placeholder {
+        color: var(--form-icon);
+    }
+
+    .form-input-wrap:focus-within .form-input-icon {
+        color: var(--form-accent-hi);
+    }
+
+    .form-input.has-trailing {
+        padding-right: 2.75rem;
+    }
+
+    .form-input[aria-invalid="true"] {
+        border-color: rgba(239, 68, 68, 0.6);
+    }
+
+    .form-input[aria-invalid="true"]:focus {
+        box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.14);
+    }
+
+    /* Show / hide password toggle. */
+    .form-reveal {
+        position: absolute;
+        right: 0.35rem;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 2rem;
+        height: 2rem;
+        background: transparent;
+        border: none;
+        border-radius: var(--radius);
+        color: var(--form-dim);
+        cursor: pointer;
+        transition: color 0.15s ease, background-color 0.15s ease;
+    }
+
+    .form-reveal:hover {
+        color: var(--form-text);
+        background: rgba(255, 255, 255, 0.05);
+    }
+
+    /* ---- Messages ---- */
+    /* Visually hidden, but still read by assistive technology. */
+    .form-sr-only {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+        border: 0;
+    }
+
+    .form-error {
+        display: flex;
+        align-items: flex-start;
+        gap: 0.45rem;
+        font-size: 0.76rem;
+        line-height: 1.5;
+        color: var(--form-danger);
+    }
+
+    .form-error svg {
+        flex-shrink: 0;
+        margin-top: 2px;
+    }
+
+    .form-hint {
+        display: block;
+        font-size: 0.73rem;
+        line-height: 1.5;
+        color: var(--form-dim);
+    }
+
+    /* A live status under a field: the confirmation match, for instance.
+       The element is always in the DOM and always referenced by the input,
+       so assistive technology hears the change when it happens rather than
+       when the element happens to appear.
+
+       One line of height is reserved so that showing the message does not
+       shove the rest of the form down. */
+    .form-status {
+        display: flex;
+        align-items: flex-start;
+        gap: 0.45rem;
+        min-height: 1.05rem;
+        font-size: 0.73rem;
+        line-height: 1.05rem;
+        color: var(--form-dim);
+    }
+
+    .form-status-icon {
+        flex-shrink: 0;
+        margin-top: 2px;
+        display: inline-flex;
+    }
+
+    .form-status-icon--error {
+        color: var(--form-danger);
+    }
+
+    .form-status-icon--ok {
+        color: var(--form-success);
+    }
+
+    .form-status-text {
+        min-width: 0;
+    }
+
+    /* ---- Password requirements (registration and settings) ----
+       One block, one idea: what the password still needs. The summary says
+       how much is left, the track shows it at a glance, and the list names
+       each rule and, while it is unmet, the specific thing to add.
+
+       The block sits inside the password field, so it inherits the field's
+       internal gap. It adds no margin of its own — that is what keeps the
+       vertical rhythm uniform.
+
+       It appears on two screens — the registration form and the settings
+       page — so it is written once here, against the shared form tokens,
+       and cannot disagree with itself about what the policy is. */
+    .form-rules {
+        display: flex;
+        flex-direction: column;
+        gap: 0.55rem;
+        margin-top: 0.25rem;
+    }
+
+    /* Summary row: the sentence on the left, the count on the right. */
+    .form-rules-summary {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.75rem;
+    }
+
+    .form-rules-summary-text {
+        font-size: 0.73rem;
+        font-weight: 600;
+        color: var(--form-dim);
+        transition: color 0.2s ease;
+    }
+
+    /* The count is a quiet chip, not a badge — it states a ratio, it does
+       not announce good or bad. The colour clears 4.5:1 against the chip's
+       own background, so the number stays legible at its small size. */
+    .form-rules-badge {
+        flex-shrink: 0;
+        font-size: 0.66rem;
+        font-weight: 700;
+        letter-spacing: 0.04em;
+        font-variant-numeric: tabular-nums;
+        color: #8ea3c7;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid var(--form-border);
+        border-radius: 999px;
+        padding: 0.05rem 0.45rem;
+        transition: color 0.2s ease, background-color 0.2s ease, border-color 0.2s ease;
+    }
+
+    .form-rules-badge.is-done {
+        color: var(--form-success);
+        background: rgba(16, 185, 129, 0.12);
+        border-color: rgba(16, 185, 129, 0.35);
+    }
+
+    /* Progress track: one segment per rule, spanning the full width of the
+       form column so the bar reads as the width of the whole requirement
+       set rather than as a short decoration. */
+    .form-rules-track {
+        display: flex;
+        gap: 4px;
+        width: 100%;
+    }
+
+    .form-rules-seg {
+        flex: 1;
+        height: 3px;
+        background: var(--form-border);
+        border-radius: 2px;
+        transition: background 0.2s ease;
+    }
+
+    .form-rules-seg.is-filled {
+        background: var(--form-accent-hi);
+    }
+
+    /* The rules, stacked. A column reads faster than a wrapped row, and
+       never breaks a rule across lines. */
+    .form-rules-list {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        display: grid;
+        gap: 0.3rem;
+    }
+
+    .form-rule {
+        display: flex;
+        align-items: baseline;
+        gap: 0.5rem;
+        font-size: 0.75rem;
+        line-height: 1.5;
+        color: var(--form-dim);
+        transition: color 0.15s ease;
+    }
+
+    /* The rule and, while it is unmet, the specific thing to add. The
+       detail sits after the label on the same line, so a rule never grows
+       into a two-line block and pushes the list out of shape. */
+    .form-rule-text {
+        display: flex;
+        align-items: baseline;
+        gap: 0.4rem;
+        flex-wrap: wrap;
+        min-width: 0;
+    }
+
+    .form-rule-label {
+        font-weight: 500;
+    }
+
+    /* The specific thing still to add. It is styled as an instruction, not
+       as a second label, so the eye lands on the one unmet rule. */
+    .form-rule-detail {
+        font-size: 0.7rem;
+        font-weight: 600;
+        color: var(--form-accent-hi);
+        white-space: nowrap;
+    }
+
+    /* One icon slot per rule. The check and the empty circle are stacked and
+       swapped by CSS, so each rule needs only one element rather than two
+       conditionally rendered SVGs. */
+    .form-rule-icon {
+        position: relative;
+        flex-shrink: 0;
+        width: 13px;
+        height: 13px;
+        /* Lined up with the first line of the label, not the middle of the
+           two-line block. */
+        align-self: flex-start;
+        margin-top: 3px;
+        display: inline-flex;
+    }
+
+    .form-rule-icon svg {
+        position: absolute;
+        inset: 0;
+        transition: opacity 0.15s ease;
+    }
+
+    .form-rule-check {
+        opacity: 0;
+    }
+
+    .form-rule-dot {
+        opacity: 1;
+    }
+
+    .form-rule.is-met {
+        color: var(--form-success);
+    }
+
+    .form-rule.is-met .form-rule-detail {
+        opacity: 0;
+    }
+
+    .form-rule.is-met .form-rule-check {
+        opacity: 1;
+    }
+
+    .form-rule.is-met .form-rule-dot {
+        opacity: 0;
+    }
+
+    /* The condensed form the settings page uses.
+
+       The registration form is one column and the checklist is the
+       focus of the field it sits under, so it can afford a summary,
+       a track and four rows. On the settings page it is a supporting
+       note under a form that is about something else, so it is
+       condensed to a single line of four ticks — the same four rules,
+       said in the same words, with the summary folded away. */
+    .form-rules--compact {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 0.4rem 1rem;
+        margin-top: 0.6rem;
+    }
+
+    .form-rules--compact .form-rules-summary,
+    .form-rules--compact .form-rules-track {
+        display: none;
+    }
+
+    .form-rules--compact .form-rules-list {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.4rem 1rem;
+    }
+
+    .form-rules--compact .form-rule {
+        align-items: center;
+        font-size: 0.73rem;
+    }
+}
+
+/* ============================================================
+    AUTH — Sign in / Create account
+    Two-column shell: a quiet brand rail on the left, the
+    credential form on the right. Built from the same tokens
+    as the rest of the app (no new hues, no new radii).
+   ============================================================ */
+@layer components {
+    .auth-shell {
+        --auth-surface: var(--card-surface);
+        --auth-border-soft: var(--card-border);
+        /* The hairline on the credential screens' own containers. It was
+           used without ever being declared, so those borders fell back
+           to the initial value and rendered as nothing at all. */
+        --auth-border: var(--card-border);
+        --auth-accent: #4f5edd;
+        /* The brighter accent the brand rail and the auth links use. It
+           is the same hue as the shared form accent, lifted a step, so
+           the two never read as two different blues. */
+        --auth-accent-hi: var(--form-accent-hi);
+        --auth-surface-2: var(--form-surface-2);
+        --auth-accent-soft: rgba(79, 94, 221, 0.08);
+        --auth-accent-line: rgba(99, 102, 241, 0.28);
+        --auth-text: var(--card-text);
+        --auth-muted: var(--card-muted);
+        --auth-dim: var(--card-dim);
+
+        min-height: 100vh;
+        display: grid;
+        grid-template-columns: 1fr;
+        background: var(--color-bg);
+    }
+
+    @media (min-width: 960px) {
+        .auth-shell {
+            grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr);
+        }
+    }
+
+    /* ---- Brand rail (desktop only) ---- */
+    .auth-brand {
+        display: none;
+        position: relative;
+        overflow: hidden;
+        padding: 2.5rem 3.25rem 3.5rem;
+        border-right: 1px solid var(--color-border);
+        background:
+            radial-gradient(90% 70% at 0% 0%, rgba(79, 94, 221, 0.16) 0%, transparent 62%),
+            radial-gradient(70% 60% at 100% 100%, rgba(56, 189, 248, 0.07) 0%, transparent 60%),
+            #0b0e17;
+        flex-direction: column;
+        /* The wordmark is pinned to the top; the copy sits in the middle and
+           the footnote at the bottom. */
+        justify-content: space-between;
+        gap: 2.5rem;
+    }
+
+    @media (min-width: 960px) {
+        .auth-brand {
+            display: flex;
+        }
+    }
+
+    /* A faint 48px grid, matching the landing page's backdrop. */
+    .auth-brand::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background-image:
+            linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+        background-size: 48px 48px;
+        mask-image: linear-gradient(180deg, black 0%, transparent 70%);
+        pointer-events: none;
+    }
+
+    .auth-brand > * {
+        position: relative;
+        z-index: 1;
+    }
+
+    .auth-brand-logo {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        align-self: flex-start;
+        font-size: 1.05rem;
+        font-weight: 800;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+        color: var(--auth-text);
+        text-decoration: none;
+    }
+
+    .auth-brand-logo:hover {
+        opacity: 1;
+        color: var(--auth-text);
+    }
+
+    .auth-brand-mark {
+        width: 8px;
+        height: 18px;
+        background: var(--auth-accent);
+        border-radius: 2px;
+        flex-shrink: 0;
+    }
+
+    .auth-brand-copy {
+        max-width: 30rem;
+        /* Takes the slack between the wordmark above and the footnote
+           below, so the copy sits in the middle of the rail. */
+        margin: auto 0;
+    }
+
+    .auth-brand-eyebrow {
+        display: inline-block;
+        font-size: 0.66rem;
+        font-weight: 700;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: var(--auth-accent-hi);
+        border: 1px solid var(--form-border-hover);
+        background: rgba(79, 94, 221, 0.08);
+        padding: 0.3rem 0.85rem;
+        border-radius: var(--radius);
+        margin-bottom: 1.25rem;
+    }
+
+    .auth-brand-title {
+        font-size: clamp(1.65rem, 2.6vw, 2.15rem);
+        line-height: 1.2;
+        letter-spacing: -0.025em;
+        color: var(--auth-text);
+        margin: 0 0 0.9rem;
+    }
+
+    .auth-brand-title em {
+        font-style: normal;
+        color: var(--auth-accent-hi);
+    }
+
+    .auth-brand-sub {
+        font-size: 0.9rem;
+        line-height: 1.75;
+        color: var(--auth-muted);
+        margin: 0;
+        max-width: 26rem;
+    }
+
+    /* Feature list — the three things the product actually promises. */
+    .auth-brand-list {
+        list-style: none;
+        margin: 2rem 0 0;
+        padding: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 0.85rem;
+    }
+
+    .auth-brand-item {
+        display: flex;
+        align-items: flex-start;
+        gap: 0.7rem;
+        font-size: 0.85rem;
+        line-height: 1.6;
+        color: var(--auth-muted);
+    }
+
+    .auth-brand-item svg {
+        flex-shrink: 0;
+        margin-top: 3px;
+        color: var(--auth-accent-hi);
+    }
+
+    .auth-brand-foot {
+        font-size: 0.72rem;
+        color: #5c7090;
+        line-height: 1.6;
+    }
+
+    /* ---- Form column ---- */
+    .auth-panel {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        padding: 2.5rem 1.25rem 4rem;
+    }
+
+    @media (min-width: 640px) {
+        .auth-panel {
+            padding: 3.5rem 2.5rem 4.5rem;
+        }
+    }
+
+    @media (min-width: 960px) {
+        .auth-panel {
+            padding: 4rem 3.5rem;
+        }
+    }
+
+    .auth-panel-inner {
+        width: 100%;
+        max-width: 25rem;
+        margin: 0 auto;
+        /* No card here on purpose: the credential form sits directly on the
+           page, not inside a second container. The fields carry their own
+           surfaces and borders, so the form still reads as a form without
+           wrapping the whole thing in a box. */
+        padding: clamp(1.5rem, 4vw, 2.25rem);
+    }
+
+    /* The wordmark shown where the brand rail is not. It is the screen's
+       own way back to the landing page, since there is no site nav here.
+       On desktop the rail carries the wordmark instead, so this is hidden. */
+    .auth-home-link {
+        display: flex;
+        align-items: center;
+        justify-content: flex-start;
+        gap: 0.5rem;
+        /* Top-left above the form on small screens. */
+        margin-bottom: 2rem;
+        font-size: 1.05rem;
+        font-weight: 800;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+        color: var(--auth-text);
+        text-decoration: none;
+    }
+
+    @media (min-width: 960px) {
+        .auth-home-link {
+            display: none;
+        }
+    }
+
+    .auth-home-link:hover {
+        opacity: 1;
+        color: var(--auth-text);
+    }
+
+    .auth-home-link .auth-brand-mark {
+        background: var(--auth-accent);
+    }
+
+    /* The header and the form are separated by the form's own top margin,
+       so the space between them is set once, in one place. */
+    .auth-head {
+        margin-bottom: 0;
+    }
+
+    .auth-eyebrow {
+        display: block;
+        font-size: 0.68rem;
+        font-weight: 700;
+        letter-spacing: 0.09em;
+        text-transform: uppercase;
+        color: var(--auth-dim);
+        margin-bottom: 0.45rem;
+    }
+
+    .auth-title {
+        font-size: clamp(1.5rem, 3.4vw, 1.85rem);
+        font-weight: 700;
+        letter-spacing: -0.03em;
+        color: var(--auth-text);
+        margin: 0 0 0.4rem;
+    }
+
+    .auth-sub {
+        font-size: 0.875rem;
+        line-height: 1.6;
+        color: var(--auth-muted);
+        margin: 0;
+    }
+
+    /* ---- Form ----
+       Every field sits on the same rhythm. The gap between fields is the
+       form's only vertical rhythm, so it is set once here and never
+       overridden with a margin further down. */
+    .auth-form {
+        display: flex;
+        flex-direction: column;
+        gap: 1.25rem;
+        margin-top: 1.75rem;
+    }
+
+    /* Banner for form-level failures (bad credentials, lockout). */
+    .auth-alert {
+        display: flex;
+        align-items: flex-start;
+        gap: 0.7rem;
+        margin-top: 1.75rem;
+        padding: 0.8rem 0.95rem;
+        background: rgba(239, 68, 68, 0.08);
+        border: 1px solid rgba(239, 68, 68, 0.28);
+        border-radius: 4px;
+        font-size: 0.8rem;
+        line-height: 1.55;
+        color: #fca5a5;
+    }
+
+    .auth-alert svg {
+        flex-shrink: 0;
+        margin-top: 1px;
+        color: var(--form-danger);
+    }
+
+    /* ---- Options row ---- */
+    .auth-options {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.75rem;
+        flex-wrap: wrap;
+    }
+
+    .auth-check {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.55rem;
+        font-size: 0.8rem;
+        color: var(--auth-muted);
+        cursor: pointer;
+        user-select: none;
+    }
+
+    .auth-check input[type="checkbox"] {
+        appearance: none;
+        -webkit-appearance: none;
+        width: 16px;
+        height: 16px;
+        margin: 0;
+        flex-shrink: 0;
+        border: 1px solid var(--form-border-hover);
+        border-radius: 3px;
+        background: var(--auth-surface-2);
+        cursor: pointer;
+        display: inline-grid;
+        place-content: center;
+        transition: background-color 0.15s ease, border-color 0.15s ease;
+    }
+
+    .auth-check input[type="checkbox"]::before {
+        content: "";
+        width: 9px;
+        height: 9px;
+        transform: scale(0);
+        transition: transform 0.12s ease;
+        clip-path: polygon(14% 44%, 0 65%, 40% 100%, 100% 16%, 84% 0%, 38% 66%);
+        background: #fff;
+    }
+
+    .auth-check input[type="checkbox"]:checked {
+        background: var(--auth-accent);
+        border-color: var(--auth-accent);
+    }
+
+    .auth-check input[type="checkbox"]:checked::before {
+        transform: scale(1);
+    }
+
+    .auth-check:hover input[type="checkbox"] {
+        border-color: var(--auth-accent-hi);
+    }
+
+    .auth-link-quiet {
+        font-size: 0.8rem;
+        font-weight: 600;
+        color: var(--auth-accent-hi);
+        text-decoration: none;
+    }
+
+    .auth-link-quiet:hover {
+        color: var(--card-accent-soft);
+        opacity: 1;
+    }
+
+    /* ---- Submit button ---- */
+    .auth-submit {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.55rem;
+        width: 100%;
+        padding: 0.8rem 1.25rem;
+        background: var(--auth-accent);
+        border: 1px solid #3d4bc9;
+        border-radius: 4px;
+        color: #fff;
+        font-family: inherit;
+        font-size: 0.9rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition:
+            background-color 0.15s ease,
+            box-shadow 0.15s ease,
+            transform 0.15s ease;
+    }
+
+    .auth-submit:hover {
+        background: #3d4bc9;
+        box-shadow: 0 6px 20px rgba(79, 94, 221, 0.35);
+        transform: translateY(-1px);
+    }
+
+    .auth-submit:active {
+        transform: translateY(0);
+        box-shadow: none;
+    }
+
+    /* ---- Divider + alternate action ---- */
+    .auth-alt {
+        margin-top: 1.75rem;
+        padding-top: 1.5rem;
+        border-top: 1px solid var(--auth-border-soft);
+        text-align: center;
+        font-size: 0.83rem;
+        color: var(--auth-muted);
+    }
+
+    .auth-alt a {
+        color: var(--auth-accent-hi);
+        font-weight: 600;
+        text-decoration: none;
+    }
+
+    .auth-alt a:hover {
+        color: var(--card-accent-soft);
+        opacity: 1;
+    }
+
+    /* ---- Legal note ---- */
+    .auth-legal {
+        margin-top: 1.5rem;
+        font-size: 0.73rem;
+        line-height: 1.6;
+        color: var(--auth-dim);
+        text-align: center;
+    }
+
+    /* ---- Demo account: a quiet, collapsible row ----
+       The credentials are a convenience for evaluators, not the primary call
+       to action, so they stay collapsed behind one understated row instead of
+       occupying a large panel above or below the form. */
+    .auth-demo {
+        margin-top: 1.5rem;
+        border: 1px solid var(--auth-border);
+        border-radius: 4px;
+        background: rgba(255, 255, 255, 0.015);
+        overflow: hidden;
+    }
+
+    .auth-demo-summary {
+        display: flex;
+        align-items: center;
+        gap: 0.55rem;
+        padding: 0.7rem 0.9rem;
+        cursor: pointer;
+        list-style: none;
+        user-select: none;
+        color: var(--auth-muted);
+        transition: background-color 0.15s ease, color 0.15s ease;
+    }
+
+    /* Hide the default disclosure triangle; a chevron replaces it. */
+    .auth-demo-summary::-webkit-details-marker {
+        display: none;
+    }
+
+    .auth-demo-summary:hover {
+        background: rgba(255, 255, 255, 0.03);
+        color: var(--card-label);
+    }
+
+    .auth-demo-summary:focus-visible {
+        outline: 2px solid var(--card-accent-soft);
+        outline-offset: -2px;
+    }
+
+    .auth-demo-summary-icon {
+        flex-shrink: 0;
+        color: var(--auth-dim);
+    }
+
+    .auth-demo-summary-text {
+        font-size: 0.79rem;
+        font-weight: 600;
+        flex: 1;
+    }
+
+    .auth-demo-chevron {
+        flex-shrink: 0;
+        color: var(--auth-dim);
+        transition: transform 0.2s ease;
+    }
+
+    .auth-demo[open] .auth-demo-chevron {
+        transform: rotate(180deg);
+    }
+
+    .auth-demo[open] .auth-demo-summary {
+        border-bottom: 1px solid var(--auth-border);
+    }
+
+    .auth-demo-body {
+        padding: 0.85rem 0.9rem 0.9rem;
+    }
+
+    .auth-demo-sub {
+        font-size: 0.74rem;
+        line-height: 1.55;
+        color: var(--auth-muted);
+        margin: 0 0 0.75rem;
+    }
+
+    .auth-demo-creds {
+        display: flex;
+        flex-direction: column;
+        gap: 0.4rem;
+    }
+
+    .auth-demo-cred {
+        display: flex;
+        align-items: center;
+        gap: 0.6rem;
+    }
+
+    .auth-demo-cred-label {
+        flex-shrink: 0;
+        /* Wide enough for "PASSWORD" at this size, so both credential values
+           start at the same x offset and the two rows line up. */
+        width: 4.5rem;
+        font-size: 0.66rem;
+        font-weight: 700;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        color: var(--auth-dim);
+    }
+
+    .auth-demo-cred-value {
+        /* A grid, so the value chip and the Copy button line up across both
+           credential rows despite the values being different lengths. */
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        align-items: center;
+        gap: 0.5rem;
+        flex: 1;
+        min-width: 0;
+    }
+
+    .auth-demo-cred-value code {
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.07);
+        padding: 0.2rem 0.45rem;
+        border-radius: var(--radius-sm);
+        font-size: 0.75rem;
+        color: #e2e8f7;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .auth-demo-copy {
+        flex-shrink: 0;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 3.25rem;
+        background: transparent;
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        border-radius: var(--radius-sm);
+        color: var(--auth-muted);
+        font-family: inherit;
+        font-size: 0.66rem;
+        font-weight: 600;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        padding: 0.22rem 0.45rem;
+        cursor: pointer;
+        transition: color 0.15s ease, border-color 0.15s ease, background-color 0.15s ease;
+    }
+
+    .auth-demo-copy:hover {
+        color: #e2e8f7;
+        border-color: rgba(255, 255, 255, 0.24);
+        background: rgba(255, 255, 255, 0.04);
+    }
+
+    .auth-demo-copy.is-copied {
+        color: #6ee7b7;
+        border-color: rgba(16, 185, 129, 0.4);
+        background: rgba(16, 185, 129, 0.1);
+    }
+
+    /* The clipboard can be unavailable (insecure context, or the browser
+       denied permission). Say so rather than failing silently. */
+    .auth-demo-copy.is-failed {
+        color: #fca5a5;
+        border-color: rgba(239, 68, 68, 0.4);
+        background: rgba(239, 68, 68, 0.1);
+    }
+
+    .auth-demo-cta {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.4rem;
+        width: 100%;
+        margin-top: 0.75rem;
+        background: rgba(99, 102, 241, 0.12);
+        border: 1px solid rgba(129, 140, 248, 0.4);
+        border-radius: var(--radius);
+        color: #c7d2fe;
+        font-size: 0.78rem;
+        font-weight: 600;
+        padding: 0.5rem 1rem;
+        text-decoration: none;
+        transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+    }
+
+    .auth-demo-cta:hover {
+        background: rgba(99, 102, 241, 0.2);
+        border-color: rgba(129, 140, 248, 0.65);
+        color: #e0e7ff;
+        opacity: 1;
+    }
+
+    /* Puts the demo credentials into the sign-in form in one click. It is a
+       quiet outline button, not a filled one: signing in is still the page's
+       primary action. */
+    .auth-demo-fill {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.4rem;
+        width: 100%;
+        margin-top: 0.75rem;
+        background: transparent;
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        border-radius: var(--radius);
+        color: var(--auth-muted);
+        font-family: inherit;
+        font-size: 0.78rem;
+        font-weight: 600;
+        padding: 0.5rem 1rem;
+        cursor: pointer;
+        transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+    }
+
+    .auth-demo-fill:hover {
+        background: rgba(255, 255, 255, 0.04);
+        border-color: rgba(255, 255, 255, 0.24);
+        color: #e2e8f7;
+    }
+
+    .auth-demo-fill.is-filled {
+        color: #6ee7b7;
+        border-color: rgba(16, 185, 129, 0.4);
+        background: rgba(16, 185, 129, 0.1);
+    }
+}
+
+/* ============================================================
+    DEMO ACCOUNT PANEL
+    Shared by the sign-in and sign-up pages.
+   ============================================================ */
+@layer components {
+    .demo-box {
+        margin-top: 1.5rem;
+        padding: 1rem 1.1rem;
+        background: rgba(79, 94, 221, 0.07);
+        border: 1px solid rgba(99, 102, 241, 0.24);
+        border-radius: var(--radius-lg);
+    }
+
+    .demo-box-head {
+        display: flex;
+        align-items: flex-start;
+        gap: 0.7rem;
+        margin-bottom: 0.85rem;
+    }
+
+    .demo-box-icon {
+        flex-shrink: 0;
+        width: 28px;
+        height: 28px;
+        border-radius: 7px;
+        background: rgba(99, 102, 241, 0.14);
+        border: 1px solid rgba(99, 102, 241, 0.28);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--card-accent-soft);
+    }
+
+    .demo-box-titles {
+        min-width: 0;
+    }
+
+    .demo-box-title {
+        font-size: 0.86rem;
+        font-weight: 700;
+        color: #e2e8f7;
+        line-height: 1.4;
+        margin-bottom: 0.15rem;
+    }
+
+    .demo-box-sub {
+        font-size: 0.76rem;
+        color: #8fa3c7;
+        line-height: 1.55;
+    }
+
+    .demo-credentials {
+        display: flex;
+        flex-direction: column;
+        gap: 0.45rem;
+    }
+
+    .demo-credential {
+        display: flex;
+        align-items: center;
+        gap: 0.7rem;
+        flex-wrap: wrap;
+    }
+
+    .demo-credential-label {
+        flex-shrink: 0;
+        width: 58px;
+        font-size: 0.68rem;
+        font-weight: 700;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        color: #8fa3c7;
+    }
+
+    .demo-credential-value {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        min-width: 0;
+        flex: 1;
+    }
+
+    .demo-credential-value code {
+        background: rgba(255, 255, 255, 0.06);
+        border: 1px solid rgba(255, 255, 255, 0.07);
+        padding: 0.22rem 0.5rem;
+        border-radius: var(--radius);
+        font-size: 0.78rem;
+        color: #e2e8f7;
+        word-break: break-all;
+    }
+
+    .demo-copy {
+        flex-shrink: 0;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 52px;
+        background: transparent;
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        border-radius: var(--radius);
+        color: #8fa3c7;
+        font-family: inherit;
+        font-size: 0.68rem;
+        font-weight: 600;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        padding: 0.24rem 0.5rem;
+        cursor: pointer;
+        transition:
+            color 0.15s ease,
+            border-color 0.15s ease,
+            background 0.15s ease;
+    }
+
+    .demo-copy:hover {
+        color: #e2e8f7;
+        border-color: rgba(255, 255, 255, 0.24);
+        background: rgba(255, 255, 255, 0.04);
+    }
+
+    .demo-copy:focus-visible {
+        outline: 2px solid #818cf8;
+        outline-offset: 2px;
+    }
+
+    .demo-copy.is-copied {
+        color: #6ee7b7;
+        border-color: rgba(16, 185, 129, 0.4);
+        background: rgba(16, 185, 129, 0.1);
+    }
+
+    .demo-copy-label.is-success {
+        color: inherit;
+    }
+
+    .demo-note {
+        margin-top: 0.85rem;
+        padding-top: 0.7rem;
+        border-top: 1px solid rgba(255, 255, 255, 0.07);
+        font-size: 0.71rem;
+        color: #6f86ab;
+        line-height: 1.55;
+    }
+
+    .demo-actions {
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+
+    .demo-actions .demo-note {
+        margin-top: 0;
+    }
+
+    .demo-cta {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.4rem;
+        width: 100%;
+        background: rgba(99, 102, 241, 0.12);
+        border: 1px solid rgba(129, 140, 248, 0.4);
+        border-radius: var(--radius);
+        color: #c7d2fe;
+        font-size: 0.8rem;
+        font-weight: 600;
+        padding: 0.55rem 1rem;
+        transition:
+            background 0.15s ease,
+            border-color 0.15s ease,
+            color 0.15s ease;
+    }
+
+    .demo-cta:hover {
+        background: rgba(99, 102, 241, 0.2);
+        border-color: rgba(129, 140, 248, 0.65);
+        color: #e0e7ff;
+        opacity: 1;
+    }
+
+    .demo-cta:focus-visible {
+        outline: 2px solid #818cf8;
+        outline-offset: 2px;
+    }
+}
+
+/* ============================================================
+    APPLICATION SURFACE — shared shell + page system
+   ------------------------------------------------------------
+   One layer for every signed-in page outside the debate arena.
+   Built entirely from the tokens already defined at the top of
+   this file: --color-bg / -surface / -surface-2 / -border /
+   -accent / -accent-2, and the 2–6px radius scale. No new hues,
+   no new radii, no new spacing scale — the pages read as one
+   product because they share one vocabulary.
+
+   Naming: `.app-*` for the shell, `.surf-*` for page furniture.
+   ============================================================ */
+@layer components {
+    /* ---- Shell tokens ---------------------------------------------
+       These are the shell-local aliases of the global tokens, so a
+       shell change never reaches into a page's own styles. */
+    .app-shell {
+        --app-surface: var(--color-surface);
+        --app-surface-2: var(--color-surface-2);
+        --app-border: var(--color-border);
+        --app-border-hover: var(--color-border-hover);
+        --app-accent: var(--color-accent);
+        --app-accent-2: var(--color-accent-2);
+        --app-text: var(--color-text);
+        --app-muted: var(--color-text-muted);
+        --app-dim: var(--color-text-dim);
+        --app-radius: var(--radius-lg);
+        --app-header-h: 60px;
+        --app-side-w: 248px;
+    }
+
+    /* ---- Content offset ----------------------------------------------
+       The shell bar is fixed, so the page content is pushed down by
+       its height. */
+    #main-content {
+        padding-top: var(--app-header-h, 60px);
+    }
+
+    body.is-auth #main-content {
+        padding-top: 0;
+    }
+
+    /* The sidebar is fixed to the left edge, so the page content is
+       pushed across by its width instead of down. */
+    body.has-side #main-content {
+        padding-top: 0;
+        padding-left: var(--app-side-w, 248px);
+    }
+
+    /* ---- App top bar -----------------------------------------------
+       The bar sits over the page and is the only fixed element.
+       It is a hairline-bordered strip: brand on the left, primary
+       navigation in the middle, account on the right. */
+    .app-nav {
+        position: fixed;
+        inset: 0 0 auto 0;
+        height: var(--app-header-h);
+        display: flex;
+        align-items: center;
+        gap: 1.5rem;
+        padding: 0 1.5rem;
+        background: rgba(9, 11, 16, 0.92);
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
+        border-bottom: 1px solid var(--color-border);
+        z-index: 100;
+    }
+
+    .app-nav-brand {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.55rem;
+        flex-shrink: 0;
+        font-size: 0.95rem;
+        font-weight: 800;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--color-text);
+        text-decoration: none;
+    }
+
+    .app-nav-brand:hover {
+        opacity: 1;
+        color: var(--color-text);
+    }
+
+    .app-nav-mark {
+        width: 6px;
+        height: 16px;
+        border-radius: 1px;
+        background: var(--color-accent);
+        flex-shrink: 0;
+    }
+
+    .app-nav-divider {
+        width: 1px;
+        height: 20px;
+        background: var(--color-border);
+        flex-shrink: 0;
+    }
+
+    /* ---- Primary navigation ---- */
+    .app-nav-links {
+        display: flex;
+        align-items: center;
+        gap: 0.15rem;
+        flex: 1;
+        min-width: 0;
+    }
+
+    .app-nav-link {
+        position: relative;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.45rem;
+        height: 34px;
+        padding: 0 0.7rem;
+        border-radius: var(--radius);
+        font-size: 0.8rem;
+        font-weight: 600;
+        color: var(--color-text-muted);
+        text-decoration: none;
+        white-space: nowrap;
+        transition:
+            color 0.15s ease,
+            background-color 0.15s ease;
+    }
+
+    .app-nav-link:hover {
+        color: var(--color-text);
+        background: rgba(255, 255, 255, 0.05);
+        opacity: 1;
+    }
+
+    /* The active item is marked by an accent underline rather than a
+       filled pill, so the bar does not look like a set of buttons. */
+    .app-nav-link.is-active {
+        color: var(--color-text);
+    }
+
+    .app-nav-link.is-active::after {
+        content: "";
+        position: absolute;
+        left: 0.7rem;
+        right: 0.7rem;
+        bottom: -13px;
+        height: 2px;
+        background: var(--color-accent);
+        border-radius: 1px;
+    }
+
+    .app-nav-link svg {
+        color: var(--color-text-dim);
+        transition: color 0.15s ease;
+    }
+
+    .app-nav-link:hover svg,
+    .app-nav-link.is-active svg {
+        color: var(--color-accent-2);
+    }
+
+    /* ---- Right-hand actions ---- */
+    .app-nav-actions {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin-left: auto;
+        flex-shrink: 0;
+    }
+
+    /* The landing page's single way back into the product. It sits in the
+       nav rather than in a popover because the landing page is a
+       marketing surface: a visitor who has already signed in should not
+       have to open a menu to get back to work. */
+    .app-nav-dashboard {
+        gap: 0.35rem;
+    }
+
+    .app-nav-dashboard svg {
+        flex-shrink: 0;
+    }
+
+    .app-nav-toggle {
+        display: none;
+        align-items: center;
+        justify-content: center;
+        width: 34px;
+        height: 34px;
+        background: transparent;
+        border: 1px solid var(--color-border);
+        border-radius: var(--radius);
+        color: var(--color-text);
+        cursor: pointer;
+        transition: background-color 0.15s ease, border-color 0.15s ease;
+    }
+
+    .app-nav-toggle:hover {
+        background: var(--color-surface-2);
+        border-color: var(--color-border-hover);
+    }
+
+    /* ---- Sidebar -----------------------------------------------------
+       The signed-in workspace sits behind a fixed rail. The rail is a
+       column, so the destinations stack instead of spreading across a
+       wide bar, and the identity block has a permanent home at the foot
+       of it.
+
+       It is built as four bands divided by hairlines — brand, action,
+       destinations, identity — so each part of the rail can be found
+       without reading every link. */
+    .app-side {
+        /* The rail's own dim tone. The app-wide --color-text-dim is
+           tuned for large surfaces and lands at 3.9:1 here, short of
+           the 4.5:1 WCAG AA asks of normal text. This is a shade
+           lighter, so the small labels and the email line clear the
+           bar without the whole app's palette moving. */
+        --app-side-dim: #7c8ba1;
+
+        position: fixed;
+        top: 0;
+        left: 0;
+        bottom: 0;
+        width: var(--app-side-w, 248px);
+        z-index: 200;
+        background: var(--color-surface);
+        border-right: 1px solid var(--color-border);
+    }
+
+    .app-side-inner {
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+        overflow: hidden;
+    }
+
+    /* ---- Band 1 · Brand ------------------------------------------------
+       A solid band at the top of the rail. The wordmark is the only
+       thing on it, so the product's identity is never in doubt. */
+    .app-side-brand {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.5rem;
+        flex-shrink: 0;
+        height: var(--app-header-h, 60px);
+        padding: 0 0.85rem 0 1rem;
+        border-bottom: 1px solid var(--color-border);
+    }
+
+    .app-side-brand-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.55rem;
+        min-width: 0;
+        color: var(--color-text);
+        text-decoration: none;
+    }
+
+    .app-side-brand-link:hover {
+        opacity: 1;
+        color: var(--color-text);
+    }
+
+    .app-side-brand-mark {
+        width: 6px;
+        height: 16px;
+        border-radius: 1px;
+        background: var(--color-accent);
+        flex-shrink: 0;
+    }
+
+    .app-side-brand-name {
+        font-size: 0.88rem;
+        font-weight: 800;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: var(--color-text);
+    }
+
+    /* The rail is always on screen on wide viewports, so its close
+       button has nothing to close there. */
+    .app-side-close {
+        display: none;
+        align-items: center;
+        justify-content: center;
+        width: 30px;
+        height: 30px;
+        flex-shrink: 0;
+        background: transparent;
+        border: 1px solid var(--color-border);
+        border-radius: var(--radius);
+        color: var(--color-text-muted);
+        cursor: pointer;
+        transition:
+            background-color 0.15s ease,
+            border-color 0.15s ease,
+            color 0.15s ease;
+    }
+
+    .app-side-close:hover {
+        background: var(--color-surface-2);
+        border-color: var(--color-border-hover);
+        color: var(--color-text);
+    }
+
+    /* ---- Band 2 · Action and destinations ----------------------------
+       The scrollable middle of the rail. It holds the primary action
+       and then the grouped links.
+
+       The band itself carries no side padding: the rows run full-bleed
+       to the rail's edge so the active marker can sit flush against it
+       and the hover tint can fill the row. Each element supplies its
+       own inset instead. */
+    .app-side-body {
+        flex: 1 1 auto;
+        min-height: 0;
+        overflow-y: auto;
+        overscroll-behavior: contain;
+        padding: 1rem 0 1.1rem;
+    }
+
+    /* Starting a debate is what the product exists for, so it is a
+       button at the top of the rail rather than one more link in the
+       list below it. The shortcut badge is honest: the key is wired
+       up in resources/js/app.js.
+
+       The selector carries .surf-btn as well, because the shared button
+       family is declared further down this file and would otherwise win
+       the tie on padding and alignment. */
+    .app-side-cta.surf-btn {
+        display: flex;
+        align-items: center;
+        justify-content: flex-start;
+        gap: 0.5rem;
+        width: calc(100% - 1.7rem);
+        height: 38px;
+        margin: 0 0.85rem 1.35rem;
+        padding: 0 0.7rem;
+    }
+
+    .app-side-cta.is-active {
+        background: #3d4bc9;
+    }
+
+    .app-side-cta span {
+        flex-shrink: 0;
+    }
+
+    .app-side-kbd {
+        margin-left: auto;
+        padding: 0.05rem 0.3rem;
+        border: 1px solid rgba(255, 255, 255, 0.24);
+        border-radius: var(--radius-sm);
+        background: rgba(255, 255, 255, 0.1);
+        color: rgba(255, 255, 255, 0.78);
+        font-family: inherit;
+        font-size: 0.6rem;
+        font-weight: 700;
+        line-height: 1.5;
+        letter-spacing: 0.04em;
+    }
+
+    /* A secondary action placed above the navigation. */
+    .app-side-actions {
+        padding: 0 0.85rem 1rem;
+    }
+
+    .app-side-actions > * {
+        width: 100%;
+    }
+
+    .app-side-nav {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .app-side-group {
+        display: flex;
+        flex-direction: column;
+        gap: 0.15rem;
+    }
+
+    /* Groups are separated by a clear gap, so a heading never reads as
+       the tail of the group above it. The label carries the break; the
+       gap gives it room to breathe. */
+    .app-side-group + .app-side-group {
+        margin-top: 1.15rem;
+    }
+
+    /* The session block sits at the bottom of the list, separated by a
+       rule, so ending the session reads as a different act from moving
+       around the product. */
+    .app-side-group--session {
+        margin-top: 1.1rem;
+    }
+
+    .app-side-sep {
+        height: 0;
+        margin: 0 1rem 0.55rem;
+        border: 0;
+        border-top: 1px solid var(--color-border);
+    }
+
+    /* Section headings break the rail into groups instead of one long
+       undifferentiated list.
+
+       The label is small but it is still text a reader has to read, so
+       it uses the rail's own dim tone rather than the app-wide one:
+       --color-text-dim only reaches 3.9:1 against the rail's surface,
+       which is short of the 4.5:1 that WCAG AA asks of normal text. */
+    .app-side-label {
+        display: block;
+        padding: 0 1rem 0.45rem;
+        font-size: 0.62rem;
+        font-weight: 700;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: var(--app-side-dim);
+    }
+
+    /* The first group needs no lead-in: the primary action above it
+       already marks the start of the list. */
+    .app-side-group:first-child .app-side-label {
+        padding-top: 0;
+    }
+
+    /* The row is full-bleed — the hover tint and the active marker
+       reach the rail's edge — while the icon and the label sit on a
+       1rem inset that lines them up with the wordmark above. */
+    .app-side-link {
+        position: relative;
+        display: flex;
+        align-items: center;
+        gap: 0.65rem;
+        height: 36px;
+        padding: 0 1rem;
+        border-radius: 0;
+        font-size: 0.82rem;
+        font-weight: 500;
+        color: var(--color-text-muted);
+        text-decoration: none;
+        white-space: nowrap;
+        transition:
+            color 0.15s ease,
+            background-color 0.15s ease;
+    }
+
+    .app-side-link:hover {
+        color: var(--color-text);
+        background: var(--color-surface-2);
+        opacity: 1;
+    }
+
+    .app-side-link svg {
+        flex-shrink: 0;
+        color: var(--app-side-dim);
+        transition: color 0.15s ease;
+    }
+
+    .app-side-link:hover svg {
+        color: var(--color-text-muted);
+    }
+
+    /* Long labels ellipsize rather than pushing the icon out of the
+       row, so the rail keeps its shape at any name length. */
+    .app-side-text {
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    /* The active destination carries a filled tint, an accent icon and
+       a rail marker. One treatment, three signals — colour is never the
+       only one. */
+    .app-side-link.is-active {
+        color: var(--color-text);
+        font-weight: 600;
+        background: rgba(79, 94, 221, 0.14);
+    }
+
+    .app-side-link.is-active svg {
+        color: var(--color-accent-2);
+    }
+
+    .app-side-link.is-active::before {
+        content: "";
+        position: absolute;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        width: 3px;
+        background: var(--color-accent);
+    }
+
+    /* Signing out is a form, not a link, so the button has to be reset
+       to the same shape as a rail link before it can sit among them. */
+    .app-side-form {
+        margin: 0;
+    }
+
+    .app-side-form .app-side-link {
+        width: 100%;
+        background: none;
+        border: 0;
+        font-family: inherit;
+        cursor: pointer;
+        text-align: left;
+    }
+
+    /* The one destructive action in the rail. It is marked in colour
+       and by the icon, so the difference is not carried by hue alone. */
+    .app-side-link.is-danger {
+        color: var(--color-text-muted);
+    }
+
+    .app-side-link.is-danger svg {
+        color: var(--app-side-dim);
+    }
+
+    .app-side-link.is-danger:hover {
+        color: #fca5a5;
+        background: rgba(239, 68, 68, 0.1);
+    }
+
+    .app-side-link.is-danger:hover svg {
+        color: var(--form-danger);
+    }
+
+    /* ---- Band 3 · Identity ---------------------------------------------
+       The account block states who you are. It is pinned to the foot of
+       the rail so that answer is always in the same place. */
+    .app-side-user {
+        display: flex;
+        align-items: center;
+        gap: 0.6rem;
+        flex-shrink: 0;
+        padding: 0.8rem 1rem;
+        border-top: 1px solid var(--color-border);
+        background: var(--color-bg);
+    }
+
+    .app-side-user-avatar {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 30px;
+        height: 30px;
+        flex-shrink: 0;
+        border-radius: var(--radius);
+        background: linear-gradient(135deg, #4f5edd, #7c6cf5);
+        color: #fff;
+        font-size: 0.68rem;
+        font-weight: 800;
+        letter-spacing: 0.02em;
+    }
+
+    .app-side-user-body {
+        display: flex;
+        flex-direction: column;
+        min-width: 0;
+        flex: 1;
+    }
+
+    .app-side-user-name {
+        font-size: 0.79rem;
+        font-weight: 600;
+        color: var(--color-text);
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .app-side-user-email {
+        font-size: 0.68rem;
+        font-weight: 400;
+        color: var(--app-side-dim);
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .app-side-guest {
+        display: flex;
+        flex-direction: column;
+        gap: 0.45rem;
+        width: 100%;
+    }
+
+    /* ---- Scrim (narrow viewports only) ----
+       It lives outside the rail in the markup so it dims the page
+       behind the drawer, not the drawer itself. */
+    .app-side-scrim {
+        display: none;
+        position: fixed;
+        inset: 0;
+        z-index: 190;
+        background: rgba(5, 7, 13, 0.72);
+        backdrop-filter: blur(2px);
+        -webkit-backdrop-filter: blur(2px);
+    }
+
+    /* ---- The mobile bar ----------------------------------------------
+       Below the breakpoint the rail becomes a drawer, so the page needs
+       a bar of its own to open it. It is a real bar in the flow rather
+       than a floating button, so it never sits on top of the page
+       title. On wide viewports the rail is always visible, so the bar
+       has nothing to do and stays out of the way. */
+    .app-side-bar {
+        display: none;
+    }
+
+    .app-side-open {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 34px;
+        height: 34px;
+        flex-shrink: 0;
+        background: transparent;
+        border: 1px solid var(--color-border);
+        border-radius: var(--radius);
+        color: var(--color-text);
+        cursor: pointer;
+        transition:
+            background-color 0.15s ease,
+            border-color 0.15s ease;
+    }
+
+    .app-side-open:hover {
+        background: var(--color-surface-2);
+        border-color: var(--color-border-hover);
+    }
+
+    /* ---- Account menu ---- */
+    .app-account {
+        position: relative;
+    }
+
+    .app-account-trigger {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        height: 34px;
+        padding: 0 0.45rem 0 0.3rem;
+        border: 1px solid var(--color-border);
+        border-radius: var(--radius);
+        background: var(--color-surface);
+        color: var(--color-text-muted);
+        font-family: inherit;
+        font-size: 0.78rem;
+        font-weight: 600;
+        cursor: pointer;
+        max-width: 190px;
+        transition:
+            border-color 0.15s ease,
+            background-color 0.15s ease,
+            color 0.15s ease;
+    }
+
+    .app-account-trigger:hover {
+        border-color: var(--color-border-hover);
+        background: var(--color-surface-2);
+        color: var(--color-text);
+    }
+
+    .app-account-name {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    /* The rail's own identity block is styled with the .app-side-user
+       family (see the sidebar section above). The generic account
+       styles below belong to the landing page's and the arena's
+       popovers. */
+
+    .app-account-avatar {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 24px;
+        height: 24px;
+        border-radius: 2px;
+        background: linear-gradient(135deg, #4f5edd, #7c6cf5);
+        color: #fff;
+        font-size: 0.62rem;
+        font-weight: 800;
+        letter-spacing: 0.02em;
+        flex-shrink: 0;
+    }
+
+    .app-account-menu {
+        position: absolute;
+        right: 0;
+        top: calc(100% + 0.5rem);
+        min-width: 236px;
+        padding: 0.35rem;
+        background: var(--card-surface);
+        border: 1px solid var(--card-border);
+        border-radius: 4px;
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
+        z-index: 100;
+    }
+
+    /* The rail's account block is a static card rather than a toggle,
+       so this popover now belongs to the landing page's nav alone. */
+
+    .app-account-meta {
+        display: flex;
+        align-items: center;
+        gap: 0.6rem;
+        padding: 0.55rem 0.55rem 0.7rem;
+        margin-bottom: 0.3rem;
+        border-bottom: 1px solid #111827;
+    }
+
+    .app-account-meta-body {
+        display: flex;
+        flex-direction: column;
+        min-width: 0;
+    }
+
+    .app-account-meta-name {
+        font-size: 0.82rem;
+        font-weight: 700;
+        color: var(--color-text);
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .app-account-meta-email {
+        font-size: 0.7rem;
+        color: var(--color-text-dim);
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .app-account-link {
+        display: flex;
+        align-items: center;
+        gap: 0.6rem;
+        width: 100%;
+        padding: 0.5rem 0.55rem;
+        border: none;
+        border-radius: 3px;
+        background: none;
+        color: var(--color-text-muted);
+        font-family: inherit;
+        font-size: 0.8rem;
+        font-weight: 500;
+        text-align: left;
+        text-decoration: none;
+        cursor: pointer;
+        transition:
+            background-color 0.15s ease,
+            color 0.15s ease;
+    }
+
+    .app-account-link:hover {
+        background: rgba(255, 255, 255, 0.05);
+        color: var(--color-text);
+        opacity: 1;
+    }
+
+    .app-account-link.is-danger:hover {
+        background: rgba(239, 68, 68, 0.1);
+        color: var(--form-danger);
+    }
+
+    /* ---- Page frame ----
+       Every signed-in page sits inside the same frame: a measured
+       column, a header block with an optional action slot, then
+       the content.
+
+       The frame also raises the dim text colour. The global
+       --color-text-dim is tuned for the roomier surfaces of the
+       marketing pages, but on a panel this dark it lands at 3.9:1 —
+       under the 4.5:1 that WCAG AA asks of ordinary text. The
+       labels, captions and table headers in here are all ordinary
+       text, so they get their own value. */
+    .surf {
+        --color-text-dim: #8492a8;
+
+        width: 100%;
+        max-width: 1240px;
+        margin: 0 auto;
+        padding: 2rem 1.5rem 4.5rem;
+    }
+
+    .surf--narrow {
+        max-width: 880px;
+    }
+
+    .surf--wide {
+        max-width: 1440px;
+    }
+
+    /* ---- Page header ---- */
+    .surf-head {
+        display: flex;
+        align-items: flex-end;
+        justify-content: space-between;
+        gap: 1.5rem;
+        flex-wrap: wrap;
+        margin-bottom: 1.75rem;
+    }
+
+    .surf-head-body {
+        min-width: 0;
+    }
+
+    .surf-eyebrow {
+        display: block;
+        font-size: 0.66rem;
+        font-weight: 700;
+        letter-spacing: 0.11em;
+        text-transform: uppercase;
+        color: var(--color-text-dim);
+        margin-bottom: 0.45rem;
+    }
+
+    .surf-title {
+        font-size: clamp(1.4rem, 2.6vw, 1.85rem);
+        font-weight: 700;
+        letter-spacing: -0.03em;
+        color: var(--color-text);
+        margin: 0 0 0.4rem;
+    }
+
+    .surf-subtitle {
+        font-size: 0.875rem;
+        line-height: 1.6;
+        color: var(--color-text-muted);
+        margin: 0;
+        max-width: 62ch;
+    }
+
+    .surf-head-actions {
+        display: flex;
+        align-items: center;
+        gap: 0.6rem;
+        flex-wrap: wrap;
+    }
+
+    /* ---- Back link ---- */
+    .surf-back {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        font-size: 0.78rem;
+        font-weight: 600;
+        color: var(--color-text-muted);
+        text-decoration: none;
+        margin-bottom: 0.85rem;
+        transition: color 0.15s ease;
+    }
+
+    .surf-back:hover {
+        color: var(--color-accent-2);
+        opacity: 1;
+    }
+
+    /* ---- Panel (the primary content container) ---- */
+    .surf-panel {
+        background: var(--card-surface);
+        border: 1px solid var(--card-border);
+        border-radius: var(--radius-lg);
+    }
+
+    .surf-panel + .surf-panel {
+        margin-top: 1rem;
+    }
+
+    .surf-panel-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.75rem;
+        flex-wrap: wrap;
+        padding: 0.85rem 1.1rem;
+        border-bottom: 1px solid var(--card-border);
+    }
+
+    .surf-panel-title {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 0.78rem;
+        font-weight: 700;
+        letter-spacing: 0.07em;
+        text-transform: uppercase;
+        color: var(--color-text);
+        margin: 0;
+    }
+
+    .surf-panel-title svg {
+        color: var(--color-text-dim);
+    }
+
+    .surf-panel-meta {
+        font-size: 0.75rem;
+        font-weight: 500;
+        color: var(--color-text-dim);
+    }
+
+    .surf-panel-body {
+        padding: 1.1rem;
+    }
+
+    .surf-panel-body--flush {
+        padding: 0;
+    }
+
+    /* ---- Buttons ----
+       One button family across the app. The variants differ in
+       weight, not in shape: the radius, the padding and the type
+       scale are identical, so a row of mixed buttons lines up. */
+    .surf-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.45rem;
+        padding: 0.5rem 0.95rem;
+        border: 1px solid transparent;
+        border-radius: var(--radius);
+        background: none;
+        color: var(--color-text-muted);
+        font-family: inherit;
+        font-size: 0.8rem;
+        font-weight: 600;
+        line-height: 1.4;
+        text-decoration: none;
+        white-space: nowrap;
+        cursor: pointer;
+        transition:
+            background-color 0.15s ease,
+            border-color 0.15s ease,
+            color 0.15s ease,
+            box-shadow 0.15s ease;
+    }
+
+    .surf-btn:disabled {
+        opacity: 0.45;
+        cursor: not-allowed;
+    }
+
+    .surf-btn-primary {
+        background: var(--color-accent);
+        border-color: #3d4bc9;
+        color: #fff;
+    }
+
+    .surf-btn-primary:hover:not(:disabled) {
+        background: #3d4bc9;
+        color: #fff;
+        opacity: 1;
+        box-shadow: 0 4px 14px rgba(79, 94, 221, 0.35);
+    }
+
+    .surf-btn-secondary {
+        background: var(--color-surface-2);
+        border-color: var(--color-border);
+        color: var(--color-text);
+    }
+
+    .surf-btn-secondary:hover:not(:disabled) {
+        background: #1e2436;
+        border-color: var(--color-border-hover);
+        color: var(--color-text);
+        opacity: 1;
+    }
+
+    .surf-btn-outline {
+        background: transparent;
+        border-color: var(--color-border);
+        color: var(--color-text-muted);
+    }
+
+    .surf-btn-outline:hover:not(:disabled) {
+        background: rgba(255, 255, 255, 0.04);
+        border-color: var(--color-border-hover);
+        color: var(--color-text);
+        opacity: 1;
+    }
+
+    .surf-btn-danger {
+        background: rgba(239, 68, 68, 0.08);
+        border-color: rgba(239, 68, 68, 0.3);
+        color: var(--form-danger);
+    }
+
+    .surf-btn-danger:hover:not(:disabled) {
+        background: rgba(239, 68, 68, 0.18);
+        border-color: rgba(239, 68, 68, 0.5);
+        color: #fff;
+        opacity: 1;
+    }
+
+    .surf-btn-sm {
+        padding: 0.32rem 0.65rem;
+        font-size: 0.73rem;
+    }
+
+    .surf-btn-lg {
+        padding: 0.65rem 1.4rem;
+        font-size: 0.875rem;
+    }
+
+    /* Icon-only button: square, so it can sit in a table cell. */
+    .surf-btn-icon {
+        padding: 0;
+        width: 30px;
+        height: 30px;
+        flex-shrink: 0;
+    }
+
+    /* ---- Stat tiles ----
+       A KPI strip. Label, value, then a supporting line — in that
+       order, so the number is never read before the metric it
+       belongs to is known. */
+    .surf-stats {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 1px;
+        background: var(--color-border);
+        border: 1px solid var(--color-border);
+        border-radius: var(--radius-lg);
+        overflow: hidden;
+        margin-bottom: 1rem;
+    }
+
+    /* A three-metric strip. It keeps its own column count but still
+       collapses at the narrow breakpoint like the four-metric one. */
+    .surf-stats--3 {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .surf-stat {
+        display: flex;
+        flex-direction: column;
+        gap: 0.35rem;
+        padding: 1rem 1.1rem;
+        background: var(--card-surface);
+    }
+
+    .surf-stat-label {
+        font-size: 0.65rem;
+        font-weight: 700;
+        letter-spacing: 0.09em;
+        text-transform: uppercase;
+        color: var(--color-text-dim);
+    }
+
+    .surf-stat-value {
+        display: flex;
+        align-items: baseline;
+        gap: 0.2rem;
+        font-size: 1.65rem;
+        font-weight: 700;
+        letter-spacing: -0.03em;
+        line-height: 1.1;
+        color: var(--color-text);
+        font-variant-numeric: tabular-nums;
+    }
+
+    .surf-stat-denom {
+        font-size: 0.78rem;
+        font-weight: 500;
+        color: var(--color-text-dim);
+    }
+
+    .surf-stat-note {
+        font-size: 0.72rem;
+        line-height: 1.45;
+        color: var(--color-text-muted);
+    }
+
+    /* ---- Status pills ----
+       Colour is never the only signal: every pill carries a word. */
+    .surf-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        padding: 0.18rem 0.5rem;
+        border: 1px solid;
+        border-radius: var(--radius-sm);
+        font-size: 0.63rem;
+        font-weight: 700;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+        line-height: 1.4;
+        white-space: nowrap;
+    }
+
+    .surf-pill::before {
+        content: "";
+        width: 5px;
+        height: 5px;
+        border-radius: 50%;
+        background: currentColor;
+        flex-shrink: 0;
+    }
+
+    .surf-pill--done {
+        color: #6ee7b7;
+        border-color: rgba(16, 185, 129, 0.28);
+        background: rgba(16, 185, 129, 0.08);
+    }
+
+    .surf-pill--live {
+        color: #fbbf24;
+        border-color: rgba(245, 158, 11, 0.28);
+        background: rgba(245, 158, 11, 0.08);
+    }
+
+    .surf-pill--sample {
+        color: #7dd3fc;
+        border-color: rgba(56, 189, 248, 0.28);
+        background: rgba(56, 189, 248, 0.08);
+    }
+
+    .surf-pill--neutral {
+        color: var(--color-text-muted);
+        border-color: var(--color-border);
+        background: rgba(255, 255, 255, 0.03);
+    }
+
+    /* A pill that carries a *value* rather than a *state* — a score, a
+       count. The status dot would read as a stray bullet next to the
+       number, so the dot is dropped for these. */
+    .surf-pill--plain::before {
+        content: none;
+    }
+
+    /* ---- Tags
+       A quiet label for a fact that is not a state: a format, a side,
+       a difficulty band. They carry no dot and no colour of their
+       own, so a row of them reads as metadata rather than as a set of
+       badges competing for attention. */
+    .surf-tag {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.1rem 0.4rem;
+        border: 1px solid var(--color-border);
+        border-radius: var(--radius-sm);
+        background: rgba(255, 255, 255, 0.03);
+        color: var(--color-text-muted);
+        font-size: 0.66rem;
+        font-weight: 600;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        line-height: 1.5;
+        white-space: nowrap;
+    }
+
+    /* ---- Record metadata
+       The facts that belong to a record but not to its name: the format
+       it was run in, the side it was argued from, the band it was run
+       at. They sit under the motion as a row of quiet tags so the
+       motion — the thing being scanned for — is never crowded by
+       them. */
+    .surf-record-meta {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 0.3rem;
+        margin-top: 0.35rem;
+    }
+
+    /* ---- Score cell
+       A score reads as a number with a scale under it: the figure is
+       what it is, the meter is where it sits between zero and a
+       hundred. The meter is a supporting read, so it is thin and
+       quiet — it never competes with the figure beside it. */
+    .surf-score-cell {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-end;
+        gap: 0.3rem;
+    }
+
+    .surf-score-cell .surf-meter {
+        width: 72px;
+        max-width: 100%;
+        height: 4px;
+    }
+
+    /* ---- Date cell
+       The date and the time are one value, so they travel in one box.
+       Left as two separate children they became two flex items in the
+       stacked layout, and the row read as two facts rather than one. */
+    .surf-cell-date {
+        display: inline-flex;
+        flex-direction: column;
+        gap: 0.1rem;
+        white-space: nowrap;
+    }
+
+    .surf-cell-date .surf-cell-sub {
+        margin-top: 0;
+    }
+
+    /* ---- Action cluster
+       The buttons in a row. They are grouped so the eye reads them as
+       one object rather than as three separate controls. */
+    .surf-row-actions {
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 0.3rem;
+    }
+
+    /* ---- Table footer
+       The count of what is on screen. A table that lists records
+       without saying how many leaves the reader wondering whether the
+       list is complete or truncated. */
+    .surf-table-foot {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.75rem;
+        flex-wrap: wrap;
+        padding: 0.65rem 1.1rem;
+        border-top: 1px solid var(--card-border);
+        font-size: 0.74rem;
+        color: var(--color-text-dim);
+    }
+
+    .surf-table-foot-meta {
+        font-variant-numeric: tabular-nums;
+    }
+
+    /* ---- Grade badge ----
+       The mark a round earned, stated with the number that produced
+       it. It sits in the page header, so it has to read at a glance
+       without competing with the title. */
+    .surf-grade {
+        display: inline-flex;
+        align-items: baseline;
+        gap: 0.45rem;
+        padding: 0.4rem 0.7rem;
+        border: 1px solid;
+        border-radius: var(--radius-sm);
+        line-height: 1.2;
+        white-space: nowrap;
+    }
+
+    .surf-grade-value {
+        font-size: 1.35rem;
+        font-weight: 800;
+        letter-spacing: -0.02em;
+        font-variant-numeric: tabular-nums;
+    }
+
+    .surf-grade-label {
+        font-size: 0.63rem;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        opacity: 0.85;
+    }
+
+    /* ---- Data table ----
+       The primary list pattern: a record table for anything with a
+       score, a status, a date and an action. */
+    .surf-table-wrap {
+        width: 100%;
+        overflow-x: auto;
+    }
+
+    .surf-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.82rem;
+    }
+
+    .surf-table thead th {
+        padding: 0.6rem 0.85rem;
+        text-align: left;
+        font-size: 0.63rem;
+        font-weight: 700;
+        letter-spacing: 0.09em;
+        text-transform: uppercase;
+        color: var(--color-text-dim);
+        background: rgba(255, 255, 255, 0.015);
+        border-bottom: 1px solid var(--card-border);
+        white-space: nowrap;
+    }
+
+    .surf-table tbody td {
+        padding: 0.75rem 0.85rem;
+        border-bottom: 1px solid var(--card-border);
+        color: var(--color-text-muted);
+        vertical-align: middle;
+    }
+
+    .surf-table tbody tr:last-child td {
+        border-bottom: none;
+    }
+
+    .surf-table tbody tr {
+        transition: background-color 0.12s ease;
+    }
+
+    .surf-table tbody tr:hover {
+        background: rgba(255, 255, 255, 0.022);
+    }
+
+    .surf-table .is-numeric {
+        text-align: right;
+        font-variant-numeric: tabular-nums;
+    }
+
+    /* ---- Column widths
+       A table's columns are set here rather than per-cell, so the
+       record's own name gets the room and the metadata columns stay
+       on one line. Without this the opponent's name and the date
+       wrap, and the rows come out ragged.
+
+       The layout is fixed so the declared widths are honoured exactly:
+       a cell that runs out of room truncates instead of pushing the
+       table wider than its panel. */
+    .surf-table {
+        table-layout: fixed;
+    }
+
+    .surf-table .col-primary { width: 30%; }
+    .surf-table .col-label   { width: 10%; }
+    .surf-table .col-person  { width: 18%; }
+    .surf-table .col-date    { width: 12%; }
+    .surf-table .col-status  { width: 13%; }
+    .surf-table .col-score   { width: 12%; }
+    .surf-table .col-actions { width: 18%; white-space: nowrap; }
+
+    /* The dashboard's ledger. Four columns instead of five: the format
+       travels under the motion, so the record's own name gets the room
+       it needs. The score column is sized for the wider of its two
+       contents — a number, or a status pill — so a pill is never
+       clipped by the column it sits in. */
+    .surf-table--ledger .col-primary { width: 44%; }
+    .surf-table--ledger .col-person  { width: 18%; }
+    .surf-table--ledger .col-date    { width: 15%; }
+    .surf-table--ledger .col-score   { width: 23%; }
+
+    /* The record table. Six columns of metadata, so the widths are
+       earned rather than assumed: the motion is the record's own name
+       and takes the room it needs; the actions column holds a labelled
+       button, an icon button and the delete button, and so has to be
+       wide enough to actually fit them; the score column carries a
+       figure over a meter and is sized for the wider of the two.
+
+       Format, side and difficulty travel under the motion rather than
+       in columns of their own — two thin columns squeezed the record's
+       name into a gutter and left every row reading as a table of
+       metadata with the subject buried in it. */
+    .surf-table--records .col-primary { width: 30%; }
+    .surf-table--records .col-person  { width: 17%; }
+    .surf-table--records .col-date    { width: 10%; }
+    .surf-table--records .col-status  { width: 12%; }
+    .surf-table--records .col-score   { width: 13%; }
+    .surf-table--records .col-actions { width: 18%; white-space: nowrap; }
+
+    /* An opponent's name is a name, not a note. It is given the room to
+       say itself in full rather than being cut mid-word by the column
+       rule — a truncated persona reads as a broken cell, not as a
+       longer name. */
+    .surf-table--records .col-person {
+        white-space: normal;
+        overflow: visible;
+        text-overflow: clip;
+        font-size: 0.8rem;
+        line-height: 1.5;
+    }
+
+    /* The action cluster sits against the right edge of the table. */
+    .surf-table td.col-actions {
+        text-align: right;
+    }
+
+    /* A column holding a person's name or a date should never wrap
+       mid-value — it should either fit or be truncated at the edge. */
+    .surf-table td.col-person,
+    .surf-table td.col-date {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    /* The score cell holds either a number or a status label; both are
+       short, but the label needs room for its own text. */
+    .surf-table td.col-score,
+    .surf-table td.col-status {
+        overflow: hidden;
+    }
+
+    /* An unscored session's state, in the score cell. It is a word
+       rather than a pill so it sits quietly beside the numbers it
+       replaces, rather than competing with them. */
+    .surf-cell-status {
+        font-size: 0.72rem;
+        font-weight: 600;
+        letter-spacing: 0.02em;
+        color: var(--color-text-dim);
+        white-space: nowrap;
+    }
+
+    /* The primary cell: the record's own name. */
+    .surf-cell-primary {
+        font-size: 0.84rem;
+        font-weight: 600;
+        color: var(--color-text);
+        line-height: 1.5;
+        display: block;
+        text-decoration: none;
+    }
+
+    a.surf-cell-primary:hover {
+        color: var(--color-accent-2);
+        opacity: 1;
+    }
+
+    .surf-cell-sub {
+        display: block;
+        margin-top: 0.2rem;
+        font-size: 0.72rem;
+        color: var(--color-text-dim);
+        line-height: 1.5;
+    }
+
+    /* A clamped two-line cell, for long motion texts. */
+    .surf-cell-clamp {
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+
+    /* ---- Metadata row (inline facts under a title) ---- */
+    .surf-meta {
+        display: flex;
+        align-items: center;
+        gap: 0.4rem;
+        flex-wrap: wrap;
+        font-size: 0.72rem;
+        color: var(--color-text-dim);
+    }
+
+    .surf-meta-sep {
+        width: 2px;
+        height: 2px;
+        border-radius: 50%;
+        background: var(--color-text-dim);
+        flex-shrink: 0;
+    }
+
+    /* ---- Forms ----
+       The text inputs, their labels and their messages live in the
+       shared form family (see FORM CONTROLS) — the credential screens
+       and the account settings page draw the same control, so there is
+       one implementation of it rather than two that drift apart.
+
+       The select stays here because it only appears in the history
+       filter and has no counterpart on the credential screens. */
+
+    .surf-select {
+        width: 100%;
+        padding: 0.5rem 0.7rem;
+        background: var(--form-surface-2);
+        border: 1px solid var(--form-border);
+        border-radius: var(--radius);
+        color: var(--color-text);
+        font-family: inherit;
+        font-size: 0.8rem;
+        outline: none;
+        cursor: pointer;
+        transition:
+            border-color 0.15s ease,
+            box-shadow 0.15s ease;
+    }
+
+    .surf-select:focus {
+        border-color: var(--color-accent);
+        box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.16);
+    }
+
+    /* ---- Toolbar (filters above a table) ---- */
+    .surf-toolbar {
+        display: flex;
+        align-items: center;
+        gap: 0.6rem;
+        flex-wrap: wrap;
+        padding: 0.7rem 1.1rem;
+        border-bottom: 1px solid var(--card-border);
+    }
+
+    /* ---- Segmented control (tabs) ----
+       A segmented control, not buttons: the segments share one
+       container and one selected fill. */
+    .surf-segment {
+        display: inline-flex;
+        gap: 2px;
+        padding: 2px;
+        background: var(--form-surface-2);
+        border: 1px solid var(--form-border);
+        border-radius: var(--radius);
+    }
+
+    .surf-segment-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        padding: 0.34rem 0.7rem;
+        border: none;
+        border-radius: 2px;
+        background: transparent;
+        color: var(--color-text-muted);
+        font-family: inherit;
+        font-size: 0.76rem;
+        font-weight: 600;
+        cursor: pointer;
+        white-space: nowrap;
+        transition:
+            background-color 0.15s ease,
+            color 0.15s ease;
+    }
+
+    .surf-segment-btn:hover {
+        color: var(--color-text);
+    }
+
+    .surf-segment-btn.is-active {
+        background: var(--color-accent);
+        color: #fff;
+    }
+
+    .surf-segment-count {
+        padding: 0.05rem 0.35rem;
+        border-radius: 2px;
+        background: rgba(255, 255, 255, 0.07);
+        color: var(--color-text-muted);
+        font-size: 0.62rem;
+        font-weight: 700;
+        font-variant-numeric: tabular-nums;
+    }
+
+    .surf-segment-btn.is-active .surf-segment-count {
+        background: rgba(255, 255, 255, 0.22);
+        color: #fff;
+    }
+
+    /* ---- Search field ---- */
+    .surf-search {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        flex: 1;
+        min-width: 0;
+        max-width: 320px;
+        padding: 0.4rem 0.65rem;
+        background: var(--form-surface-2);
+        border: 1px solid var(--form-border);
+        border-radius: var(--radius);
+        transition:
+            border-color 0.15s ease,
+            box-shadow 0.15s ease;
+    }
+
+    .surf-search:focus-within {
+        border-color: var(--color-accent);
+        box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.14);
+    }
+
+    .surf-search svg {
+        flex-shrink: 0;
+        color: var(--color-text-dim);
+    }
+
+    .surf-search input {
+        flex: 1;
+        min-width: 0;
+        background: transparent;
+        border: none;
+        outline: none;
+        color: var(--color-text);
+        font-family: inherit;
+        font-size: 0.8rem;
+    }
+
+    .surf-search input::placeholder {
+        color: var(--color-text-dim);
+    }
+
+    .surf-search input::-webkit-search-decoration,
+    .surf-search input::-webkit-search-cancel-button,
+    .surf-search input::-webkit-search-results-button,
+    .surf-search input::-webkit-search-results-decoration {
+        -webkit-appearance: none;
+        appearance: none;
+        display: none;
+    }
+
+    .surf-search-clear {
+        flex-shrink: 0;
+        padding: 0 0.15rem;
+        border: none;
+        background: none;
+        color: var(--color-text-dim);
+        font-size: 1rem;
+        line-height: 1;
+        cursor: pointer;
+    }
+
+    .surf-search-clear:hover {
+        color: #fca5a5;
+    }
+
+    /* ---- Toolbar filters
+       The narrowing controls, grouped on the right of the toolbar so
+       the format segments read as "what am I looking at" and these
+       read as "how much of it". */
+    .surf-toolbar-filters {
+        display: flex;
+        align-items: center;
+        gap: 0.6rem;
+        flex: 1;
+        min-width: 0;
+        flex-wrap: wrap;
+    }
+
+    /* The search box is the one control that wants the whole line when
+       the toolbar narrows: squeezed beside two dropdowns it becomes a
+       stub of a field with its placeholder cut off. */
+    .surf-toolbar-filters .surf-search {
+        flex: 1 1 14rem;
+    }
+
+    /* ---- Select field
+       A select with a drawn chevron. The native arrow is replaced
+       rather than hidden, so the control still reads as a dropdown in
+       a browser that paints its own. */
+    .surf-field {
+        position: relative;
+        display: inline-flex;
+        align-items: center;
+        flex: 0 0 auto;
+    }
+
+    .surf-field .surf-select {
+        width: auto;
+        padding-right: 1.9rem;
+        appearance: none;
+        -webkit-appearance: none;
+    }
+
+    .surf-field-chevron {
+        position: absolute;
+        right: 0.6rem;
+        color: var(--color-text-dim);
+        pointer-events: none;
+    }
+
+    /* ---- Sort control
+       A column header that sorts. The header row's own styling is
+       uppercase and dim, so the button inside it is drawn to match —
+       the sort affordance is a caret, not a separate chip sitting
+       among the labels. */
+    .surf-sort {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.3rem;
+        padding: 0;
+        border: none;
+        background: none;
+        color: inherit;
+        font-family: inherit;
+        font-size: inherit;
+        font-weight: inherit;
+        letter-spacing: inherit;
+        text-transform: inherit;
+        cursor: pointer;
+        transition: color 0.15s ease;
+    }
+
+    .surf-sort:hover {
+        color: var(--color-text);
+    }
+
+    .surf-sort.is-active {
+        color: var(--color-text);
+    }
+
+    /* The caret is drawn pointing down by default and flips when the
+       order is reversed, so the control always says which way the
+       column runs. */
+    .surf-sort-icon {
+        opacity: 0;
+        transition:
+            opacity 0.15s ease,
+            transform 0.15s ease;
+    }
+
+    .surf-sort:hover .surf-sort-icon,
+    .surf-sort.is-active .surf-sort-icon {
+        opacity: 1;
+    }
+
+    .surf-sort.is-active .surf-sort-icon {
+        color: var(--color-accent-2);
+    }
+
+    .surf-sort.is-desc .surf-sort-icon {
+        transform: rotate(180deg);
+    }
+
+    /* The sort select lives in the toolbar only once the table has
+       stacked and lost its sortable column headers. It is hidden on a
+       wide screen, where clicking the header is the better control. */
+    .surf-sort-field {
+        display: none;
+    }
+
+    @media (max-width: 1200px) {
+        .surf-sort-field {
+            display: inline-flex;
+        }
+    }
+
+    /* ---- Screen-reader-only text ---- */
+    .surf-sr-only {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+        border: 0;
+    }
+
+    /* ---- Empty state ---- */
+    .surf-empty {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.4rem;
+        padding: 3rem 1.5rem;
+        text-align: center;
+    }
+
+    .surf-empty-icon {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 44px;
+        height: 44px;
+        margin-bottom: 0.6rem;
+        border-radius: var(--radius);
+        background: rgba(99, 102, 241, 0.08);
+        border: 1px solid rgba(99, 102, 241, 0.22);
+        color: var(--color-accent-2);
+    }
+
+    .surf-empty-title {
+        font-size: 0.95rem;
+        font-weight: 700;
+        color: var(--color-text);
+        margin: 0;
+    }
+
+    .surf-empty-text {
+        max-width: 38ch;
+        margin: 0;
+        font-size: 0.82rem;
+        line-height: 1.65;
+        color: var(--color-text-muted);
+    }
+
+    .surf-empty-action {
+        margin-top: 1rem;
+    }
+
+    /* ---- Meter (score / rubric bar) ---- */
+    .surf-meter {
+        display: block;
+        height: 6px;
+        border-radius: 3px;
+        background: rgba(255, 255, 255, 0.07);
+        overflow: hidden;
+    }
+
+    .surf-meter-fill {
+        display: block;
+        height: 100%;
+        border-radius: 3px;
+        background: var(--color-accent);
+        transition: width 0.35s ease;
+    }
+
+    .surf-meter-fill--matter {
+        background: #4f5edd;
+    }
+
+    .surf-meter-fill--manner {
+        background: #38bdf8;
+    }
+
+    .surf-meter-fill--method {
+        background: #a78bfa;
+    }
+
+    .surf-meter-fill--success {
+        background: var(--color-success);
+    }
+
+    /* ---- Score figure ---- */
+    .surf-score {
+        display: inline-flex;
+        align-items: baseline;
+        gap: 0.15rem;
+        font-variant-numeric: tabular-nums;
+    }
+
+    .surf-score-value {
+        font-size: 1.15rem;
+        font-weight: 700;
+        letter-spacing: -0.02em;
+        color: var(--color-text);
+        line-height: 1;
+    }
+
+    .surf-score-denom {
+        font-size: 0.68rem;
+        font-weight: 500;
+        color: var(--color-text-dim);
+    }
+
+    .surf-score--lg .surf-score-value {
+        font-size: 2.25rem;
+        letter-spacing: -0.035em;
+    }
+
+    /* ---- Rubric rows (label / meter / value) ---- */
+    .surf-rubric {
+        display: grid;
+        gap: 1rem;
+    }
+
+    .surf-rubric-row {
+        display: grid;
+        grid-template-columns: 5rem minmax(0, 1fr) auto;
+        align-items: center;
+        gap: 0.85rem;
+    }
+
+    .surf-rubric-label {
+        font-size: 0.75rem;
+        font-weight: 600;
+        color: var(--color-text-muted);
+    }
+
+    .surf-rubric-value {
+        font-size: 0.8rem;
+        font-weight: 700;
+        color: var(--color-text);
+        font-variant-numeric: tabular-nums;
+        white-space: nowrap;
+    }
+
+    .surf-rubric-value span {
+        color: var(--color-text-dim);
+        font-weight: 500;
+    }
+
+    /* ---- Analytics charts ----
+       Three kinds, one grammar.
+
+       A chart here is a plain SVG with the text labels outside it, so
+       the plot carries no wording of its own and every number on it is
+       also written in the markup beside it. Colour is never the only
+       signal either: the bars carry their count as text, and the
+       legend names each series.
+
+       No chart library: the shapes are simple enough to draw directly,
+       and a library would bring a rendering dependency and a bundle
+       for three marks that never change shape between visits. */
+
+    /* The analytics band: a wide trend chart on the left, and two
+       narrower charts stacked on the right. It falls to a single column
+       at the same width as the page's other two-column bands, so the
+       page keeps one rhythm.
+
+       The grid owns the spacing between the charts, so the panels
+       inside it must not add their own — otherwise the second and third
+       charts are pushed further down than the first. */
+    .surf-charts {
+        display: grid;
+        grid-template-columns: minmax(0, 1.55fr) minmax(0, 1fr);
+        grid-template-rows: auto auto;
+        gap: 1rem;
+        margin-bottom: 1rem;
+    }
+
+    /* The trend chart takes the left column and both rows. */
+    .surf-chart-card--trend {
+        grid-column: 1;
+        grid-row: 1 / span 2;
+    }
+
+    .surf-chart-card--rubric {
+        grid-column: 2;
+        grid-row: 1;
+    }
+
+    .surf-chart-card--difficulty {
+        grid-column: 2;
+        grid-row: 2;
+    }
+
+    .surf-charts .surf-panel + .surf-panel {
+        margin-top: 0;
+    }
+
+    .surf-chart-card {
+        display: flex;
+        flex-direction: column;
+        min-width: 0;
+    }
+
+    .surf-chart-card .surf-panel-body {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+    }
+
+    /* The plot and the scale beside it. The scale is a real column of
+       text rather than numbers floating over the plot, so it stays
+       legible when the chart is narrow.
+
+       The plot has no height of its own — it takes whatever the card
+       gives it — so the trend chart grows to fill the space beside the
+       two narrower charts instead of leaving a dead zone under the
+       line. The SVG inside it stretches to fill the box, and the
+       readings are real HTML placed over it: an SVG scaled down to
+       phone width would shrink its own text to unreadable sizes, so
+       the values are kept out of the SVG. */
+    .surf-plot {
+        display: flex;
+        gap: 0.5rem;
+        align-items: stretch;
+        flex: 1;
+        min-height: 200px;
+    }
+
+    .surf-plot-scale {
+        position: relative;
+        flex: 0 0 2.1rem;
+        font-size: 0.62rem;
+        font-variant-numeric: tabular-nums;
+        color: var(--color-text-dim);
+        text-align: right;
+    }
+
+    /* Each scale value sits on the line it names. Its position comes
+       from the same number that places the gridline, so the two cannot
+       drift apart. */
+    .surf-scale-value {
+        position: absolute;
+        right: 0;
+        transform: translateY(-50%);
+        line-height: 1;
+    }
+
+    .surf-plot-canvas {
+        position: relative;
+        flex: 1;
+        min-width: 0;
+    }
+
+    .surf-plot-svg {
+        display: block;
+        width: 100%;
+        height: 100%;
+        overflow: visible;
+    }
+
+    /* Gridlines and the plotted line. The line is drawn in the accent
+       colour and the fill beneath it fades out, so the shape of the
+       trend is readable without a legend.
+
+       The strokes do not scale with the plot: the SVG is stretched to
+       whatever width it is given, and a stroke that stretched with it
+       would be hairline on a narrow screen and heavy on a wide one. */
+    .surf-plot-grid {
+        stroke: var(--color-border);
+        stroke-width: 1;
+        vector-effect: non-scaling-stroke;
+        shape-rendering: crispEdges;
+    }
+
+    .surf-plot-area {
+        fill: url(#surf-trend-fill);
+        stroke: none;
+    }
+
+    .surf-plot-line {
+        fill: none;
+        stroke: var(--color-accent);
+        stroke-width: 2;
+        vector-effect: non-scaling-stroke;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+    }
+
+    /* The reading and its point, placed over the plot. The reading is
+       ordinary HTML text, so it stays the same size and weight
+       whatever the chart is scaled to. */
+    .surf-plot-point {
+        position: absolute;
+        width: 9px;
+        height: 9px;
+        border-radius: 50%;
+        background: var(--color-surface);
+        border: 2px solid var(--color-accent);
+        transform: translate(-50%, -50%);
+    }
+
+    .surf-plot-value {
+        position: absolute;
+        transform: translate(-50%, -50%);
+        font-size: 0.7rem;
+        font-weight: 700;
+        font-variant-numeric: tabular-nums;
+        color: var(--color-text-muted);
+        white-space: nowrap;
+    }
+
+    /* The dates under the two ends of the line. The left padding lines
+       them up with the plot rather than with the panel. */
+    .surf-plot-axis {
+        display: flex;
+        justify-content: space-between;
+        gap: 1rem;
+        margin-top: 0.5rem;
+        padding-left: 2.6rem;
+        font-size: 0.65rem;
+        color: var(--color-text-dim);
+    }
+
+    /* A bar chart: one row per series, the bar and its count on one
+       line. The count is written out, so the bar repeats information
+       rather than being the only copy of it. */
+    .surf-bars {
+        display: grid;
+        gap: 0.9rem;
+        align-content: start;
+    }
+
+    .surf-bar-row {
+        display: grid;
+        grid-template-columns: 6.5rem minmax(0, 1fr) 2rem;
+        align-items: center;
+        gap: 0.7rem;
+    }
+
+    .surf-bar-label {
+        font-size: 0.75rem;
+        font-weight: 600;
+        color: var(--color-text-muted);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .surf-bar-track {
+        height: 8px;
+        border-radius: 4px;
+        background: rgba(255, 255, 255, 0.06);
+        overflow: hidden;
+    }
+
+    .surf-bar-fill {
+        display: block;
+        height: 100%;
+        border-radius: 4px;
+        background: var(--color-accent);
+        min-width: 2px;
+    }
+
+    .surf-bar-fill--accent-2 {
+        background: var(--color-accent-2);
+    }
+
+    .surf-bar-count {
+        font-size: 0.78rem;
+        font-weight: 700;
+        color: var(--color-text);
+        font-variant-numeric: tabular-nums;
+        text-align: right;
+    }
+
+    /* A row with no reports still shows its label, so the axis keeps
+       the same shape between visits. */
+    .surf-bar-row--empty .surf-bar-label,
+    .surf-bar-row--empty .surf-bar-count {
+        color: var(--color-text-dim);
+    }
+
+    /* ---- Legend ----
+       A key for the chart, naming each colour. */
+    .surf-legend {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem 1rem;
+        margin-top: 0.9rem;
+        font-size: 0.68rem;
+        color: var(--color-text-muted);
+    }
+
+    .surf-legend-item {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+    }
+
+    .surf-legend-swatch {
+        width: 9px;
+        height: 9px;
+        border-radius: 2px;
+        flex-shrink: 0;
+    }
+
+    .surf-legend-swatch--accent {
+        background: var(--color-accent);
+    }
+
+    .surf-legend-swatch--accent-2 {
+        background: var(--color-accent-2);
+    }
+
+    /* The line under a chart that has nothing to show yet. It fills the
+       space the chart would take, so the panel does not collapse and
+       leave a hole in the page. */
+    .surf-chart-note {
+        margin-top: auto;
+        padding-top: 0.9rem;
+        font-size: 0.82rem;
+    }
+
+    /* A chart card whose only content is a note. The note is centred in
+       the space the chart would have taken, rather than sitting at the
+       top of a tall empty box or pinned to the bottom of one. */
+    .surf-panel-body--empty {
+        justify-content: center;
+    }
+
+    .surf-panel-body--empty .surf-chart-note {
+        margin-top: 0;
+        padding-top: 0;
+    }
+
+    /* ---- Callout (resume / notice) ----
+       A band with a coloured leading edge. The edge is the whole
+       marker — an icon in a box beside the text read as a separate
+       widget rather than as part of the sentence it sat beside. */
+    .surf-callout {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        padding: 0.95rem 1.1rem;
+        background: var(--card-surface);
+        border: 1px solid var(--card-border);
+        border-left: 2px solid var(--color-accent);
+        border-radius: var(--radius-lg);
+        margin-bottom: 1rem;
+    }
+
+    .surf-callout--live {
+        border-left-color: var(--color-warning);
+    }
+
+    .surf-callout-body {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .surf-callout-kicker {
+        display: block;
+        margin-bottom: 0.3rem;
+        font-size: 0.63rem;
+        font-weight: 700;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: var(--color-text-dim);
+    }
+
+    .surf-callout-title {
+        margin: 0 0 0.25rem;
+        font-size: 0.92rem;
+        font-weight: 600;
+        line-height: 1.5;
+        color: var(--color-text);
+    }
+
+    .surf-callout-note {
+        font-size: 0.74rem;
+        color: var(--color-text-dim);
+    }
+
+    /* ---- Identity row (avatar / name / email / action) ----
+       The email is the longest value on the page. It is allowed to
+       shrink and scroll rather than break mid-word, and the action
+       drops to its own line on narrow screens so the text column
+       keeps a usable width. */
+    .surf-identity {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        flex-wrap: wrap;
+    }
+
+    .surf-identity-avatar {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 52px;
+        height: 52px;
+        border-radius: var(--radius);
+        background: linear-gradient(135deg, #4f5edd, #7c6cf5);
+        color: #fff;
+        font-size: 1.1rem;
+        font-weight: 800;
+        flex-shrink: 0;
+    }
+
+    .surf-identity-body {
+        flex: 1 1 12rem;
+        min-width: 0;
+    }
+
+    .surf-identity-name {
+        margin: 0 0 0.15rem;
+        font-size: 1.05rem;
+        font-weight: 700;
+        color: var(--color-text);
+        overflow-wrap: anywhere;
+    }
+
+    .surf-identity-email {
+        margin: 0;
+        font-size: 0.82rem;
+        color: var(--color-text-muted);
+        overflow-wrap: anywhere;
+    }
+
+    /* ---- Definition list (label / value pairs) ---- */
+    .surf-dl {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 1px;
+        background: var(--color-border);
+        border: 1px solid var(--color-border);
+        border-radius: var(--radius-lg);
+        overflow: hidden;
+    }
+
+    .surf-dl-item {
+        padding: 0.8rem 0.9rem;
+        background: var(--card-surface);
+    }
+
+    .surf-dl-label {
+        display: block;
+        margin-bottom: 0.25rem;
+        font-size: 0.63rem;
+        font-weight: 700;
+        letter-spacing: 0.09em;
+        text-transform: uppercase;
+        color: var(--color-text-dim);
+    }
+
+    .surf-dl-value {
+        font-size: 0.84rem;
+        font-weight: 600;
+        color: var(--color-text);
+        text-transform: capitalize;
+    }
+
+    /* ---- Two-column content grid ----
+       The wide column carries the record table; the narrow one carries
+       the panels that explain the numbers. Both columns are stacks of
+       panels separated by the same 1rem gap the grid itself uses, so
+       the vertical rhythm on the page is one value rather than two
+       that happen to be close. */
+    .surf-cols {
+        display: grid;
+        grid-template-columns: minmax(0, 1.85fr) minmax(0, 1fr);
+        gap: 1rem;
+        align-items: start;
+    }
+
+    .surf-col {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+        min-width: 0;
+    }
+
+    /* A panel inside a column is separated by the column's own gap, so
+       it must not also carry a sibling margin — that was the old
+       `.surf-panel + .surf-panel` rule, which double-spaced every
+       panel that was not the first in its column. */
+    .surf-col > .surf-panel + .surf-panel {
+        margin-top: 0;
+    }
+
+    /* ---- Panel actions (a row of buttons under panel copy) ---- */
+    .surf-panel-actions {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+    }
+
+    /* ---- Report card copy ----
+       A motion is the record's own name, so it gets the emphasis; the
+       verdict underneath is supporting prose and stays quieter. */
+    .surf-report-title {
+        margin: 0 0 0.35rem;
+        font-size: 0.92rem;
+        font-weight: 600;
+        line-height: 1.55;
+        color: var(--color-text);
+    }
+
+    .surf-report-meta {
+        margin-top: 0.9rem;
+    }
+
+    .surf-report-score {
+        color: var(--color-text);
+        font-weight: 700;
+    }
+
+    /* ---- Prose block (verdict, long copy) ---- */
+    .surf-prose {
+        margin: 0;
+        font-size: 0.92rem;
+        line-height: 1.7;
+        color: var(--color-text-muted);
+    }
+
+    /* The verdict is prose, but it is prose that introduces the buttons
+       below it — so it needs a gap under it that the generic prose
+       rule does not give. */
+    .surf-report-verdict {
+        margin-bottom: 1rem;
+    }
+
+    .surf-prose--lead {
+        font-size: 0.98rem;
+        line-height: 1.7;
+        color: #d4deee;
+    }
+
+    /* ---- Settings page ----------------------------------------------
+       The settings page is a form, not a report. It is built as a
+       two-column frame: a sticky list of sections on the left, the
+       section itself on the right. The list is a table of contents
+       that scrolls with you, so the reader always knows which part of
+       the account they are editing.
+
+       Nothing on this page is a statistic. The practice numbers live
+       on the dashboard, where they are the subject rather than a
+       decoration; repeating them here would put a scorecard above a
+       form and make the page read as a report. */
+
+    /* The frame. The contents column is capped so a form never runs
+       the full width of a wide screen — a 1200px-wide input is a
+       worse form than a 560px-wide one. */
+    .surf--settings {
+        max-width: 780px;
+    }
+
+    /* One column of panels. Each panel is titled, so the page reads
+       top to bottom without a list of its own sections beside it. */
+    .surf-settings {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    /* The contents column. */
+    .surf-settings-content {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+        min-width: 0;
+    }
+
+    /* A settings panel. The panel body holds a form, and the form is
+       the panel's content — so the panel is a frame, not a card
+       around a card. */
+    .surf-settings-panel {
+        background: var(--card-surface);
+        border: 1px solid var(--card-border);
+        border-radius: var(--radius-lg);
+        scroll-margin-top: 1.5rem;
+    }
+
+    .surf-settings-panel-head {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 1rem;
+        flex-wrap: wrap;
+        padding: 0.95rem 1.15rem;
+        border-bottom: 1px solid var(--card-border);
+    }
+
+    .surf-settings-panel-title {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin: 0;
+        font-size: 0.95rem;
+        font-weight: 650;
+        letter-spacing: -0.01em;
+        color: var(--color-text);
+    }
+
+    .surf-settings-panel-title svg {
+        color: var(--color-text-dim);
+        flex-shrink: 0;
+    }
+
+    .surf-settings-panel-meta {
+        margin: 0.25rem 0 0;
+        font-size: 0.78rem;
+        line-height: 1.55;
+        color: var(--color-text-dim);
+        max-width: 46ch;
+    }
+
+    .surf-settings-panel-body {
+        padding: 1.15rem;
+    }
+
+    /* A form inside a panel body.
+
+       The fields are the shared form family, which brings its own
+       rhythm: the gap inside a field is tighter than the gap between
+       fields. The panel body adds the gap between the fields, so the
+       whole form reads as one column of related controls. */
+    .surf-form {
+        display: flex;
+        flex-direction: column;
+        gap: 1.15rem;
+        margin: 0;
+    }
+
+    /* A row of two fields side by side. They are the same kind of
+       field, so they are given the same width — a form where one field
+       is wider than the other reads as though one of them matters
+       more. */
+    .surf-field-row {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr);
+        gap: 1.15rem;
+    }
+
+    @media (min-width: 620px) {
+        .surf-field-row {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+    }
+
+    /* The action row. The button sits left; a hint beside it says
+       what happens when it is pressed, so the action is never a
+       mystery. */
+    .surf-form-actions {
+        display: flex;
+        align-items: center;
+        gap: 0.85rem;
+        flex-wrap: wrap;
+        padding-top: 0.25rem;
+    }
+
+    .surf-form-note {
+        font-size: 0.75rem;
+        line-height: 1.5;
+        color: var(--color-text-dim);
+    }
+
+    /* The danger zone. It is marked by a red leading edge, so the
+       difference from the panels above it is carried by the panel
+       itself and not only by the colour of the text inside it. */
+    .surf-settings-panel--danger {
+        border-color: rgba(239, 68, 68, 0.24);
+        border-left: 2px solid rgba(239, 68, 68, 0.55);
+    }
+
+    /* The warning prose is held to a comfortable measure rather than
+       run the width of the panel — a long line of text about losing
+       your account is harder to read, not easier. */
+    .surf-settings-panel--danger .surf-prose {
+        max-width: 60ch;
+    }
+
+    .surf-settings-panel--danger .surf-settings-panel-head {
+        border-bottom-color: rgba(239, 68, 68, 0.16);
+    }
+
+    .surf-settings-panel--danger .surf-settings-panel-title {
+        color: var(--form-danger);
+    }
+
+    .surf-settings-panel--danger .surf-settings-panel-title svg {
+        color: var(--form-danger);
+    }
+
+    .surf-account-card {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        flex-wrap: wrap;
+        padding: 1.15rem;
+        background: var(--card-surface);
+        border: 1px solid var(--card-border);
+        border-radius: var(--radius-lg);
+    }
+
+    .surf-account-card-body {
+        flex: 1 1 12rem;
+        min-width: 0;
+    }
+
+    .surf-account-card-name {
+        margin: 0 0 0.15rem;
+        font-size: 1.05rem;
+        font-weight: 700;
+        color: var(--color-text);
+        overflow-wrap: anywhere;
+    }
+
+    .surf-account-card-email {
+        margin: 0;
+        font-size: 0.82rem;
+        color: var(--color-text-muted);
+        overflow-wrap: anywhere;
+    }
+
+    .surf-account-card-actions {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+    }
+
+    /* The one fact the card carries about the account's age. It is
+       labelled like a field rather than set as a headline, because it
+       is context and not the subject of the page. */
+    .surf-account-card-meta {
+        display: flex;
+        flex-direction: column;
+        gap: 0.15rem;
+        text-align: right;
+    }
+
+    .surf-account-card-meta-label {
+        font-size: 0.63rem;
+        font-weight: 700;
+        letter-spacing: 0.09em;
+        text-transform: uppercase;
+        color: var(--color-text-dim);
+    }
+
+    .surf-account-card-meta-value {
+        font-size: 0.84rem;
+        font-weight: 600;
+        color: var(--color-text);
+    }
+
+    /* The account facts. A definition list of the two things that
+       identify an account and the one that says when it was made. */
+
+    /* On a narrow screen the section list is not worth its vertical
+       space, so it is dropped and each panel carries its own title.
+       The panel title is the heading; the list was only ever a
+       shortcut to it. */
+    @media (max-width: 899px) {
+        .surf-settings {
+            gap: 1rem;
+        }
+    }
+
+    /* ---- Responsive ------------------------------------------------
+       The table collapses to a stacked list on narrow screens; the
+       column headers are hidden and each cell carries its own
+       label via a data attribute. */
+    @media (max-width: 1080px) {
+        .surf-cols {
+            grid-template-columns: minmax(0, 1fr);
+        }
+
+        .surf-charts {
+            grid-template-columns: minmax(0, 1fr);
+            grid-template-rows: none;
+        }
+
+        /* Every card goes back into the flow, in the order they are
+           written: trend, rubric, difficulty. */
+        .surf-chart-card--trend,
+        .surf-chart-card--rubric,
+        .surf-chart-card--difficulty {
+            grid-column: auto;
+            grid-row: auto;
+        }
+
+        .surf-stats,
+        .surf-stats--3 {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+    }
+
+    /* ---- Sidebar responsive ------------------------------------------
+       Below 1024px the rail no longer has room to sit beside the
+       content, so it becomes a drawer that slides over it. The content
+       takes the full width back, and a slim bar of its own appears
+       above it carrying the menu button and the wordmark.
+
+       The bar is in the flow rather than floating over the page, so it
+       cannot sit on top of a title — the previous floating button had
+       to be given a gutter of its own to avoid the collision. */
+    @media (max-width: 1024px) {
+        body.has-side #main-content {
+            padding-left: 0;
+        }
+
+        .app-side {
+            /* The drawer is the same rail, not a different panel: it
+               keeps the rail's width so the two never read as two
+               different surfaces. The 86vw cap stops it from taking a
+               phone screen whole on the narrowest devices. */
+            width: var(--app-side-w, 248px);
+            max-width: 86vw;
+            transform: translateX(-100%);
+            /* Hidden from the tab order while it is off screen, so a
+               keyboard user cannot land on links they cannot see. The
+               delay lets the slide-out finish first. */
+            visibility: hidden;
+            transition:
+                transform 0.24s cubic-bezier(0.32, 0.72, 0, 1),
+                visibility 0s linear 0.24s;
+            box-shadow: 0 0 40px rgba(0, 0, 0, 0.5);
+        }
+
+        .app-side-scrim {
+            display: block;
+        }
+
+        .app-side-close {
+            display: inline-flex;
+        }
+
+        /* The bar takes the rail's place at the top of the page. The
+           wordmark leads on the left and the menu button sits on the
+           right, where a thumb reaches for it. */
+        .app-side-bar {
+            position: sticky;
+            top: 0;
+            z-index: 150;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.75rem;
+            height: 52px;
+            padding: 0 1rem;
+            background: var(--color-surface);
+            border-bottom: 1px solid var(--color-border);
+        }
+
+        /* The drawer keeps the rail's own proportions: the destinations
+           band fills the panel and the identity block sits on its foot,
+           exactly as it does on a wide viewport. Collapsing the band to
+           its content height left the identity stranded part-way down
+           the panel with a strip of bare rail showing beneath it, which
+           read as a broken edge rather than a rail.
+
+           The band still scrolls when the panel is too short for it, so
+           the identity never gets pushed off the bottom. */
+        .app-side-body {
+            flex: 1 1 auto;
+        }
+
+        .app-side-bar-brand {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--color-text);
+            font-size: 0.82rem;
+            font-weight: 800;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            text-decoration: none;
+        }
+
+        .app-side-bar-brand:hover {
+            opacity: 1;
+            color: var(--color-text);
+        }
+    }
+
+    /* The open state is driven by Alpine on the body, so the rail
+       translates in and the page behind it stops scrolling. */
+    body.sidebar-is-open .app-side {
+        transform: translateX(0);
+        visibility: visible;
+        transition: transform 0.24s cubic-bezier(0.32, 0.72, 0, 1);
+    }
+
+    body.sidebar-is-open {
+        overflow: hidden;
+    }
+
+    @media (max-width: 860px) {
+        .app-nav {
+            padding: 0 1rem;
+        }
+
+        .app-nav-toggle {
+            display: inline-flex;
+        }
+
+        .app-nav-divider {
+            display: none;
+        }
+
+        /* The links drop into a panel under the bar. */
+        .app-nav-links {
+            position: absolute;
+            top: var(--app-header-h);
+            left: 0;
+            right: 0;
+            display: none;
+            flex-direction: column;
+            align-items: stretch;
+            gap: 0;
+            padding: 0.4rem;
+            background: #090b10;
+            border-bottom: 1px solid var(--color-border);
+            box-shadow: 0 16px 32px rgba(0, 0, 0, 0.55);
+        }
+
+        .app-nav-links.is-open {
+            display: flex;
+        }
+
+        .app-nav-link {
+            height: auto;
+            padding: 0.6rem 0.7rem;
+            border-radius: var(--radius-sm);
+        }
+
+        .app-nav-link.is-active {
+            background: rgba(79, 94, 221, 0.14);
+        }
+
+        .app-nav-link.is-active::after {
+            display: none;
+        }
+    }
+
+    @media (max-width: 720px) {
+        .surf {
+            padding: 1.5rem 1rem 4rem;
+        }
+
+        .surf-head {
+            align-items: flex-start;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .surf-head-actions {
+            width: 100%;
+        }
+
+        .surf-head-actions .surf-btn {
+            flex: 1;
+        }
+
+        /* A panel head holds a title on one side and a note on the
+           other. On a narrow column the note crowds the title, so it
+           moves under it and reads as a caption. */
+        .surf-panel-head {
+            align-items: flex-start;
+            flex-direction: column;
+            gap: 0.35rem;
+        }
+
+        .surf-panel-head .surf-pill {
+            align-self: flex-start;
+        }
+
+        /* The resume band puts its text and its button on one line. On
+           a narrow screen the button crowds the motion — and the
+           motion is the thing being resumed — so the band stacks and
+           the button takes the full width below it. */
+        .surf-callout {
+            flex-direction: column;
+            align-items: stretch;
+            gap: 0.85rem;
+        }
+
+        .surf-callout .surf-btn {
+            justify-content: center;
+        }
+
+        /* The bar chart's label column is fixed width. On a narrow
+           screen that width comes out of the bar, so the label is
+           given the room it needs and the bar takes what is left.
+
+           The label is allowed to wrap rather than to be cut off: a
+           difficulty called "World Champion" truncated to "World
+           Cham..." leaves the reader guessing which band it is. */
+        .surf-bar-row {
+            grid-template-columns: 6.5rem minmax(0, 1fr) 1.75rem;
+            gap: 0.55rem;
+            align-items: center;
+        }
+
+        .surf-bar-label {
+            white-space: normal;
+            line-height: 1.35;
+            overflow: visible;
+        }
+
+        /* The plot's scale column shrinks with the panel, and the dates
+           under the line are aligned to the plot rather than to the
+           panel. */
+        .surf-plot {
+            grid-template-columns: 1.8rem minmax(0, 1fr);
+            gap: 0.4rem;
+        }
+
+        .surf-plot-axis {
+            padding-left: 2.2rem;
+        }
+    }
+
+    @media (max-width: 620px) {
+        /* The metric strip keeps two columns on a phone. One column
+           each turned four short tiles into a long scroll of nearly
+           identical blocks before the reader reached any content. */
+        .surf-stats,
+        .surf-stats--3 {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        .surf-toolbar {
+            flex-direction: column;
+            align-items: stretch;
+        }
+
+        .surf-segment {
+            width: 100%;
+        }
+
+        .surf-segment-btn {
+            flex: 1;
+            justify-content: center;
+        }
+
+        .surf-search {
+            max-width: 100%;
+        }
+
+        /* On a phone the filters stack one per line: the search takes
+           the first line on its own, and the two dropdowns share the
+           line below it. */
+        .surf-toolbar-filters .surf-search {
+            flex: 1 1 100%;
+        }
+
+        .surf-toolbar-filters .surf-field {
+            flex: 1 1 0;
+        }
+
+        .surf-toolbar-filters .surf-field .surf-select {
+            width: 100%;
+        }
+
+        .surf-rubric-row {
+            grid-template-columns: 4rem minmax(0, 1fr) auto;
+            gap: 0.6rem;
+        }
+    }
+
+    /* ---- Stacked table records
+       The table becomes a stack of records: the column headers are
+       hidden and each cell carries its own label through a data
+       attribute, so the record reads as a labelled list.
+
+       A table with many columns runs out of room well before the
+       narrow breakpoint, so it stacks as soon as its columns would
+       start to collide. The rule is shared; only the point at which
+       it applies differs. */
+    @media (max-width: 620px) {
+        .surf-table thead {
+            display: none;
+        }
+
+        .surf-table,
+        .surf-table tbody,
+        .surf-table tr,
+        .surf-table td {
+            display: block;
+            width: 100%;
+        }
+
+        /* The desktop column widths are percentages of the table; in the
+           stacked layout every cell is a full-width row, so the widths
+           have to be released or the narrow ones clip their content. */
+        .surf-table tbody td.col-primary,
+        .surf-table tbody td.col-label,
+        .surf-table tbody td.col-person,
+        .surf-table tbody td.col-date,
+        .surf-table tbody td.col-status,
+        .surf-table tbody td.col-score,
+        .surf-table tbody td.col-actions {
+            width: 100%;
+        }
+
+        .surf-table tbody tr {
+            padding: 0.85rem 1rem;
+            border-bottom: 1px solid var(--card-border);
+        }
+
+        .surf-table tbody td {
+            padding: 0.2rem 0;
+            border: none;
+            display: flex;
+            align-items: baseline;
+            justify-content: space-between;
+            gap: 1rem;
+        }
+
+        .surf-table tbody td::before {
+            content: attr(data-label);
+            flex-shrink: 0;
+            font-size: 0.63rem;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: var(--color-text-dim);
+        }
+
+        .surf-table tbody td[data-label=""]::before,
+        .surf-table tbody td:has(> .surf-cell-primary)::before {
+            display: none;
+        }
+
+        .surf-table tbody td.is-numeric {
+            text-align: left;
+        }
+
+        /* The record's own name leads the stack, so it gets the full
+           width and keeps more of its text than the table's clamp. */
+        .surf-table tbody td .surf-cell-primary {
+            -webkit-line-clamp: 3;
+        }
+
+        /* The desktop column rules clip a cell that runs out of room, but
+           a stacked cell has the label and the value sharing one line.
+           Clipping there would eat the value, so the value is allowed
+           to wrap and the label keeps its own width. */
+        .surf-table tbody td.col-person,
+        .surf-table tbody td.col-date,
+        .surf-table tbody td.col-score,
+        .surf-table tbody td.col-status {
+            white-space: normal;
+            overflow: visible;
+            text-overflow: clip;
+        }
+
+        /* The value takes the room the label leaves. It is given a
+           floor so a long value wraps at a word boundary instead of
+           breaking one word per line. */
+        .surf-table tbody td > :not(.surf-cell-primary) {
+            flex: 1 1 auto;
+            min-width: 55%;
+            text-align: right;
+        }
+
+        /* The sub-line under a record's name is a caption, not a
+           value. In the stacked layout the record's name and its
+           caption stay together as one block, with the caption under
+           the name — spread across the row, the caption read as a
+           separate column of its own. */
+        .surf-table tbody td.col-primary,
+        .surf-table tbody td:has(> .surf-cell-primary) {
+            flex-direction: column;
+            align-items: stretch;
+            gap: 0.15rem;
+        }
+
+        .surf-table tbody td > .surf-cell-sub {
+            flex: 0 0 auto;
+            min-width: 0;
+            margin-top: 0;
+            text-align: left;
+        }
+
+        /* A status pill is a badge, not a run of text. It keeps its
+           own size and sits against the right edge of the row. */
+        .surf-table tbody td > .surf-pill {
+            flex: 0 0 auto;
+            min-width: 0;
+            margin-left: auto;
+        }
+
+        .surf-table tbody td > .surf-cell-status,
+        .surf-table tbody td > .surf-score {
+            white-space: nowrap;
+        }
+
+        /* The score is an inline-flex box, so it shrinks to fit rather
+           than filling the slot. It has to fill for the value to sit
+           against the right edge with the rest of the column. */
+        .surf-table tbody td > .surf-score {
+            display: flex;
+            justify-content: flex-end;
+        }
+    }
+
+    /* The record table stacks below 1200px. It has six columns, which
+       run out of room well before the narrow breakpoint, so it becomes
+       a list of labelled records sooner than the four-column tables
+       do.
+
+       The header row goes with it, which is why the toolbar carries the
+       sort on narrow screens: the column headers that hold the sortable
+       buttons are no longer on the page. */
+    @media (max-width: 1200px) {
+        .surf-table--records thead {
+            display: none;
+        }
+
+        .surf-table--records,
+        .surf-table--records tbody,
+        .surf-table--records tr,
+        .surf-table--records td {
+            display: block;
+            width: 100%;
+        }
+
+        .surf-table--records tbody td.col-primary,
+        .surf-table--records tbody td.col-person,
+        .surf-table--records tbody td.col-date,
+        .surf-table--records tbody td.col-status,
+        .surf-table--records tbody td.col-score,
+        .surf-table--records tbody td.col-actions {
+            width: 100%;
+        }
+
+        .surf-table--records tbody tr {
+            padding: 0.85rem 1rem;
+            border-bottom: 1px solid var(--card-border);
+        }
+
+        /* Stacked, each cell is a labelled line rather than a row of
+           the table. The label takes a fixed narrow column and the
+           value takes the rest, so the facts read as a column of
+           aligned pairs rather than as labels stranded at one edge and
+           values stranded at the other.
+
+           A grid rather than a flex row: the label is generated
+           content, so it cannot be given a width by a flex rule
+           without also pulling the value into the row's own sizing. */
+        .surf-table--records tbody td {
+            padding: 0.25rem 0;
+            border: none;
+            display: grid;
+            grid-template-columns: 5.5rem minmax(0, 1fr);
+            align-items: baseline;
+            column-gap: 0.75rem;
+        }
+
+        .surf-table--records tbody td::before {
+            content: attr(data-label);
+            font-size: 0.63rem;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            white-space: nowrap;
+            color: var(--color-text-dim);
+        }
+
+        .surf-table--records tbody td[data-label=""]::before,
+        .surf-table--records tbody td:has(> .surf-cell-primary)::before {
+            display: none;
+        }
+
+        .surf-table--records tbody td.is-numeric {
+            text-align: left;
+        }
+
+        .surf-table--records tbody td .surf-cell-primary {
+            -webkit-line-clamp: 3;
+        }
+
+        /* The motion leads the record, so it takes the whole line: the
+           name on a line of its own, the tags under it. Left as a pair
+           of columns the name would be squeezed beside a label it does
+           not need.
+
+           The link needs an explicit width because the clamp makes it a
+           -webkit-box, and a box has no intrinsic width to fall back
+           on — as a flex item it shrinks to nothing. */
+        .surf-table--records tbody td.col-primary {
+            display: flex;
+            flex-direction: column;
+            align-items: stretch;
+            justify-content: flex-start;
+            gap: 0.35rem;
+        }
+
+        .surf-table--records tbody td.col-primary > .surf-cell-primary {
+            width: 100%;
+            flex: 0 0 auto;
+        }
+
+        .surf-table--records tbody td.col-person,
+        .surf-table--records tbody td.col-date,
+        .surf-table--records tbody td.col-score,
+        .surf-table--records tbody td.col-status {
+            white-space: normal;
+            overflow: visible;
+            text-overflow: clip;
+        }
+
+        /* The value takes the room the label leaves, and reads from
+           that same left edge on every line of the record. */
+        .surf-table--records tbody td > :not(.surf-cell-primary) {
+            min-width: 0;
+            text-align: left;
+        }
+
+        /* A status pill is a badge, not a run of text. It keeps its own
+           size and sits against the start of the value column, where
+           the other values sit.
+
+           The margin is reset because the narrower breakpoint pushes
+           a pill to the far edge of the row, which is right for the
+           plain tables but wrong here — this record's values all read
+           from one edge. */
+        .surf-table--records tbody td > .surf-pill {
+            justify-self: start;
+            margin-left: 0;
+        }
+
+        /* The date is one value, so it holds together rather than
+           being split across the line. */
+        .surf-table--records tbody td > .surf-cell-date {
+            justify-self: start;
+            margin-left: 0;
+        }
+
+        .surf-table--records tbody td > .surf-cell-status,
+        .surf-table--records tbody td > .surf-score {
+            white-space: nowrap;
+        }
+
+        /* The score cell carries the figure and its meter. Stacked, the
+           two sit on one line with the meter filling what is left, so
+           the mark is still read as a figure against a scale.
+
+           The pair hugs its own width rather than spreading, so the
+           figure stays next to its meter instead of drifting to the
+           middle of a wide row with the meter far off at the edge. */
+        .surf-table--records tbody td > .surf-score-cell {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            justify-content: flex-start;
+            gap: 0.6rem;
+        }
+
+        .surf-table--records tbody td > .surf-score-cell .surf-meter {
+            width: 72px;
+            flex: 0 0 auto;
+        }
+
+        .surf-table--records tbody td > .surf-score {
+            display: flex;
+            justify-content: flex-start;
+        }
+
+        /* The metadata tags travel with the motion, so in the stacked
+           layout they sit under it in their own row. */
+        .surf-table--records tbody td > .surf-record-meta {
+            flex: 0 0 auto;
+            width: 100%;
+            justify-content: flex-start;
+        }
+
+        /* The row's actions are the row's own controls, so they sit on
+           their own line against the right edge. */
+        .surf-table--records tbody td.col-actions {
+            display: flex;
+            justify-content: flex-end;
+            padding-top: 0.7rem;
+        }
+
+        .surf-table--records tbody td.col-actions > .surf-row-actions {
+            flex: 0 0 auto;
+            min-width: 0;
+        }
+    }
+
+    /* ============================================================
+       THE ADJUDICATION REPORT
+       ============================================================
+       A report is a document, not a dashboard. The reader is a debater
+       who has just come off the floor and wants to know what to work
+       on, and a judge who wants to see how the mark was reached.
+
+       Three rules shape it:
+
+           1. A number is never left alone. Every score travels with
+              the band it fell in and the words that describe it, so a
+              mark is always a judgement and never just a figure.
+
+           2. Sections are numbered. A report that is read once should
+              be able to be referred to afterwards — "section 3" should
+              mean the same thing to two people.
+
+           3. Nothing is decorative. Colour marks a kind of finding
+              and the kind is always written out beside it, so the
+              report still reads when it is printed in black and white.
+       ------------------------------------------------------- */
+
+    /* ---- The frame ----
+       The report is a single column of sections with a contents panel
+       beside it on a wide screen. The contents panel is what makes it
+       a document: the reader can see the shape of the report before
+       reading any of it. */
+    .rpt {
+        --rpt-measure: 68ch;
+
+        width: 100%;
+        max-width: 1180px;
+        margin: 0 auto;
+        padding: 2rem 1.5rem 4.5rem;
+    }
+
+    .rpt-grid {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 210px;
+        gap: 2rem;
+        align-items: start;
+    }
+
+    .rpt-main {
+        display: flex;
+        flex-direction: column;
+        gap: 1.25rem;
+        min-width: 0;
+    }
+
+    /* ---- The contents panel ----
+       It sticks to the top of the viewport so the reader can move
+       through a long report without scrolling back up. It is a
+       navigation landmark, so it is named as one. */
+    .rpt-toc {
+        position: sticky;
+        top: 1.5rem;
+        padding: 0.9rem 0.95rem;
+        background: var(--card-surface);
+        border: 1px solid var(--card-border);
+        border-radius: var(--radius-lg);
+    }
+
+    .rpt-toc-title {
+        margin: 0 0 0.6rem;
+        font-size: 0.62rem;
+        font-weight: 700;
+        letter-spacing: 0.11em;
+        text-transform: uppercase;
+        color: var(--color-text-dim);
+    }
+
+    .rpt-toc-list {
+        display: flex;
+        flex-direction: column;
+        gap: 0.1rem;
+        margin: 0;
+        padding: 0;
+        list-style: none;
+    }
+
+    .rpt-toc-link {
+        display: grid;
+        grid-template-columns: 1.6rem 1fr;
+        gap: 0.35rem;
+        align-items: baseline;
+        padding: 0.28rem 0.35rem;
+        border-radius: var(--radius-sm);
+        font-size: 0.78rem;
+        line-height: 1.45;
+        color: var(--color-text-muted);
+        text-decoration: none;
+        transition: color 0.15s ease, background 0.15s ease;
+    }
+
+    /* The label always sits in the second column, so an entry with no
+       number — the brief — lines up with the numbered ones below it
+       instead of falling into the narrow number column and wrapping
+       one word per line. */
+    .rpt-toc-link > span:last-child {
+        grid-column: 2;
+    }
+
+    .rpt-toc-link:hover {
+        color: var(--color-text);
+        background: rgba(255, 255, 255, 0.04);
+    }
+
+    .rpt-toc-link:focus-visible {
+        outline: 2px solid var(--color-accent-2);
+        outline-offset: 1px;
+    }
+
+    /* The section number in the contents, so a reader can say "section
+       4" and be understood. */
+    .rpt-toc-num {
+        font-size: 0.66rem;
+        font-weight: 700;
+        color: var(--color-text-dim);
+        font-variant-numeric: tabular-nums;
+    }
+
+    /* ---- A section ----
+       The panel is the section's frame. Its head carries the number,
+       the title and what is in it — a reader scanning the heads knows
+       the shape of the report without reading the bodies. */
+    .rpt-section {
+        background: var(--card-surface);
+        border: 1px solid var(--card-border);
+        border-radius: var(--radius-lg);
+        scroll-margin-top: 1.5rem;
+    }
+
+    .rpt-section-head {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: 1rem;
+        flex-wrap: wrap;
+        padding: 0.95rem 1.2rem;
+        border-bottom: 1px solid var(--card-border);
+    }
+
+    .rpt-section-title {
+        display: flex;
+        align-items: baseline;
+        gap: 0.6rem;
+        margin: 0;
+        font-size: 0.95rem;
+        font-weight: 650;
+        letter-spacing: -0.01em;
+        color: var(--color-text);
+    }
+
+    /* The section number. It is the one thing on the page that is set
+       in a heavier weight than the title, because it is a reference
+       rather than a heading. */
+    .rpt-section-num {
+        font-size: 0.68rem;
+        font-weight: 800;
+        letter-spacing: 0.06em;
+        color: var(--color-accent-2);
+        font-variant-numeric: tabular-nums;
+    }
+
+    .rpt-section-note {
+        margin: 0;
+        font-size: 0.78rem;
+        line-height: 1.5;
+        color: var(--color-text-dim);
+    }
+
+    /* The gloss under a section heading: the one line that translates
+       the section's own vocabulary into the reader's. It is set apart
+       so it reads as a key, not as more of the note. */
+    .rpt-section-gloss {
+        display: block;
+        margin-top: 0.25rem;
+        color: var(--color-text-muted);
+    }
+
+    .rpt-section-body {
+        padding: 1.2rem;
+    }
+
+    .rpt-section-body > * + * {
+        margin-top: 1rem;
+    }
+
+    /* ---- Prose ----
+       The paragraphs of the report. The measure is held to a readable
+       width: a line of text that runs the full width of a panel is
+       hard to read and hard to scan. */
+    .rpt-prose {
+        margin: 0;
+        max-width: var(--rpt-measure);
+        font-size: 0.9rem;
+        line-height: 1.75;
+        color: var(--color-text-muted);
+    }
+
+    .rpt-prose--lead {
+        font-size: 1rem;
+        line-height: 1.72;
+        color: #d4deee;
+    }
+
+    .rpt-prose strong {
+        color: var(--color-text);
+        font-weight: 600;
+    }
+
+    /* ---- The cover block ----
+       The head of the document: what was debated, who debated it, what
+       was decided. It is the one place the report states its own
+       subject, so it carries the motion at full size. */
+    .rpt-cover {
+        background: var(--card-surface);
+        border: 1px solid var(--card-border);
+        border-radius: var(--radius-lg);
+        overflow: hidden;
+    }
+
+    /* A thin accent rule along the top of the cover. It is the only
+       place in the report that uses colour as a border, and it marks
+       the document's beginning. */
+    .rpt-cover::before {
+        content: '';
+        display: block;
+        height: 2px;
+        background: var(--color-accent);
+    }
+
+    .rpt-cover-body {
+        padding: 1.4rem 1.4rem 1.25rem;
+    }
+
+    .rpt-cover-eyebrow {
+        display: block;
+        font-size: 0.62rem;
+        font-weight: 700;
+        letter-spacing: 0.13em;
+        text-transform: uppercase;
+        color: var(--color-text-dim);
+        margin-bottom: 0.5rem;
+    }
+
+    .rpt-cover-title {
+        margin: 0 0 0.65rem;
+        font-size: clamp(1.15rem, 2.2vw, 1.5rem);
+        font-weight: 700;
+        letter-spacing: -0.025em;
+        line-height: 1.3;
+        color: var(--color-text);
+    }
+
+    .rpt-cover-meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.4rem 1.1rem;
+        margin: 0;
+        font-size: 0.78rem;
+        color: var(--color-text-dim);
+    }
+
+    .rpt-cover-meta strong {
+        color: var(--color-text-muted);
+        font-weight: 600;
+    }
+
+    /* ---- The verdict block ----
+       The mark and the words that go with it, side by side. The mark
+       is the headline; the words are why. */
+    .rpt-verdict {
+        display: grid;
+        grid-template-columns: auto minmax(0, 1fr);
+        gap: 1.4rem;
+        align-items: start;
+        padding: 1.15rem 1.2rem;
+        background: var(--card-surface-2);
+        border-top: 1px solid var(--card-border);
+    }
+
+    .rpt-mark {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.3rem;
+        min-width: 6.5rem;
+    }
+
+    .rpt-mark-value {
+        font-size: 2.6rem;
+        font-weight: 800;
+        letter-spacing: -0.04em;
+        line-height: 1;
+        color: var(--color-text);
+        font-variant-numeric: tabular-nums;
+    }
+
+    .rpt-mark-denom {
+        font-size: 0.7rem;
+        font-weight: 500;
+        color: var(--color-text-dim);
+        margin-top: -0.15rem;
+    }
+
+    .rpt-mark-band {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        padding: 0.2rem 0.5rem;
+        border: 1px solid;
+        border-radius: var(--radius-sm);
+        font-size: 0.63rem;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        white-space: nowrap;
+    }
+
+    .rpt-verdict-body {
+        min-width: 0;
+    }
+
+    /* The band in a sentence. The cover says what the mark was; this
+       says what that mark means, in the rubric's own words. */
+    .rpt-grade-summary {
+        font-size: 0.9rem;
+        line-height: 1.6;
+        color: var(--color-text-muted);
+    }
+
+    /* The gap to the next band. It is the one number in the report
+       that is about the future rather than the past, so it is set
+       apart from the mark rather than beside it. */
+    .rpt-gap {
+        margin-top: 0.7rem;
+        font-size: 0.78rem;
+        color: var(--color-text-dim);
+    }
+
+    .rpt-gap strong {
+        color: var(--color-text-muted);
+        font-weight: 600;
+    }
+
+    /* ---- The ladder ----
+       The grade bands as a scale, with the round's own mark placed on
+       them. A mark alone is a number with no context; the ladder is what
+       turns it into a position on the rubric. */
+    .rpt-ladder {
+        margin-top: 1.4rem;
+        padding-top: 1.1rem;
+        border-top: 1px solid var(--color-border);
+    }
+
+    .rpt-ladder-title {
+        font-size: 0.68rem;
+        font-weight: 700;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: var(--color-text-dim);
+        margin-bottom: 0.75rem;
+    }
+
+    .rpt-ladder-list {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 0.4rem;
+    }
+
+    .rpt-ladder-row {
+        display: grid;
+        grid-template-columns: 7rem 4.5rem 1fr auto;
+        align-items: center;
+        gap: 0.75rem;
+        padding: 0.45rem 0.6rem;
+        border-radius: var(--radius-sm);
+        border: 1px solid transparent;
+    }
+
+    /* A band above the mark was not reached, so it is dimmed. */
+    .rpt-ladder-row.is-ahead .rpt-ladder-label,
+    .rpt-ladder-row.is-ahead .rpt-ladder-range {
+        color: var(--color-text-dim);
+        opacity: 0.6;
+    }
+
+    .rpt-ladder-row.is-current {
+        background: var(--color-surface-2);
+        border-color: var(--color-border);
+    }
+
+    .rpt-ladder-label {
+        font-size: 0.8rem;
+        font-weight: 600;
+        color: var(--color-text);
+    }
+
+    .rpt-ladder-range {
+        font-size: 0.72rem;
+        color: var(--color-text-dim);
+        font-variant-numeric: tabular-nums;
+    }
+
+    .rpt-ladder-bar {
+        height: 0.45rem;
+        border-radius: 999px;
+        background: rgba(148, 163, 184, 0.16);
+        overflow: hidden;
+    }
+
+    .rpt-ladder-fill {
+        display: block;
+        height: 100%;
+        border-radius: inherit;
+        background: var(--color-text-dim);
+    }
+
+    /* A band the mark is above is complete. */
+    .rpt-ladder-row.is-passed .rpt-ladder-fill {
+        background: var(--color-text-muted);
+    }
+
+    .rpt-ladder-row.is-current .rpt-ladder-fill {
+        background: var(--color-accent);
+    }
+
+    .rpt-ladder-mark {
+        font-size: 0.78rem;
+        font-weight: 700;
+        color: var(--color-text);
+        font-variant-numeric: tabular-nums;
+    }
+
+    .rpt-ladder-note {
+        font-size: 0.68rem;
+        color: var(--color-text-dim);
+        font-variant-numeric: tabular-nums;
+        white-space: nowrap;
+    }
+
+    .rpt-ladder-foot {
+        margin-top: 0.8rem;
+        font-size: 0.72rem;
+        line-height: 1.55;
+        color: var(--color-text-dim);
+    }
+
+    .rpt-ladder-foot code {
+        font-family: var(--font-mono, ui-monospace, monospace);
+        font-size: 0.68rem;
+        padding: 0.05rem 0.25rem;
+        border-radius: 3px;
+        background: rgba(148, 163, 184, 0.14);
+    }
+
+    /* ---- The brief ----
+       The report in one screen, in plain words.
+
+       This is the panel that decides whether the rest of the report is
+       usable. A reader who has just come off the floor does not want to
+       decode a score of 77 in a band called "Score" — they want to be
+       told what happened and what to do about it. The detailed sections
+       below are the evidence for these four lines; this is the answer
+       they came for.
+
+       It sits between the cover and section 01 rather than inside
+       either, because it is neither the headline nor the detail. */
+    .rpt-brief {
+        padding: 1.25rem 1.35rem;
+        border: 1px solid var(--color-border);
+        border-left: 3px solid var(--color-accent);
+        border-radius: var(--radius-lg);
+        background: var(--color-surface-2);
+    }
+
+    .rpt-brief-title {
+        font-size: 0.7rem;
+        font-weight: 700;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: var(--color-accent);
+        margin: 0 0 0.9rem;
+    }
+
+    /* A definition list, because each line is a term and its
+       explanation. */
+    .rpt-brief-list {
+        margin: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 0.85rem;
+    }
+
+    .rpt-brief-line {
+        display: grid;
+        grid-template-columns: 8.5rem minmax(0, 1fr);
+        gap: 1rem;
+        align-items: baseline;
+    }
+
+    /* The label is the reader's way in — it says what kind of line
+       this is, in two words, before the sentence begins. */
+    .rpt-brief-label {
+        font-size: 0.68rem;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--color-text-dim);
+    }
+
+    .rpt-brief-text {
+        margin: 0;
+        font-size: 0.92rem;
+        line-height: 1.65;
+        color: var(--color-text);
+        max-width: var(--rpt-measure);
+    }
+
+    /* The line that tells the reader what to do is the one they came
+       for, so it is the one that is set apart. */
+    .rpt-brief-line--action .rpt-brief-label {
+        color: var(--color-accent-2);
+    }
+
+    .rpt-brief-line--action .rpt-brief-text {
+        color: #d4deee;
+        font-weight: 500;
+    }
+
+    .rpt-brief-line--strength .rpt-brief-label {
+        color: #6ee7b7;
+    }
+
+    .rpt-brief-line--weakness .rpt-brief-label {
+        color: #fbbf24;
+    }
+
+    /* The key to the two band vocabularies. Set apart from the brief's
+       own lines so it reads as a footnote rather than as a fifth
+       finding. */
+    .rpt-brief-key {
+        margin: 1rem 0 0;
+        padding-top: 0.75rem;
+        border-top: 1px solid var(--color-border);
+        font-size: 0.78rem;
+        line-height: 1.6;
+        color: var(--color-text-muted);
+        max-width: var(--rpt-measure);
+    }
+
+    /* ---- The scorecard ----
+       A table, because a scorecard is a table. Each row is one
+       criterion: the score, the bar, the band it fell in and the words
+       that describe that band. */
+    .rpt-card {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    .rpt-card caption {
+        text-align: left;
+        padding-bottom: 0.7rem;
+        font-size: 0.78rem;
+        line-height: 1.6;
+        color: var(--color-text-dim);
+    }
+
+    .rpt-card th {
+        padding: 0 0.6rem 0.55rem 0;
+        text-align: left;
+        font-size: 0.62rem;
+        font-weight: 700;
+        letter-spacing: 0.09em;
+        text-transform: uppercase;
+        color: var(--color-text-dim);
+        border-bottom: 1px solid var(--card-border);
+    }
+
+    .rpt-card td {
+        padding: 0.85rem 0.6rem 0.85rem 0;
+        vertical-align: top;
+        border-bottom: 1px solid var(--card-border);
+    }
+
+    .rpt-card tr:last-child td {
+        border-bottom: none;
+        padding-bottom: 0;
+    }
+
+    /* The criterion: its name and what it measures. */
+    .rpt-criterion {
+        min-width: 10rem;
+    }
+
+    .rpt-criterion-name {
+        font-size: 0.9rem;
+        font-weight: 650;
+        color: var(--color-text);
+        margin-bottom: 0.2rem;
+    }
+
+    .rpt-criterion-note {
+        font-size: 0.75rem;
+        line-height: 1.55;
+        color: var(--color-text-dim);
+        max-width: 30ch;
+    }
+
+    /* The score and its bar. */
+    .rpt-score {
+        display: flex;
+        flex-direction: column;
+        gap: 0.4rem;
+        min-width: 7.5rem;
+    }
+
+    .rpt-score-value {
+        font-size: 0.95rem;
+        font-weight: 700;
+        color: var(--color-text);
+        font-variant-numeric: tabular-nums;
+        white-space: nowrap;
+    }
+
+    .rpt-score-value span {
+        font-size: 0.72rem;
+        font-weight: 500;
+        color: var(--color-text-dim);
+    }
+
+    .rpt-score-pct {
+        font-size: 0.68rem;
+        color: var(--color-text-dim);
+        font-variant-numeric: tabular-nums;
+    }
+
+    /* The band, and the words that describe it. This is the part that
+       turns a number into a judgement. */
+    .rpt-band {
+        min-width: 13rem;
+    }
+
+    .rpt-band-label {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        font-size: 0.7rem;
+        font-weight: 700;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        color: var(--color-text-muted);
+        margin-bottom: 0.25rem;
+    }
+
+    .rpt-band-label::before {
+        content: '';
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: currentColor;
+        flex-shrink: 0;
+    }
+
+    .rpt-band-note {
+        font-size: 0.78rem;
+        line-height: 1.6;
+        color: var(--color-text-muted);
+    }
+
+    /* The criterion's own scale, with the band the score landed in
+       marked. Two vocabularies in one table is the thing that makes a
+       report hard to read, so each criterion carries the line it fell
+       short of, next to the score. */
+    .rpt-mini-ladder {
+        list-style: none;
+        margin: 0.55rem 0 0;
+        padding: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 1px;
+        border-radius: var(--radius-sm);
+        overflow: hidden;
+    }
+
+    .rpt-mini-band {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: 0.5rem;
+        padding: 0.16rem 0.42rem;
+        font-size: 0.68rem;
+        line-height: 1.5;
+        color: var(--color-text-dim);
+        background: rgba(255, 255, 255, 0.03);
+    }
+
+    .rpt-mini-band.is-current {
+        color: var(--color-text);
+        font-weight: 600;
+        background: rgba(99, 102, 241, 0.14);
+        box-shadow: inset 2px 0 0 var(--color-accent);
+    }
+
+    .rpt-mini-band-at {
+        font-variant-numeric: tabular-nums;
+        opacity: 0.72;
+    }
+
+    .rpt-mini-gap {
+        margin: 0.4rem 0 0;
+        font-size: 0.7rem;
+        font-weight: 600;
+        letter-spacing: 0.02em;
+        color: var(--color-accent-2);
+    }
+
+    /* The bar, in the criterion's own colour so the three rows read as
+       three different measures rather than three copies of one. */
+    .rpt-bar {
+        height: 5px;
+        border-radius: 3px;
+        background: rgba(255, 255, 255, 0.07);
+        overflow: hidden;
+    }
+
+    .rpt-bar-fill {
+        display: block;
+        height: 100%;
+        border-radius: 3px;
+        background: var(--color-accent);
+    }
+
+    .rpt-bar-fill--matter { background: #4f5edd; }
+    .rpt-bar-fill--manner { background: #38bdf8; }
+    .rpt-bar-fill--method { background: #a78bfa; }
+
+    /* ---- The readout ----
+       The paragraph that says what the mark means. It sits under the
+       scorecard and reads as a judge's summary in prose. */
+    .rpt-readout {
+        padding: 0.95rem 1.05rem;
+        background: rgba(79, 94, 221, 0.07);
+        border-left: 2px solid var(--color-accent);
+        border-radius: 0 var(--radius) var(--radius) 0;
+    }
+
+    .rpt-readout-title {
+        margin: 0 0 0.45rem;
+        font-size: 0.63rem;
+        font-weight: 700;
+        letter-spacing: 0.11em;
+        text-transform: uppercase;
+        color: var(--color-accent-2);
+    }
+
+    .rpt-readout p {
+        margin: 0;
+        max-width: var(--rpt-measure);
+        font-size: 0.875rem;
+        line-height: 1.7;
+        color: #d4deee;
+    }
+
+    .rpt-readout p + p {
+        margin-top: 0.5rem;
+    }
+
+    /* ---- The findings ----
+       One block per kind of finding. The kind is stated in words at
+       the head of the block, so the colour is a reinforcement and
+       never the carrier of the meaning. */
+    .rpt-group + .rpt-group {
+        margin-top: 1.4rem;
+    }
+
+    .rpt-group-head {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin: 0 0 0.4rem;
+        font-size: 0.7rem;
+        font-weight: 700;
+        letter-spacing: 0.09em;
+        text-transform: uppercase;
+        color: var(--color-text-muted);
+    }
+
+    .rpt-group-rule {
+        flex: 1;
+        height: 1px;
+        background: var(--card-border);
+    }
+
+    /* One finding. */
+    .rpt-item {
+        display: grid;
+        grid-template-columns: 1.9rem minmax(0, 1fr);
+        gap: 0.7rem;
+        padding: 0.8rem 0;
+        border-bottom: 1px solid var(--card-border);
+    }
+
+    .rpt-item:last-child {
+        border-bottom: none;
+        padding-bottom: 0;
+    }
+
+    .rpt-item:first-of-type {
+        padding-top: 0.2rem;
+    }
+
+    .rpt-item-num {
+        font-size: 0.66rem;
+        font-weight: 800;
+        color: var(--color-text-dim);
+        font-variant-numeric: tabular-nums;
+        padding-top: 2px;
+    }
+
+    .rpt-item-body {
+        min-width: 0;
+    }
+
+    /* The phase a finding is about, and the judge's own tag for it.
+       Both are metadata about the finding, so they sit on one line
+       above the finding itself. */
+    .rpt-item-meta {
+        display: flex;
+        align-items: center;
+        gap: 0.45rem;
+        flex-wrap: wrap;
+        margin-bottom: 0.35rem;
+    }
+
+    /* The phase. It is the most useful thing on the line — it tells
+       the reader which speech to reopen — so it is the loudest. */
+    .rpt-phase {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.3rem;
+        padding: 0.16rem 0.45rem;
+        border: 1px solid var(--card-border-hover);
+        border-radius: var(--radius-sm);
+        background: rgba(255, 255, 255, 0.04);
+        font-size: 0.63rem;
+        font-weight: 700;
+        letter-spacing: 0.07em;
+        text-transform: uppercase;
+        color: var(--color-text-muted);
+        white-space: nowrap;
+    }
+
+    /* The judge's tag. It repeats what the group heading already says,
+       but on the finding itself it tells the reader what kind of note
+       this is without them having to count back up the page. */
+    .rpt-tag {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.16rem 0.45rem;
+        border: 1px solid;
+        border-radius: var(--radius-sm);
+        font-size: 0.6rem;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        white-space: nowrap;
+    }
+
+    .rpt-tag--strength { background: rgba(16,185,129,0.12); color: #34d399; border-color: rgba(16,185,129,0.25); }
+    .rpt-tag--issue    { background: rgba(239,68,68,0.10);  color: #f87171; border-color: rgba(239,68,68,0.22); }
+    .rpt-tag--tip      { background: rgba(56,189,248,0.10); color: #38bdf8; border-color: rgba(56,189,248,0.22); }
+    .rpt-tag--drill    { background: rgba(245,158,11,0.10); color: #fbbf24; border-color: rgba(245,158,11,0.22); }
+    .rpt-tag--note     { background: rgba(148,163,184,0.08); color: #94a3b8; border-color: rgba(148,163,184,0.18); }
+
+    /* The words the speaker actually used, set apart from the judge's
+       comment on them. */
+    .rpt-quote {
+        margin: 0 0 0.5rem;
+        padding: 0.5rem 0.7rem;
+        border-left: 2px solid var(--card-border-hover);
+        background: rgba(255, 255, 255, 0.02);
+        border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+        font-size: 0.85rem;
+        line-height: 1.6;
+        color: #d4deee;
+        font-style: italic;
+    }
+
+    .rpt-item-text {
+        margin: 0;
+        max-width: var(--rpt-measure);
+        font-size: 0.875rem;
+        line-height: 1.7;
+        color: var(--color-text-muted);
+    }
+
+    /* ---- The drill ----
+       The one thing to do next. It gets its own panel rather than
+       being a bullet among the others, because it is the only finding
+       that is an instruction rather than an observation. */
+    .rpt-drill {
+        display: flex;
+        gap: 0.85rem;
+        padding: 1rem 1.05rem;
+        background: rgba(245, 158, 11, 0.06);
+        border: 1px solid rgba(245, 158, 11, 0.22);
+        border-radius: var(--radius-lg);
+    }
+
+    .rpt-drill-icon {
+        flex-shrink: 0;
+        width: 1.75rem;
+        height: 1.75rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: var(--radius);
+        background: rgba(245, 158, 11, 0.12);
+        color: #fbbf24;
+    }
+
+    .rpt-drill-body {
+        min-width: 0;
+    }
+
+    .rpt-drill-title {
+        margin: 0 0 0.35rem;
+        font-size: 0.63rem;
+        font-weight: 700;
+        letter-spacing: 0.11em;
+        text-transform: uppercase;
+        color: #fbbf24;
+    }
+
+    .rpt-drill-text {
+        margin: 0;
+        max-width: var(--rpt-measure);
+        font-size: 0.9rem;
+        line-height: 1.7;
+        color: #d4deee;
+    }
+
+    /* ---- The fallacies ----
+       Each one names the phase it happened in and the error itself.
+       The type is the heading; the explanation is the judge's
+       reasoning, which is the part a debater can actually learn from. */
+    .rpt-fallacy {
+        display: grid;
+        grid-template-columns: 8.5rem minmax(0, 1fr);
+        gap: 1rem;
+        padding: 0.9rem 0;
+        border-bottom: 1px solid var(--card-border);
+        align-items: start;
+    }
+
+    .rpt-fallacy:last-child {
+        border-bottom: none;
+        padding-bottom: 0;
+    }
+
+    .rpt-fallacy:first-of-type {
+        padding-top: 0.2rem;
+    }
+
+    .rpt-fallacy-type {
+        font-size: 0.85rem;
+        font-weight: 650;
+        color: #fbbf24;
+        line-height: 1.4;
+    }
+
+    .rpt-fallacy-phase {
+        display: block;
+        margin-top: 0.3rem;
+        font-size: 0.62rem;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--color-text-dim);
+    }
+
+    .rpt-fallacy-text {
+        margin: 0;
+        max-width: var(--rpt-measure);
+        font-size: 0.85rem;
+        line-height: 1.7;
+        color: var(--color-text-muted);
+    }
+
+    /* The clean report: no fallacies were found. */
+    .rpt-clear {
+        display: flex;
+        align-items: flex-start;
+        gap: 0.65rem;
+        padding: 0.85rem 1rem;
+        background: rgba(16, 185, 129, 0.05);
+        border: 1px solid rgba(16, 185, 129, 0.2);
+        border-radius: var(--radius-lg);
+    }
+
+    .rpt-clear-icon {
+        flex-shrink: 0;
+        color: #6ee7b7;
+        margin-top: 0.1rem;
+    }
+
+    .rpt-clear-text {
+        margin: 0;
+        font-size: 0.85rem;
+        line-height: 1.65;
+        color: #6ee7b7;
+    }
+
+    /* ---- The round ----
+       Phase by phase: what was said, how long it ran, and how much of
+       the phase's time it used. */
+    .rpt-phase-row {
+        display: grid;
+        grid-template-columns: 8rem minmax(0, 1fr) 11rem;
+        gap: 1rem;
+        padding: 0.9rem 0;
+        border-bottom: 1px solid var(--card-border);
+        align-items: start;
+    }
+
+    .rpt-phase-row:last-child {
+        border-bottom: none;
+        padding-bottom: 0;
+    }
+
+    .rpt-phase-row:first-of-type {
+        padding-top: 0.2rem;
+    }
+
+    .rpt-phase-name {
+        font-size: 0.85rem;
+        font-weight: 650;
+        color: var(--color-text);
+    }
+
+    .rpt-phase-stats {
+        display: block;
+        margin-top: 0.25rem;
+        font-size: 0.7rem;
+        line-height: 1.5;
+        color: var(--color-text-dim);
+        font-variant-numeric: tabular-nums;
+    }
+
+    .rpt-phase-text {
+        margin: 0;
+        font-size: 0.83rem;
+        line-height: 1.7;
+        color: var(--color-text-muted);
+        max-width: 62ch;
+    }
+
+    /* The exchange within a phase. Each speech is labelled with the
+       side that made it, so the reader can tell their own speech from
+       the one it answered. */
+    .rpt-phase-body {
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 0.6rem;
+    }
+
+    .rpt-phase-turn {
+        padding-left: 0.7rem;
+        border-left: 2px solid var(--color-border);
+    }
+
+    /* The speaker's own speeches are marked with the accent rule, so
+       the eye finds them without reading the label. */
+    .rpt-phase-turn.is-own {
+        border-left-color: var(--color-accent);
+    }
+
+    .rpt-phase-who {
+        display: block;
+        font-size: 0.62rem;
+        font-weight: 700;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: var(--color-text-dim);
+        margin-bottom: 0.2rem;
+    }
+
+    .rpt-phase-turn.is-own .rpt-phase-who {
+        color: var(--color-accent);
+    }
+
+    /* What the time used means for this phase. It is the one place in
+       the report where a number is turned into a consequence, so it is
+       set apart from the speeches it sits under. */
+    .rpt-phase-verdict {
+        margin: 0.35rem 0 0;
+        padding: 0.5rem 0.7rem;
+        border-left: 2px solid var(--color-border);
+        font-size: 0.78rem;
+        line-height: 1.6;
+        color: var(--color-text-muted);
+    }
+
+    .rpt-phase-verdict--short {
+        border-left-color: var(--color-warning);
+        color: #fbbf24;
+    }
+
+    .rpt-phase-verdict--long {
+        border-left-color: var(--color-danger);
+        color: #f87171;
+    }
+
+    /* The time used. The bar fills to the share of the budget that was
+       used, so a short answer is visible at a glance. */
+    .rpt-time {
+        min-width: 0;
+    }
+
+    .rpt-time-bar {
+        height: 4px;
+        border-radius: 2px;
+        background: rgba(255, 255, 255, 0.07);
+        overflow: hidden;
+        margin-bottom: 0.35rem;
+    }
+
+    .rpt-time-fill {
+        display: block;
+        height: 100%;
+        border-radius: 2px;
+        background: var(--color-accent-2);
+    }
+
+    .rpt-time-note {
+        font-size: 0.68rem;
+        line-height: 1.5;
+        color: var(--color-text-dim);
+        font-variant-numeric: tabular-nums;
+    }
+
+    /* A phase that was cut short, or over-run. The note says which, so
+       the colour never has to carry it alone. */
+    .rpt-time-fill--short { background: var(--color-warning); }
+    .rpt-time-fill--long  { background: var(--color-danger); }
+
+    .rpt-time-note--short { color: #fbbf24; }
+    .rpt-time-note--long  { color: #f87171; }
+
+    /* ---- The record ----
+       The verbatim transcript, for reference. Every turn, in order,
+       with the side that spoke it. The speeches are disclosed rather
+       than printed open, because the record is the appendix — most
+       readers want the analysis and the drill, and the transcript is
+       one click away when they do want it. */
+    .rpt-turn {
+        border-bottom: 1px solid var(--card-border);
+    }
+
+    .rpt-turn:last-child {
+        border-bottom: none;
+    }
+
+    .rpt-turn-summary {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        padding: 0.7rem 0;
+        cursor: pointer;
+        list-style: none;
+    }
+
+    /* The disclosure marker is replaced by the "Show" affordance, so
+       the control reads as an action rather than as a triangle. */
+    .rpt-turn-summary::-webkit-details-marker {
+        display: none;
+    }
+
+    .rpt-turn-summary:hover .rpt-turn-toggle {
+        color: var(--color-text);
+        border-color: var(--color-border-hover);
+    }
+
+    .rpt-turn-summary:focus-visible {
+        outline: 2px solid var(--color-accent);
+        outline-offset: 3px;
+        border-radius: var(--radius-sm);
+    }
+
+    .rpt-turn-who {
+        display: flex;
+        flex-direction: column;
+        gap: 0.2rem;
+        align-items: flex-start;
+    }
+
+    .rpt-turn-side {
+        font-size: 0.72rem;
+        font-weight: 700;
+        color: var(--color-text);
+    }
+
+    .rpt-turn-phase {
+        font-size: 0.61rem;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--color-text-dim);
+    }
+
+    .rpt-turn-meta {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        font-size: 0.68rem;
+        color: var(--color-text-dim);
+        font-variant-numeric: tabular-nums;
+        white-space: nowrap;
+    }
+
+    .rpt-turn-toggle {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.15rem 0.5rem;
+        border: 1px solid var(--color-border);
+        border-radius: var(--radius-sm);
+        font-size: 0.63rem;
+        font-weight: 600;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        color: var(--color-text-muted);
+    }
+
+    /* The label says what the click will do, and flips when open. */
+    .rpt-turn-toggle::after {
+        content: 'Show';
+    }
+
+    .rpt-turn[open] .rpt-turn-toggle::after {
+        content: 'Hide';
+    }
+
+    .rpt-turn-text {
+        margin: 0 0 1rem;
+        padding: 0.9rem 1rem;
+        background: rgba(148, 163, 184, 0.05);
+        border-left: 2px solid var(--color-border);
+        border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+        font-size: 0.85rem;
+        line-height: 1.75;
+        color: var(--color-text-muted);
+        max-width: var(--rpt-measure);
+    }
+
+    /* The speaker's own turns are set apart from the opponent's, so
+       the report's own subject is easy to follow. */
+    .rpt-turn--user .rpt-turn-text {
+        color: #d4deee;
+        border-left-color: var(--color-accent);
+    }
+
+    /* The control that opens the whole transcript at once. */
+    .rpt-record-tools {
+        display: flex;
+        justify-content: flex-end;
+        margin-bottom: 0.5rem;
+    }
+
+    .rpt-record-toggle {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        padding: 0.35rem 0.7rem;
+        border: 1px solid var(--color-border);
+        border-radius: var(--radius-sm);
+        background: transparent;
+        font-size: 0.68rem;
+        font-weight: 600;
+        letter-spacing: 0.04em;
+        color: var(--color-text-muted);
+        cursor: pointer;
+        transition: color 0.15s ease, border-color 0.15s ease;
+    }
+
+    .rpt-record-toggle:hover {
+        color: var(--color-text);
+        border-color: var(--color-border-hover);
+    }
+
+    .rpt-record-toggle:focus-visible {
+        outline: 2px solid var(--color-accent);
+        outline-offset: 2px;
+    }
+
+    /* ---- The facts ----
+       The metadata of the session: who argued what, at what level. It
+       is a definition list, because that is what it is. */
+    .rpt-facts {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+        gap: 1px;
+        background: var(--card-border);
+        border: 1px solid var(--card-border);
+        border-radius: var(--radius-lg);
+        overflow: hidden;
+    }
+
+    .rpt-fact {
+        padding: 0.7rem 0.8rem;
+        background: var(--card-surface);
+    }
+
+    .rpt-fact-label {
+        display: block;
+        margin-bottom: 0.22rem;
+        font-size: 0.61rem;
+        font-weight: 700;
+        letter-spacing: 0.09em;
+        text-transform: uppercase;
+        color: var(--color-text-dim);
+    }
+
+    .rpt-fact-value {
+        font-size: 0.82rem;
+        font-weight: 600;
+        color: var(--color-text);
+        text-transform: capitalize;
+    }
+
+    /* ---- The toolbar ----
+       The report's own actions: back to the arena, copy the
+       transcript, export. */
+    .rpt-toolbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.6rem;
+        flex-wrap: wrap;
+        margin-bottom: 1.25rem;
+    }
+
+    .rpt-toolbar-actions {
+        display: flex;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+    }
+
+    /* ---- The closing actions ---- */
+    .rpt-footer {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 0.6rem;
+        margin-top: 1.5rem;
+        flex-wrap: wrap;
+    }
+
+    /* ============================================================
+       RESPONSIVE
+       The report is a single column on a phone, and the contents
+       panel becomes a plain list at the top of the document.
+       ------------------------------------------------------- */
+
+    @media (max-width: 1020px) {
+        .rpt-grid {
+            grid-template-columns: minmax(0, 1fr);
+            gap: 1.25rem;
+        }
+
+        /* On one column the contents panel cannot sit beside the
+           report, so it moves above it and stops sticking — a sticky
+           panel above the document would cover the section the reader
+           just jumped to. */
+        .rpt-toc {
+            position: static;
+        }
+
+        .rpt-toc-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+            gap: 0.15rem;
+        }
+    }
+
+    @media (max-width: 720px) {
+        .rpt {
+            padding: 1.5rem 1rem 3rem;
+        }
+
+        /* The verdict block stacks: the mark above the words. */
+        .rpt-verdict {
+            grid-template-columns: minmax(0, 1fr);
+            gap: 0.9rem;
+        }
+
+        /* The brief stacks: the label above its sentence. */
+        .rpt-brief {
+            padding: 1.1rem 1rem;
+        }
+
+        .rpt-brief-line {
+            grid-template-columns: minmax(0, 1fr);
+            gap: 0.25rem;
+        }
+
+        /* The scorecard becomes a stack of blocks, one per criterion.
+           A four-column table on a phone is four narrow columns with
+           a bar in one of them — unreadable. */
+        .rpt-card,
+        .rpt-card tbody,
+        .rpt-card tr,
+        .rpt-card td {
+            display: block;
+            width: 100%;
+        }
+
+        .rpt-card thead {
+            display: none;
+        }
+
+        /* The caption is prose about the table, and prose set in a
+           table cell collapses to one word a line once the table
+           becomes a stack of blocks. It is read out of the table and
+           given the width of the section instead. */
+        .rpt-card caption {
+            display: block;
+            width: 100%;
+            padding-bottom: 0.9rem;
+        }
+
+        .rpt-card tr {
+            padding: 0.85rem 0;
+            border-bottom: 1px solid var(--card-border);
+        }
+
+        .rpt-card tr:last-child {
+            border-bottom: none;
+        }
+
+        .rpt-card td {
+            padding: 0;
+            border-bottom: none;
+        }
+
+        /* The criterion's name comes first, then its score, then the
+           band — the order a reader wants them in. */
+        .rpt-card td + td {
+            margin-top: 0.55rem;
+        }
+
+        /* The table's column headings are gone once the table becomes
+           a stack of blocks, so each cell carries its own label. The
+           label is only shown on a phone — on a wide screen the
+           column heading above it says the same thing. */
+        .rpt-card td[data-label]::before {
+            content: attr(data-label);
+            display: block;
+            margin-bottom: 0.3rem;
+            font-size: 0.6rem;
+            font-weight: 700;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: var(--color-text-dim);
+        }
+
+        .rpt-criterion-note {
+            max-width: none;
+        }
+
+        .rpt-band {
+            min-width: 0;
+        }
+
+        /* The phase row stacks: the phase and its numbers, then the
+           speech, then the time. */
+        .rpt-phase-row {
+            grid-template-columns: minmax(0, 1fr);
+            gap: 0.55rem;
+        }
+
+        .rpt-fallacy {
+            grid-template-columns: minmax(0, 1fr);
+            gap: 0.35rem;
+        }
+
+        /* The record's summary stacks: who spoke on one line, the
+           word count and the control on the next. */
+        .rpt-turn-summary {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 0.35rem;
+        }
+
+        .rpt-turn-who {
+            flex-direction: row;
+            align-items: baseline;
+            gap: 0.5rem;
+        }
+
+        /* The ladder loses its range column and lets the bar take the
+           space; four columns do not fit a phone. */
+        .rpt-ladder-row {
+            grid-template-columns: 6rem minmax(0, 1fr) auto;
+            gap: 0.5rem;
+        }
+
+        .rpt-ladder-range {
+            display: none;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .rpt-toolbar {
+            flex-direction: column;
+            align-items: stretch;
+        }
+
+        .rpt-toolbar-actions {
+            flex-direction: column;
+        }
+
+        .rpt-toolbar-actions .surf-btn {
+            width: 100%;
         }
     }
 }

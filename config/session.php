@@ -169,6 +169,10 @@ return [
     |
     */
 
+    // Left null by default so Laravel auto-detects from the request scheme
+    // (which works behind the HTTPS-terminating proxy because the forwarded
+    // proto header is trusted). Set SESSION_SECURE_COOKIE=true explicitly in
+    // production so the cookie is marked Secure even if that header is lost.
     'secure' => env('SESSION_SECURE_COOKIE'),
 
     /*

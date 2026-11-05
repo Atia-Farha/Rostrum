@@ -4,16 +4,13 @@
 @section('meta_description', 'Practice competitive debate against an AI opponent in English or Bangla — with expert adjudication feedback.')
 @section('body_class', 'is-landing')
 
-@section('nav_actions')
-    <a href="{{ route('history.index') }}" class="btn btn-ghost btn-sm nav-history-link">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-        History
-    </a>
-    <a href="{{ route('setup') }}" class="btn btn-primary btn-sm" id="nav-start-practice">
-        Get Started
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg>
-    </a>
-@endsection
+{{-- The landing page keeps the nav but drops the four dashboard links.
+     A signed-in visitor reaches Dashboard, Account Settings and History
+     through the rail on every working page, so listing them in the nav
+     would put the same destinations in front of them twice.
+
+     The HomeController shares 'hideDashboardLinks' for this; see
+     layouts/app.blade.php. --}}
 
 @section('content')
 
@@ -27,7 +24,21 @@
         <div class="landing-hero-grid">
 
             <div class="landing-hero-copy">
-                <div class="landing-reveal">
+                {{-- Two rows, not one. The badge is a wide, detailed graphic
+                     and the eyebrow is a thin pill; set side by side they
+                     fight for the same horizontal space and neither reads
+                     properly. Stacked, the badge leads as the credential
+                     and the eyebrow labels what the product is. --}}
+                <div class="landing-reveal landing-hero-provenance">
+                    <span class="landing-badge">
+                        <img src="{{ asset('Built-for-AIgnite-2026.png') }}"
+                             alt="Built for AIgnite Buildathon 2026 — Ostad presents, National AI Hackathon for B2C Solutions"
+                             width="2105"
+                             height="747"
+                             loading="eager"
+                             decoding="async">
+                    </span>
+
                     <span class="landing-eyebrow">AI Debate Training Platform</span>
                 </div>
 
@@ -41,7 +52,7 @@
                 </p>
 
                 <div class="landing-hero-actions landing-reveal landing-reveal-delay-3">
-                    <a href="{{ route('setup') }}" id="btn-start-practice" class="landing-btn-primary">
+                    <a href="{{ auth()->check() ? route('dashboard') : route('register') }}" id="btn-start-practice" class="landing-btn-primary">
                         Begin a Debate Session
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg>
                     </a>
@@ -96,7 +107,7 @@
     </div>
 
     {{-- Features bento --}}
-    <section class="landing-section landing-container">
+    <section id="features" class="landing-section landing-container">
         <div class="landing-section-head">
             <span class="landing-eyebrow">Platform Features</span>
             <h2 class="landing-display landing-section-title">
@@ -199,7 +210,7 @@
     </section>
 
     {{-- Scoring rubric --}}
-    <section class="landing-section landing-container">
+    <section id="scoring" class="landing-section landing-container">
         <div class="landing-section-head">
             <span class="landing-eyebrow">Scoring Framework</span>
             <h2 class="landing-display landing-section-title">
@@ -236,9 +247,13 @@
                 Ready to take the <span class="landing-text-accent">podium</span>?
             </h2>
             <p class="landing-cta-desc">
-                Start your first debate session in under a minute. No account required — just pick a motion and begin.
+                @auth
+                    Start your first debate session in under a minute — just pick a motion and begin.
+                @else
+                    Create a free account in under a minute, then pick a motion and begin.
+                @endauth
             </p>
-            <a href="{{ route('setup') }}" class="landing-btn-primary">
+            <a href="{{ auth()->check() ? route('dashboard') : route('register') }}" class="landing-btn-primary">
                 Start Practicing Now
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg>
             </a>
@@ -248,12 +263,59 @@
     {{-- Footer --}}
     <footer class="landing-footer">
         <div class="landing-container landing-footer-inner">
-            <div class="landing-footer-brand">
-                <span class="nav-logo-mark"></span>
-                Rostrum
+
+            {{-- Brand column: what this is, and where to start. --}}
+            <div class="landing-footer-brand-col">
+                <a href="{{ route('home') }}" class="landing-footer-logo">
+                    <span class="nav-logo-mark" aria-hidden="true"></span>
+                    Rostrum
+                </a>
+                <p class="landing-footer-blurb">
+                    Structured debate training with formal adjudication —
+                    scored on the Matter, Manner and Method rubric used in
+                    competitive university debate.
+                </p>
             </div>
-            <p class="landing-footer-copy">
-                &copy; {{ date('Y') }} Rostrum · Powered by <strong>Gemini 3.6 Flash</strong> &amp; <strong>ElevenLabs Scribe &amp; Voice</strong>
+
+            {{-- Section links. These scroll to the sections on this page, so
+                 a visitor never has to leave it to find out what is here. --}}
+            <nav class="landing-footer-col" aria-label="Explore">
+                <h2 class="landing-footer-heading">Explore</h2>
+                <ul class="landing-footer-list">
+                    <li><a href="#features">Platform features</a></li>
+                    <li><a href="#how-it-works">How it works</a></li>
+                    <li><a href="#scoring">Scoring framework</a></li>
+                </ul>
+            </nav>
+
+            {{-- Account links. --}}
+            <nav class="landing-footer-col" aria-label="Account">
+                <h2 class="landing-footer-heading">Account</h2>
+                <ul class="landing-footer-list">
+                    @auth
+                        <li><a href="{{ route('dashboard') }}">Dashboard</a></li>
+                        <li><a href="{{ route('account.index') }}">Settings</a></li>
+                        <li>
+                            <form method="POST" action="{{ route('logout') }}">
+                                @csrf
+                                <button type="submit" class="landing-footer-link-button">Sign out</button>
+                            </form>
+                        </li>
+                    @else
+                        <li><a href="{{ route('login') }}">Sign in</a></li>
+                        <li><a href="{{ route('register') }}">Sign up</a></li>
+                    @endauth
+                </ul>
+            </nav>
+        </div>
+
+        {{-- Legal bar. --}}
+        <div class="landing-container landing-footer-bar">
+            <p class="landing-footer-legal">
+                &copy; {{ date('Y') }} Rostrum. All rights reserved.
+            </p>
+            <p class="landing-footer-tech">
+                Powered by <strong>Gemini 3.6 Flash</strong> &amp; <strong>ElevenLabs Scribe &amp; Voice</strong>
             </p>
         </div>
     </footer>

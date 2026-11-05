@@ -18,6 +18,7 @@ class DatabaseSeeder extends Seeder
         $this->call([
             PersonaSeeder::class,
             TournamentModeSeeder::class,
+            SeedAccountSeeder::class,
         ]);
     }
 }

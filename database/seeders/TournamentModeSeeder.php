@@ -63,7 +63,20 @@ class TournamentModeSeeder extends Seeder
         // ──────────────────────────────────────────────────────────
         // 3. Debate
         // ──────────────────────────────────────────────────────────
+        // The seeder is idempotent: it re-uses an existing seeded debate if
+        // one is already present. The deployment entrypoint runs
+        // `migrate --seed` on every boot, so a non-idempotent create would
+        // pile up duplicate demo debates on every restart.
         /** @var Debate $debate */
+        $debate = Debate::where('session_id', config('debate.seed_session_id'))->first();
+
+        if ($debate) {
+            $this->command->info('TournamentModeSeeder: Seeded tournament debate already exists — skipping.');
+            $this->command->info("  Debate  : {$debate->id}  (session: {$debate->session_id})");
+
+            return;
+        }
+
         $debate = Debate::create([
             'session_id' => config('debate.seed_session_id'),
             'motion_id'  => $motion->id,
@@ -193,7 +206,7 @@ class TournamentModeSeeder extends Seeder
                 '[TIP] Your Closing was your best speech — punchy, emotionally resonant, and ended on a concrete comparator (France). Lead with that energy from the Opening next time.',
                 '[TIP] Practice the "minimum necessary intervention" test: for every restriction you propose, proactively justify why a lighter-touch measure would be insufficient.',
             ],
-            'verdict' => 'The Government wins a narrow majority on this motion. Matter was strong and well-evidenced. However, method consistency suffered from the mid-debate scope narrowing, and the Opposition\'s enforcement critique was left unresolved. A confident Government team with stronger structural consistency would have won decisively. Score: 77 / 100 — Competent Intermediate performance.',
+            'verdict' => 'The Government wins a narrow majority on this motion. The case was well-evidenced on Matter. However, method consistency suffered from the mid-debate scope narrowing, and the Opposition\'s enforcement critique was left unresolved. A confident Government team with stronger structural consistency would have won decisively.',
         ]);
 
         $this->command->info('TournamentModeSeeder: Created 1 fully resolved tournament debate.');
@@ -201,7 +214,7 @@ class TournamentModeSeeder extends Seeder
         $this->command->info("  Debate  : {$debate->id}  (session: {$debate->session_id})");
         $this->command->info('  Rounds  : Opening, Rebuttal, Closing (6 turns total)');
         $this->command->info('  Rewrite : 1 turn rewrite on Opening user turn');
-        $this->command->info('  Score   : Matter 31 | Manner 24 | Method 22 | Total 77 / 100');
+        $this->command->info('  Marks   : Matter 31 | Manner 24 | Method 22 | Total 77 / 100');
         $this->command->info('  Verdict : Government wins (narrow)');
     }
 }

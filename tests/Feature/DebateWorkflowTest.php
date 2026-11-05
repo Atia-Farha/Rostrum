@@ -2,7 +2,9 @@
 
 namespace Tests\Feature;
 
+use App\Models\Debate;
 use App\Models\Persona;
+use App\Models\User;
 use Database\Seeders\PersonaSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -27,7 +29,7 @@ class DebateWorkflowTest extends TestCase
 
     public function test_setup_screen_renders_with_personas(): void
     {
-        $response = $this->get('/setup');
+        $response = $this->actingAs(User::factory()->create())->get('/dashboard/setup');
         $response->assertStatus(200);
         $response->assertSee('Calm Logician');
         $response->assertSee('Aggressive Cross-Examiner');
@@ -37,8 +39,9 @@ class DebateWorkflowTest extends TestCase
     public function test_debate_creation_stores_models_and_seeds_first_round(): void
     {
         $persona = Persona::first();
+        $user    = User::factory()->create();
 
-        $response = $this->post('/debates', [
+        $response = $this->actingAs($user)->post('/debates', [
             'motion_text' => 'This House believes social media does more harm than good.',
             'user_side'   => 'government',
             'persona_id'  => $persona->id,
@@ -51,14 +54,15 @@ class DebateWorkflowTest extends TestCase
             'text_en' => 'This House believes social media does more harm than good.',
         ]);
 
-        $debate = \App\Models\Debate::first();
+        $debate = Debate::first();
         $this->assertNotNull($debate);
         $this->assertEquals('government', $debate->user_side);
         $this->assertEquals('intermediate', $debate->difficulty);
+        $this->assertEquals($user->id, $debate->user_id);
 
         $response->assertRedirect('/debates/' . $debate->id);
 
-        $debateResponse = $this->get('/debates/' . $debate->id);
+        $debateResponse = $this->actingAs($user)->get('/debates/' . $debate->id);
         $debateResponse->assertStatus(200);
         $debateResponse->assertSee('Opening');
     }
@@ -66,8 +70,9 @@ class DebateWorkflowTest extends TestCase
     public function test_sparring_debate_renders_end_round_without_phases(): void
     {
         $persona = Persona::first();
+        $user    = User::factory()->create();
 
-        $response = $this->post('/debates', [
+        $this->actingAs($user)->post('/debates', [
             'motion_text' => 'This House would legalize ride-sharing apps.',
             'user_side'   => 'opposition',
             'persona_id'  => $persona->id,
@@ -76,7 +81,7 @@ class DebateWorkflowTest extends TestCase
             'language'    => 'en',
         ]);
 
-        $debate = \App\Models\Debate::first();
+        $debate = Debate::first();
         $this->assertNotNull($debate);
         $this->assertEquals('sparring', $debate->mode);
 
@@ -85,7 +90,7 @@ class DebateWorkflowTest extends TestCase
             'phase'     => null,
         ]);
 
-        $debateResponse = $this->get('/debates/' . $debate->id);
+        $debateResponse = $this->actingAs($user)->get('/debates/' . $debate->id);
         $debateResponse->assertStatus(200);
         $debateResponse->assertSee('End Round &amp; Get Feedback', false);
         $debateResponse->assertSee('No fixed phases here');
@@ -94,8 +99,9 @@ class DebateWorkflowTest extends TestCase
     public function test_mixed_language_is_rejected(): void
     {
         $persona = Persona::first();
+        $user    = User::factory()->create();
 
-        $this->post('/debates', [
+        $this->actingAs($user)->post('/debates', [
             'motion_text' => 'This House believes X.',
             'user_side'   => 'government',
             'persona_id'  => $persona->id,
@@ -118,7 +124,8 @@ class DebateWorkflowTest extends TestCase
 
     public function test_unknown_debate_returns_404_page(): void
     {
-        $this->get('/debates/00000000-0000-0000-0000-000000000000')
+        $this->actingAs(User::factory()->create())
+            ->get('/debates/00000000-0000-0000-0000-000000000000')
             ->assertStatus(404)
             ->assertSee('This page is not in the House');
     }

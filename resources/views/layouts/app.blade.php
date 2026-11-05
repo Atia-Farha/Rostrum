@@ -31,61 +31,86 @@
             }, 1500);
         });
     </script>
-
-    @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
-<body class="h-full @yield('body_class')">
+@php
+    // The credential screens render full-height and carry their own brand
+    // treatment, so they opt out of the site nav entirely rather than
+    // sitting underneath a fixed bar.
+    $hideNav = view()->shared('hideNav', false);
+
+    // The landing page keeps the nav but drops the four dashboard links:
+    // its signed-in visitor reaches those pages through the rail on every
+    // working page, so the nav would otherwise repeat them.
+    $hideDashboardLinks = view()->shared('hideDashboardLinks', false);
+
+    // The signed-in workspace gets a sidebar. The landing page keeps a
+    // horizontal bar — it is a marketing surface, not a workspace, and
+    // a rail there would be a false affordance.
+    //
+    // The debate arena is part of that workspace, so it takes the rail
+    // too. It used to opt out and carry a strip of its own, which left
+    // the one page you cannot leave mid-round with no way out of it —
+    // and no navigation at all on a phone, where the rail is the only
+    // navigation there is.
+    $hasSidebar = ! $hideNav && ! ($hideDashboardLinks ?? false);
+@endphp
+
+<body class="h-full app-shell @yield('body_class') @if ($hideNav) is-auth @endif @if ($hasSidebar) has-side @endif"
+      x-data="{ sidebarOpen: false }"
+      x-init="$watch('sidebarOpen', (isOpen) => document.body.classList.toggle('sidebar-is-open', isOpen))">
 
     <a href="#main-content" class="skip-link">Skip to main content</a>
 
-    <nav class="nav" aria-label="Primary" x-data="{ open: false }">
-        <div class="nav-header-bar">
-            <a href="{{ route('home') }}" class="nav-logo">
-                <span class="nav-logo-mark"></span>
-                Rostrum
-            </a>
-
-            <button type="button" 
-                    class="nav-toggle" 
-                    @click="open = !open" 
-                    :aria-expanded="open" 
-                    aria-label="Toggle navigation menu">
-                <svg x-show="!open" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                    <line x1="3" y1="12" x2="21" y2="12"></line>
-                    <line x1="3" y1="6" x2="21" y2="6"></line>
-                    <line x1="3" y1="18" x2="21" y2="18"></line>
-                </svg>
-                <svg x-show="open" x-cloak width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                    <line x1="18" y1="6" x2="6" y2="18"></line>
-                    <line x1="6" y1="6" x2="18" y2="18"></line>
-                </svg>
-            </button>
-        </div>
-
-        <div class="nav-actions" :class="{ 'is-open': open }">
-            @hasSection('nav_actions')
-                @yield('nav_actions')
-            @else
-                <a href="{{ route('history.index') }}" class="btn btn-ghost btn-sm nav-history-link">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-                    History
+    @unless ($hideNav)
+        @if ($hasSidebar)
+            @include('components.app-nav')
+        @else
+            {{-- The landing page keeps the horizontal bar. --}}
+            <nav class="app-nav" aria-label="Primary" x-data="{ open: false }">
+                <a href="{{ route('home') }}" class="app-nav-brand">
+                    <span class="app-nav-mark" aria-hidden="true"></span>
+                    Rostrum
                 </a>
-                @isset($debate)
-                <a href="{{ route('setup') }}" class="btn btn-primary btn-sm">
-                    New Round
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg>
-                </a>
-                @endisset
-            @endif
-        </div>
-    </nav>
+
+                <span class="app-nav-divider" aria-hidden="true"></span>
+
+                <div class="app-nav-actions">
+                    @hasSection('nav_actions')
+                        @yield('nav_actions')
+                    @endif
+
+                    @auth
+                        {{-- Signed in, the landing page's nav offers one thing
+                             only: the way back into the product. The account
+                             pill that used to sit here was a menu of five
+                             links — a popover to open before you could even
+                             find the dashboard — on a marketing page whose
+                             whole job is to show what the product is. One
+                             button says it outright.
+
+                             The identity and the other destinations are not
+                             lost: the rail carries them on every working
+                             page, and the landing page's own footer still
+                             lists them. --}}
+                        <a href="{{ route('dashboard') }}" class="surf-btn surf-btn-primary surf-btn-sm app-nav-dashboard">
+                            Go to Dashboard
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg>
+                        </a>
+                    @else
+                        <a href="{{ route('login') }}" class="surf-btn surf-btn-outline surf-btn-sm">Sign In</a>
+                        <a href="{{ route('register') }}" class="surf-btn surf-btn-primary surf-btn-sm">Create Account</a>
+                    @endauth
+                </div>
+            </nav>
+        @endif
+    @endunless
 
     {{-- Global Toast Notification System --}}
-    <div x-data="toastSystem()" 
+    <div x-data="toastSystem()"
          @show-toast.window="add($event.detail)"
          class="toast-container"
          style="position: fixed !important; bottom: 1.5rem !important; right: 1.5rem !important; top: auto !important; left: auto !important; z-index: 99999 !important; display: flex !important; flex-direction: column !important; align-items: flex-end !important; gap: 0.6rem !important; max-width: 380px !important; width: calc(100% - 3rem) !important; pointer-events: none !important;">
-        
+
         @if(session('error'))
             <div x-init="add({ type: 'error', message: @js(session('error')) })"></div>
         @endif
@@ -126,7 +151,7 @@
          x-show="show" x-cloak
          style="position: fixed !important; top: 0 !important; left: 0 !important; width: 100vw !important; height: 100vh !important; z-index: 10000 !important; margin: 0 !important; padding: 0 !important; pointer-events: auto !important;">
         <div x-show="show" x-transition.opacity @click="cancel()" style="position: fixed !important; top: 0 !important; left: 0 !important; width: 100vw !important; height: 100vh !important; background: rgba(5, 7, 13, 0.8) !important; backdrop-filter: blur(4px) !important; z-index: 10001 !important;"></div>
-        <div x-show="show" 
+        <div x-show="show"
              x-transition:enter="transition ease-out duration-200"
              x-transition:enter-start="opacity-0 scale-95"
              x-transition:enter-end="opacity-100 scale-100"
@@ -139,8 +164,8 @@
             </div>
             <p x-text="message" style="font-size: 0.85rem; color: #8099be; line-height: 1.55; margin-bottom: 1.5rem;"></p>
             <div style="display: flex; justify-content: flex-end; gap: 0.6rem;">
-                <button type="button" @click="cancel()" class="btn btn-secondary btn-sm" style="background: transparent; border-color: #1e2535; color: #8099be;">Cancel</button>
-                <button type="button" @click="confirm()" class="btn btn-danger btn-sm" x-text="confirmText"></button>
+                <button type="button" @click="cancel()" class="surf-btn surf-btn-secondary surf-btn-sm">Cancel</button>
+                <button type="button" @click="confirm()" class="surf-btn surf-btn-danger surf-btn-sm" x-text="confirmText"></button>
             </div>
         </div>
     </div>
@@ -200,6 +225,85 @@
             };
         }
 
+        /**
+         * The password policy, as one Alpine scope.
+         *
+         * The rules here mirror the server-side policy in
+         * AccountController::passwordRule() (min 10 chars, letters,
+         * mixed case, numbers) so the checklist never promises something
+         * the backend will reject.
+         *
+         * It is defined here, once, because the registration form and
+         * the settings page both show the policy. Two copies of those
+         * words would be two chances for them to drift apart from the
+         * rule the validator actually enforces.
+         *
+         * The rules themselves are read by the password-requirements
+         * component.
+         */
+        window.passwordPolicy = function () {
+            return {
+                password: '',
+                confirmation: '',
+                showPassword: false,
+                showConfirmation: false,
+
+                /** The four rules, each one independently checkable. */
+                get rules() {
+                    return {
+                        length: this.password.length >= 10,
+                        lower: /[a-z]/.test(this.password),
+                        upper: /[A-Z]/.test(this.password),
+                        number: /\d/.test(this.password),
+                    };
+                },
+
+                /** How many of the rules are met. */
+                get score() {
+                    const r = this.rules;
+                    return [r.length, r.lower, r.upper, r.number].filter(Boolean).length;
+                },
+
+                /** How many rules there are in total. */
+                get total() {
+                    return 4;
+                },
+
+                /**
+                 * Whether the field has been touched yet.
+                 *
+                 * Before the first keystroke the rules speak for
+                 * themselves, so the summary stays neutral and no
+                 * per-rule "add one" hints compete with them. Once
+                 * there is something to react to, both become specific.
+                 */
+                get started() {
+                    return this.password.length > 0;
+                },
+
+                /** The one-line summary, in words, of what is left. */
+                get summary() {
+                    const met = this.score;
+                    const left = this.total - met;
+
+                    if (! this.started) return 'Four requirements to meet';
+                    if (met === this.total) return 'All requirements met';
+                    if (left === 1) return '1 requirement left';
+                    return `${left} requirements left`;
+                },
+
+                /** The compact count shown beside the summary. */
+                get badgeLabel() {
+                    return `${this.score}/${this.total}`;
+                },
+
+                /** Whether the confirmation field matches. */
+                get matches() {
+                    return this.confirmation.length > 0 && this.confirmation === this.password;
+                },
+            };
+        };
+
         // Global helper for triggers
         window.showToast = function(message, type = 'info') {
             window.dispatchEvent(new CustomEvent('show-toast', { detail: { message, type } }));
@@ -215,9 +319,10 @@
                 }));
             });
         };
+
     </script>
 
-    <main id="main-content">
+    <main id="main-content" aria-label="Main content">
         @yield('content')
     </main>
 

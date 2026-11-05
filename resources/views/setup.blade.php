@@ -5,55 +5,17 @@
 @section('content')
 
 <style>
+    /* The page sits in the shared `surf` shell, so it inherits the
+       spacing, width and typography of the overview, history and
+       settings pages. Only the form furniture below is page-local. */
     .setup-page {
-        max-width: 780px;
-        margin: 0 auto;
-        padding: 2.5rem 1.25rem 5rem;
         font-family: 'Inter', system-ui, sans-serif;
-    }
-
-    /* Ambient glow & container styling */
-    .setup-header {
-        margin-bottom: 2.25rem;
-    }
-
-    .setup-back {
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-        font-size: 0.78rem;
-        font-weight: 600;
-        color: #7b91b3;
-        text-decoration: none;
-        margin-bottom: 1.5rem;
-        transition: color 0.15s ease, transform 0.15s ease;
-    }
-
-    .setup-back:hover { 
-        color: #6675f5; 
-        transform: translateX(-2px);
-    }
-
-    .setup-title {
-        font-size: clamp(1.4rem, 3vw, 2rem);
-        font-weight: 700;
-        color: #f0f4ff;
-        letter-spacing: -0.025em;
-        margin: 0 0 0.4rem;
-    }
-
-    .setup-subtitle {
-        font-size: 0.88rem;
-        color: #7b91b3;
-        font-weight: 400;
-        line-height: 1.6;
-        margin: 0;
     }
 
     /* Section block */
     .setup-block {
-        background: #0a0d16;
-        border: 1px solid #1e2535;
+        background: var(--card-surface);
+        border: 1px solid var(--card-border);
         border-radius: var(--radius-lg, 4px);
         padding: clamp(1.25rem, 3vw, 1.75rem);
         margin-bottom: 1.25rem;
@@ -61,7 +23,7 @@
     }
 
     .setup-block:hover {
-        border-color: rgba(99, 102, 241, 0.3);
+        border-color: var(--card-border-accent);
         box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
     }
 
@@ -71,7 +33,7 @@
         gap: 0.65rem;
         margin-bottom: 1.25rem;
         padding-bottom: 0.85rem;
-        border-bottom: 1px solid #111827;
+        border-bottom: 1px solid var(--card-border);
         flex-wrap: wrap;
     }
 
@@ -79,7 +41,7 @@
         font-size: 0.65rem;
         font-weight: 800;
         letter-spacing: 0.1em;
-        color: #818cf8;
+        color: var(--card-accent-soft);
         background: rgba(99, 102, 241, 0.1);
         border: 1px solid rgba(99, 102, 241, 0.25);
         padding: 0.2rem 0.55rem;
@@ -93,12 +55,12 @@
         font-weight: 700;
         letter-spacing: 0.05em;
         text-transform: uppercase;
-        color: #c8d5f0;
+        color: var(--card-label);
     }
 
     .setup-step-hint {
         font-size: 0.72rem;
-        color: #7b91b3;
+        color: var(--card-muted);
         font-weight: 500;
         margin-left: auto;
     }
@@ -106,10 +68,10 @@
     /* Motion textarea */
     .setup-textarea {
         width: 100%;
-        background: #06080f;
-        border: 1px solid #1e2535;
+        background: var(--form-surface-2);
+        border: 1px solid var(--form-border);
         border-radius: 4px;
-        color: #f0f4ff;
+        color: var(--card-text);
         font-size: 0.925rem;
         line-height: 1.6;
         padding: 0.875rem 1rem;
@@ -119,11 +81,11 @@
         box-sizing: border-box;
     }
 
-    .setup-textarea::placeholder { color: #687b99; }
+    .setup-textarea::placeholder { color: var(--card-dim); }
     .setup-textarea:focus { 
         outline: none; 
-        border-color: #6675f5;
-        box-shadow: 0 0 12px rgba(102, 117, 245, 0.2);
+        border-color: var(--form-accent-hi);
+        box-shadow: 0 0 0 3px var(--form-accent-glow);
     }
 
     /* Generate row */
@@ -137,15 +99,15 @@
 
     .setup-or {
         font-size: 0.75rem;
-        color: #7b91b3;
+        color: var(--card-muted);
         font-weight: 600;
     }
 
     .setup-select {
-        background: #06080f;
-        border: 1px solid #1e2535;
+        background: var(--form-surface-2);
+        border: 1px solid var(--form-border);
         border-radius: 4px;
-        color: #c8d5f0;
+        color: var(--card-label);
         font-size: 0.825rem;
         padding: 0.55rem 0.75rem;
         flex: 1;
@@ -156,7 +118,7 @@
 
     .setup-select:focus { 
         outline: none; 
-        border-color: #6675f5; 
+        border-color: var(--form-accent-hi); 
     }
 
     .setup-gen-btn {
@@ -167,18 +129,18 @@
         font-weight: 700;
         padding: 0.55rem 1.1rem;
         border-radius: 4px;
-        background: rgba(102, 117, 245, 0.12);
-        border: 1px solid rgba(102, 117, 245, 0.3);
-        color: #818cf8;
+        background: rgba(79, 94, 221, 0.12);
+        border: 1px solid rgba(99, 102, 241, 0.3);
+        color: var(--card-accent-soft);
         cursor: pointer;
         transition: all 0.15s ease;
         white-space: nowrap;
     }
 
     .setup-gen-btn:hover:not(:disabled) {
-        background: rgba(102, 117, 245, 0.22);
-        border-color: rgba(102, 117, 245, 0.5);
-        color: #f0f4ff;
+        background: rgba(79, 94, 221, 0.22);
+        border-color: rgba(99, 102, 241, 0.5);
+        color: var(--card-text);
     }
 
     .setup-gen-btn:disabled { opacity: 0.45; cursor: not-allowed; }
@@ -191,7 +153,7 @@
         font-weight: 700;
         letter-spacing: 0.08em;
         text-transform: uppercase;
-        color: #34d399;
+        color: var(--color-success);
         background: rgba(16,185,129,0.08);
         border: 1px solid rgba(16,185,129,0.2);
         padding: 0.25rem 0.6rem;
@@ -203,7 +165,7 @@
         margin-top: 0.6rem;
         font-size: 0.78rem;
         font-weight: 500;
-        color: #fca5a5;
+        color: #f87171;
         background: rgba(239,68,68,0.08);
         border: 1px solid rgba(239,68,68,0.25);
         padding: 0.5rem 0.75rem;
@@ -219,8 +181,8 @@
     }
 
     .setup-option-card {
-        background: #06080f;
-        border: 1px solid #1e2535;
+        background: var(--form-surface-2);
+        border: 1px solid var(--form-border);
         border-radius: 4px;
         padding: 1rem 1.15rem;
         cursor: pointer;
@@ -247,27 +209,27 @@
 
     .setup-option-card.selected {
         background: rgba(79, 94, 221, 0.1);
-        border-color: #6675f5;
+        border-color: var(--form-accent-hi);
         box-shadow: 0 0 16px rgba(102, 117, 245, 0.15);
     }
 
     .setup-option-title {
         font-size: 0.88rem;
         font-weight: 700;
-        color: #94a3b8;
+        color: var(--card-muted);
         margin-bottom: 0.3rem;
         transition: color 0.15s ease;
     }
 
-    .setup-option-card.selected .setup-option-title { color: #f0f4ff; }
+    .setup-option-card.selected .setup-option-title { color: var(--card-text); }
 
     .setup-option-desc {
         font-size: 0.75rem;
-        color: #7b91b3;
+        color: var(--card-muted);
         line-height: 1.5;
     }
 
-    .setup-option-card.selected .setup-option-desc { color: #94a3b8; }
+    .setup-option-card.selected .setup-option-desc { color: var(--card-muted); }
 
     .setup-standard-note {
         margin-top: 0.75rem;
@@ -277,10 +239,10 @@
         border-radius: 4px;
         font-size: 0.76rem;
         line-height: 1.6;
-        color: #94a3b8;
+        color: var(--card-muted);
     }
 
-    .setup-standard-note strong { color: #818cf8; font-weight: 700; }
+    .setup-standard-note strong { color: var(--card-accent-soft); font-weight: 700; }
 
     /* Persona grid */
     .setup-persona-grid {
@@ -290,8 +252,8 @@
     }
 
     .setup-persona-card {
-        background: #06080f;
-        border: 1px solid #1e2535;
+        background: var(--form-surface-2);
+        border: 1px solid var(--form-border);
         border-radius: 4px;
         padding: 1.1rem 1.15rem;
         cursor: pointer;
@@ -307,14 +269,14 @@
 
     .setup-persona-card.selected {
         background: rgba(79, 94, 221, 0.1);
-        border-color: #6675f5;
+        border-color: var(--form-accent-hi);
         box-shadow: 0 0 16px rgba(102, 117, 245, 0.15);
     }
 
     .setup-persona-name {
         font-size: 0.9rem;
         font-weight: 700;
-        color: #94a3b8;
+        color: var(--card-muted);
         margin-bottom: 0.4rem;
         display: flex;
         align-items: center;
@@ -322,29 +284,29 @@
         gap: 0.5rem;
     }
 
-    .setup-persona-card.selected .setup-persona-name { color: #f0f4ff; }
+    .setup-persona-card.selected .setup-persona-name { color: var(--card-text); }
 
     .setup-persona-check {
         width: 16px;
         height: 16px;
-        color: #6675f5;
+        color: var(--form-accent-hi);
         flex-shrink: 0;
     }
 
     .setup-persona-desc {
         font-size: 0.78rem;
-        color: #7b91b3;
+        color: var(--card-muted);
         line-height: 1.55;
     }
 
-    .setup-persona-card.selected .setup-persona-desc { color: #94a3b8; }
+    .setup-persona-card.selected .setup-persona-desc { color: var(--card-muted); }
 
     /* Difficulty tabs */
     .setup-diff-row {
         display: grid;
         grid-template-columns: repeat(4, 1fr);
-        background: #06080f;
-        border: 1px solid #1e2535;
+        background: var(--form-surface-2);
+        border: 1px solid var(--form-border);
         border-radius: 4px;
         overflow: hidden;
     }
@@ -353,10 +315,10 @@
         font-size: 0.78rem;
         font-weight: 700;
         padding: 0.7rem 0.5rem;
-        color: #7b91b3;
+        color: var(--card-muted);
         background: none;
         border: none;
-        border-right: 1px solid #1e2535;
+        border-right: 1px solid var(--form-border);
         cursor: pointer;
         transition: all 0.15s ease;
         text-align: center;
@@ -364,13 +326,13 @@
     }
 
     .setup-diff-tab:last-child { border-right: none; }
-    .setup-diff-tab:hover { background: rgba(99, 102, 241, 0.08); color: #818cf8; }
-    .setup-diff-tab.active { background: #4f5edd; color: #fff; }
+    .setup-diff-tab:hover { background: rgba(99, 102, 241, 0.08); color: var(--card-accent-soft); }
+    .setup-diff-tab.active { background: var(--color-accent); color: #fff; }
 
     .setup-diff-hint {
         margin-top: 0.75rem;
         font-size: 0.8rem;
-        color: #94a3b8;
+        color: var(--card-muted);
         line-height: 1.5;
         min-height: 1.5em;
     }
@@ -386,7 +348,7 @@
         display: inline-flex;
         align-items: center;
         gap: 8px;
-        background: #4f5edd;
+        background: var(--color-accent);
         color: #fff;
         font-size: 0.95rem;
         font-weight: 600;
@@ -419,9 +381,8 @@
     @keyframes spin { to { transform: rotate(360deg); } }
 
     @media (max-width: 640px) {
-        .setup-page { padding-inline: 1rem; }
         .setup-diff-row { grid-template-columns: repeat(2, 1fr); }
-        .setup-diff-tab { border-bottom: 1px solid #1e2535; }
+        .setup-diff-tab { border-bottom: 1px solid var(--form-border); }
         .setup-diff-tab:nth-child(2n) { border-right: none; }
         .setup-select { max-width: 100%; width: 100%; }
         .setup-step-hint { margin-left: 0; width: 100%; margin-top: 0.25rem; }
@@ -429,16 +390,15 @@
     }
 </style>
 
-<div class="setup-page" x-data="setupForm()">
+<div class="surf surf--settings setup-page" x-data="setupForm()">
 
-    {{-- Back nav --}}
-    <div class="setup-header">
-        <a href="{{ route('home') }}" class="setup-back">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
-            Home
-        </a>
-        <h1 class="setup-title">Configure Debate Session</h1>
-        <p class="setup-subtitle">Set your motion, opponent, language, side, and format before starting.</p>
+    {{-- ── Header ──────────────────────────────────────────────────────── --}}
+    <div class="surf-head">
+        <div class="surf-head-body">
+            <span class="surf-eyebrow">New Debate</span>
+            <h1 class="surf-title">Configure Debate Session</h1>
+            <p class="surf-subtitle">Set your motion, opponent, language, side, and format before starting.</p>
+        </div>
     </div>
 
     <form action="{{ route('debates.create') }}" method="POST" id="setup-form">
@@ -688,6 +648,7 @@ function setupForm() {
                 const res = await fetch('{{ route('motions.generate') }}', {
                     method: 'POST',
                     headers: {
+                        'Accept': 'application/json',
                         'Content-Type': 'application/json',
                         'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
                     },
@@ -698,7 +659,11 @@ function setupForm() {
                     this.motionText   = data.motion;
                     this.motionSource = 'generated';
                 } else {
-                    this.motionError = data.error || 'Could not generate a motion right now. Please try again.';
+                    // A 422 validation failure comes back as an "errors" map;
+                    // anything else surfaces the generic message.
+                    this.motionError = data.error
+                        || (data.errors ? Object.values(data.errors).flat()[0] : null)
+                        || 'Could not generate a motion right now. Please try again.';
                 }
             } catch (err) {
                 console.error('Motion generation failed:', err);
