@@ -980,7 +980,8 @@
                                 <div class="timeline-line {{ $isDone || ($isActive && $prevDone) ? ($isDone ? 'completed' : 'active-progress') : '' }}"></div>
                             @endif
 
-                            <div class="timeline-step {{ $isDone ? 'completed' : ($isActive ? 'active' : '') }}">
+                            <div class="timeline-step {{ $isDone ? 'completed' : ($isActive ? 'active' : '') }}"
+                                data-phase="{{ $phase }}">
                                 <span class="timeline-icon">
                                     @if ($isDone)
                                         <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
@@ -1003,7 +1004,7 @@
                 {{-- Server-rendered existing turns --}}
                 @foreach ($rounds as $round)
                     @if ($round->phase)
-                        <div class="phase-divider">
+                        <div class="phase-divider" data-phase="{{ $round->phase }}">
                             <span
                                 style="font-size:0.7rem; font-weight:700; text-transform:uppercase; letter-spacing:0.07em; color:var(--color-text-muted);">
                                 {{ $phaseLabels[$round->phase] ?? $round->phase }}
@@ -1574,6 +1575,112 @@
                     this.podiumTimeLeft = timeLeft;
                 },
 
+                /**
+                 * Mark a phase as finished in the transcript feed.
+                 *
+                 * The divider that separates one phase's speeches from
+                 * the next. It used to be written inline at the one
+                 * place that appended it, which meant the paths that
+                 * advanced a phase without going through that place
+                 * added no divider at all — the transcript ran straight
+                 * from the last speech of one phase into the first
+                 * speech of the next, with nothing to say so.
+                 *
+                 * It is idempotent now: asking for the same phase twice
+                 * leaves one divider, not two.
+                 *
+                 * @param {string} phase The phase that has begun
+                 */
+                showPhaseDivider(phase) {
+                    if (!phase) return;
+
+                    const container = document.getElementById('dynamic-turns');
+                    if (!container) return;
+
+                    const phaseNames = @json($phaseLabels);
+                    const label = phaseNames[phase] || phase;
+
+                    // Already marked? Do not mark it twice. The search
+                    // covers the whole transcript, because a divider
+                    // rendered on the server for the phase that has
+                    // just ended sits outside the dynamic area.
+                    const feed = document.getElementById('transcript-feed');
+                    const scope = feed || container;
+                    if (scope.querySelector(`.phase-divider[data-phase="${phase}"]`)) return;
+
+                    const div = document.createElement('div');
+                    div.className = 'phase-divider';
+                    div.dataset.phase = phase;
+                    div.innerHTML = `<span>${label}</span>`;
+                    container.appendChild(div);
+                },
+
+                /**
+                 * Move the phase timeline to a new phase.
+                 *
+                 * The timeline is rendered on the server, so it used to
+                 * only ever change on a full page reload. But the round
+                 * can advance without one — when the opponent opens the
+                 * next phase, the page stays put and the debate
+                 * continues. The timeline was left behind, still
+                 * pointing at the phase that had just ended, and the
+                 * reader had to reload to find out where they were.
+                 *
+                 * So the timeline is updated here, in the browser, at
+                 * the moment the phase actually changes.
+                 *
+                 * @param {string} phase The phase that is now in progress
+                 */
+                setActivePhase(phase) {
+                    if (!phase) return;
+
+                    const steps = document.querySelectorAll('.timeline-step[data-phase]');
+                    if (!steps.length) return;
+
+                    const order = Array.from(steps).map(el => el.dataset.phase);
+                    const activeIndex = order.indexOf(phase);
+                    if (activeIndex === -1) return;
+
+                    const checkSvg = '<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>';
+                    const playSvg  = '<svg width="8" height="8" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>';
+
+                    steps.forEach((el, i) => {
+                        const icon = el.querySelector('.timeline-icon');
+                        const isDone   = i < activeIndex;
+                        const isActive = i === activeIndex;
+
+                        el.classList.toggle('completed', isDone);
+                        el.classList.toggle('active', isActive);
+
+                        if (!icon) return;
+
+                        if (isDone) {
+                            icon.innerHTML = checkSvg;
+                        } else if (isActive) {
+                            icon.innerHTML = playSvg;
+                        } else {
+                            // Still ahead — show its position in the debate.
+                            icon.textContent = String(i + 1);
+                        }
+                    });
+
+                    // The connector before each step mirrors it: solid
+                    // green once the phase behind it is finished, and a
+                    // gradient while the phase after it is running.
+                    //
+                    // Line i sits before step i + 1, so the line before
+                    // the running phase is the one still in progress,
+                    // and the lines before the finished phases are
+                    // done.
+                    const lines = document.querySelectorAll('.timeline-line');
+                    lines.forEach((line, i) => {
+                        const isDone   = i < activeIndex - 1;
+                        const isActive = i === activeIndex - 1;
+                        line.classList.toggle('completed', isDone);
+                        line.classList.toggle('active-progress', isActive);
+                    });
+                },
+
                 // Spacebar toggles recording (ignored while typing in a field
                 // or when a button/link has focus — Space would otherwise
                 // double-trigger the focused control)
@@ -1958,12 +2065,7 @@
 
                     // Phase divider if new phase
                     if (data.round_complete && !data.debate_complete && data.new_phase) {
-                        const phaseNames = @json($phaseLabels);
-                        const div = document.createElement('div');
-                        div.className = 'phase-divider';
-                        div.innerHTML =
-                            `<span>${phaseNames[data.new_phase] || data.new_phase}</span>`;
-                        container.appendChild(div);
+                        this.showPhaseDivider(data.new_phase);
                     }
                 },
 
@@ -2063,6 +2165,31 @@
                         // Your move from the start.
                         window.debateArena?.setPendingPane('podium');
                     }
+                },
+
+                /**
+                 * Move the page into a new phase.
+                 *
+                 * The debate advances on the server, but the page does
+                 * not have to reload for the reader to see that it did.
+                 * The timeline and the transcript divider are the two
+                 * places that show where the debate is, and both are
+                 * updated here so they cannot drift apart from the
+                 * round the server is actually running.
+                 *
+                 * @param {string} phase The phase that has just begun
+                 */
+                advancePhase(phase) {
+                    if (!phase) return;
+
+                    cfg.currentPhase = phase;
+
+                    // The timeline moves to the new phase.
+                    window.debateArena?.setActivePhase(phase);
+
+                    // And the transcript says where the new phase
+                    // begins, unless the divider is already there.
+                    window.debateArena?.showPhaseDivider(phase);
                 },
 
                 dismissMessages() {
@@ -2217,13 +2344,19 @@
                                     setTimeout(() => location.reload(), 1500);
                                 } else if (data.round_complete && data.new_phase) {
                                     if (data.next_speaker === 'user') {
-                                        setTimeout(() => location.reload(), 1500);
+                                        // The phase moves on and it is the
+                                        // reader's move. The timeline has
+                                        // to follow the phase, not wait for
+                                        // a reload to say so.
+                                        this.advancePhase(data.new_phase);
+                                        this.state = 'idle';
+                                        this.timeLeft = this.durationFor(cfg.currentPhase);
                                     } else {
                                         // AI speaks first in the new phase — trigger directly without page reload
+                                        this.advancePhase(data.new_phase);
                                         this.state = 'ai_thinking';
                                         this.aiThinkingMsg = `${cfg.personaName} is preparing their ${data.new_phase} speech…`;
                                         window.debateArena?.showAiThinking(this.aiThinkingMsg);
-                                        cfg.currentPhase = data.new_phase;
                                         this.triggerAiFirst();
                                     }
                                 } else {
@@ -2237,9 +2370,14 @@
                             if (data.debate_complete) {
                                 setTimeout(() => location.reload(), 1200);
                             } else if (data.next_speaker === 'user') {
-                                setTimeout(() => location.reload(), 1200);
+                                // The phase moves on and it is the reader's
+                                // move — the timeline follows the phase.
+                                this.advancePhase(data.new_phase);
+                                this.state = 'idle';
+                                this.timeLeft = this.durationFor(cfg.currentPhase);
                             } else {
                                 // AI speaks first in the new phase (e.g. Closing phase reply reversal)
+                                this.advancePhase(data.new_phase);
                                 this.state = 'ai_thinking';
                                 this.aiThinkingMsg = `${cfg.personaName} is preparing their ${data.new_phase} speech…`;
                                 window.debateArena?.showAiThinking(this.aiThinkingMsg);
@@ -2283,13 +2421,31 @@
 
                         if (data.ai_text) {
                             window.debateArena?.appendAiTurn(data, () => {
-                                // Reload only when the server moved state forward
-                                if (data.debate_complete || (data.round_complete && data.new_phase)) {
+                                // The server may have moved the debate
+                                // on. Follow it, the same way the normal
+                                // path does.
+                                if (data.debate_complete) {
                                     setTimeout(() => location.reload(), 1500);
-                                } else {
-                                    this.state = 'idle';
-                                    this.timeLeft = this.durationFor(cfg.currentPhase);
+                                    return;
                                 }
+
+                                if (data.round_complete && data.new_phase) {
+                                    this.advancePhase(data.new_phase);
+
+                                    if (data.next_speaker === 'user') {
+                                        this.state = 'idle';
+                                        this.timeLeft = this.durationFor(cfg.currentPhase);
+                                    } else {
+                                        this.state = 'ai_thinking';
+                                        this.aiThinkingMsg = `${cfg.personaName} is preparing their ${data.new_phase} speech…`;
+                                        window.debateArena?.showAiThinking(this.aiThinkingMsg);
+                                        this.triggerAiFirst();
+                                    }
+                                    return;
+                                }
+
+                                this.state = 'idle';
+                                this.timeLeft = this.durationFor(cfg.currentPhase);
                             });
                         } else {
                             window.debateArena?.showAiError(
@@ -2343,6 +2499,38 @@
 
                         if (!failed) {
                             window.debateArena?.appendAiTurn(data, () => {
+                                // The opponent may have just closed a
+                                // phase. When it did, the debate moved
+                                // on on the server — and the page has to
+                                // move with it.
+                                //
+                                // It used to go straight to 'idle' here,
+                                // which left the timeline pointing at
+                                // the phase that had just ended and the
+                                // reader waiting on a turn that was
+                                // never coming.
+                                if (data.debate_complete) {
+                                    setTimeout(() => location.reload(), 1500);
+                                    return;
+                                }
+
+                                if (data.round_complete && data.new_phase) {
+                                    this.advancePhase(data.new_phase);
+
+                                    if (data.next_speaker === 'user') {
+                                        // The reader opens the new phase.
+                                        this.state = 'idle';
+                                        this.timeLeft = this.durationFor(cfg.currentPhase);
+                                    } else {
+                                        // The opponent opens the new phase.
+                                        this.state = 'ai_thinking';
+                                        this.aiThinkingMsg = `${cfg.personaName} is preparing their ${data.new_phase} speech…`;
+                                        window.debateArena?.showAiThinking(this.aiThinkingMsg);
+                                        this.triggerAiFirst();
+                                    }
+                                    return;
+                                }
+
                                 this.state = 'idle';
                                 this.timeLeft = this.durationFor(cfg.currentPhase);
                             });
