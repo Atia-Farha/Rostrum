@@ -1,0 +1,1647 @@
+{
+  "ok": false,
+  "strict": false,
+  "browserSkipped": false,
+  "lint": {
+    "ok": false,
+    "errorCount": 12,
+    "warningCount": 9,
+    "infoCount": 0,
+    "findings": [
+      {
+        "code": "gsap_animates_clip_element",
+        "severity": "error",
+        "message": "GSAP animation sets visibility on a clip element. Selector \"#s1\" resolves to element <section id=\"s1\" class=\"clip scene\">. The framework manages clip visibility, and autoAlpha writes visibility as well as opacity. Do not animate these properties on clip elements.",
+        "selector": "#s1",
+        "dataAttributes": {},
+        "sourceFile": "/home/atia-farha/Documents/Projects/Laravel-Projects/Rostrum/brag-output-2026-11-25-213641/composition/index.html",
+        "bbox": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0
+        },
+        "time": 0,
+        "fixHint": "Remove the visibility/display/autoAlpha tween, or move the content into a child <div> and target that instead."
+      },
+      {
+        "code": "gsap_animates_clip_element",
+        "severity": "error",
+        "message": "GSAP animation sets visibility on a clip element. Selector \"#s2\" resolves to element <section id=\"s2\" class=\"clip scene\">. The framework manages clip visibility, and autoAlpha writes visibility as well as opacity. Do not animate these properties on clip elements.",
+        "selector": "#s2",
+        "dataAttributes": {},
+        "sourceFile": "/home/atia-farha/Documents/Projects/Laravel-Projects/Rostrum/brag-output-2026-11-25-213641/composition/index.html",
+        "bbox": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0
+        },
+        "time": 0,
+        "fixHint": "Remove the visibility/display/autoAlpha tween, or move the content into a child <div> and target that instead."
+      },
+      {
+        "code": "gsap_animates_clip_element",
+        "severity": "error",
+        "message": "GSAP animation sets visibility on a clip element. Selector \"#s3\" resolves to element <section id=\"s3\" class=\"clip scene\">. The framework manages clip visibility, and autoAlpha writes visibility as well as opacity. Do not animate these properties on clip elements.",
+        "selector": "#s3",
+        "dataAttributes": {},
+        "sourceFile": "/home/atia-farha/Documents/Projects/Laravel-Projects/Rostrum/brag-output-2026-11-25-213641/composition/index.html",
+        "bbox": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0
+        },
+        "time": 0,
+        "fixHint": "Remove the visibility/display/autoAlpha tween, or move the content into a child <div> and target that instead."
+      },
+      {
+        "code": "gsap_animates_clip_element",
+        "severity": "error",
+        "message": "GSAP animation sets visibility on a clip element. Selector \"#s4\" resolves to element <section id=\"s4\" class=\"clip scene\">. The framework manages clip visibility, and autoAlpha writes visibility as well as opacity. Do not animate these properties on clip elements.",
+        "selector": "#s4",
+        "dataAttributes": {},
+        "sourceFile": "/home/atia-farha/Documents/Projects/Laravel-Projects/Rostrum/brag-output-2026-11-25-213641/composition/index.html",
+        "bbox": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0
+        },
+        "time": 0,
+        "fixHint": "Remove the visibility/display/autoAlpha tween, or move the content into a child <div> and target that instead."
+      },
+      {
+        "code": "gsap_animates_clip_element",
+        "severity": "error",
+        "message": "GSAP animation sets visibility on a clip element. Selector \"#s4-a\" resolves to element <div id=\"s4-a\" class=\"clip split-2\">. The framework manages clip visibility, and autoAlpha writes visibility as well as opacity. Do not animate these properties on clip elements.",
+        "selector": "#s4-a",
+        "dataAttributes": {},
+        "sourceFile": "/home/atia-farha/Documents/Projects/Laravel-Projects/Rostrum/brag-output-2026-11-25-213641/composition/index.html",
+        "bbox": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0
+        },
+        "time": 0,
+        "fixHint": "Remove the visibility/display/autoAlpha tween, or move the content into a child <div> and target that instead."
+      },
+      {
+        "code": "gsap_animates_clip_element",
+        "severity": "error",
+        "message": "GSAP animation sets visibility on a clip element. Selector \"#s4-b\" resolves to element <div id=\"s4-b\" class=\"clip\">. The framework manages clip visibility, and autoAlpha writes visibility as well as opacity. Do not animate these properties on clip elements.",
+        "selector": "#s4-b",
+        "dataAttributes": {},
+        "sourceFile": "/home/atia-farha/Documents/Projects/Laravel-Projects/Rostrum/brag-output-2026-11-25-213641/composition/index.html",
+        "bbox": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0
+        },
+        "time": 0,
+        "fixHint": "Remove the visibility/display/autoAlpha tween, or move the content into a child <div> and target that instead."
+      },
+      {
+        "code": "gsap_animates_clip_element",
+        "severity": "error",
+        "message": "GSAP animation sets visibility on a clip element. Selector \"#s5\" resolves to element <section id=\"s5\" class=\"clip scene\">. The framework manages clip visibility, and autoAlpha writes visibility as well as opacity. Do not animate these properties on clip elements.",
+        "selector": "#s5",
+        "dataAttributes": {},
+        "sourceFile": "/home/atia-farha/Documents/Projects/Laravel-Projects/Rostrum/brag-output-2026-11-25-213641/composition/index.html",
+        "bbox": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0
+        },
+        "time": 0,
+        "fixHint": "Remove the visibility/display/autoAlpha tween, or move the content into a child <div> and target that instead."
+      },
+      {
+        "code": "gsap_animates_clip_element",
+        "severity": "error",
+        "message": "GSAP animation sets visibility on a clip element. Selector \"#s6\" resolves to element <section id=\"s6\" class=\"clip scene\">. The framework manages clip visibility, and autoAlpha writes visibility as well as opacity. Do not animate these properties on clip elements.",
+        "selector": "#s6",
+        "dataAttributes": {},
+        "sourceFile": "/home/atia-farha/Documents/Projects/Laravel-Projects/Rostrum/brag-output-2026-11-25-213641/composition/index.html",
+        "bbox": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0
+        },
+        "time": 0,
+        "fixHint": "Remove the visibility/display/autoAlpha tween, or move the content into a child <div> and target that instead."
+      },
+      {
+        "code": "gsap_animates_clip_element",
+        "severity": "error",
+        "message": "GSAP animation sets visibility on a clip element. Selector \"#s7\" resolves to element <section id=\"s7\" class=\"clip scene\">. The framework manages clip visibility, and autoAlpha writes visibility as well as opacity. Do not animate these properties on clip elements.",
+        "selector": "#s7",
+        "dataAttributes": {},
+        "sourceFile": "/home/atia-farha/Documents/Projects/Laravel-Projects/Rostrum/brag-output-2026-11-25-213641/composition/index.html",
+        "bbox": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0
+        },
+        "time": 0,
+        "fixHint": "Remove the visibility/display/autoAlpha tween, or move the content into a child <div> and target that instead."
+      },
+      {
+        "code": "gsap_animates_clip_element",
+        "severity": "error",
+        "message": "GSAP animation sets visibility on a clip element. Selector \"#s7-a\" resolves to element <div id=\"s7-a\" class=\"clip\">. The framework manages clip visibility, and autoAlpha writes visibility as well as opacity. Do not animate these properties on clip elements.",
+        "selector": "#s7-a",
+        "dataAttributes": {},
+        "sourceFile": "/home/atia-farha/Documents/Projects/Laravel-Projects/Rostrum/brag-output-2026-11-25-213641/composition/index.html",
+        "bbox": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0
+        },
+        "time": 0,
+        "fixHint": "Remove the visibility/display/autoAlpha tween, or move the content into a child <div> and target that instead."
+      },
+      {
+        "code": "gsap_animates_clip_element",
+        "severity": "error",
+        "message": "GSAP animation sets visibility on a clip element. Selector \"#s7-b\" resolves to element <div id=\"s7-b\" class=\"clip center-stack\">. The framework manages clip visibility, and autoAlpha writes visibility as well as opacity. Do not animate these properties on clip elements.",
+        "selector": "#s7-b",
+        "dataAttributes": {},
+        "sourceFile": "/home/atia-farha/Documents/Projects/Laravel-Projects/Rostrum/brag-output-2026-11-25-213641/composition/index.html",
+        "bbox": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0
+        },
+        "time": 0,
+        "fixHint": "Remove the visibility/display/autoAlpha tween, or move the content into a child <div> and target that instead."
+      },
+      {
+        "code": "composition_file_too_large",
+        "severity": "warning",
+        "message": "This HTML composition file has 378 lines. Smaller sub-compositions are easier to read, iterate on, and diff.",
+        "selector": "[data-composition-id]",
+        "dataAttributes": {},
+        "sourceFile": "/home/atia-farha/Documents/Projects/Laravel-Projects/Rostrum/brag-output-2026-11-25-213641/composition/index.html",
+        "bbox": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0
+        },
+        "time": 0,
+        "fixHint": "Split coherent scenes or layers into separate .html files under compositions/, then mount them from the parent with data-composition-src so each file stays small enough to inspect, revise, and validate independently."
+      },
+      {
+        "code": "timeline_track_too_dense",
+        "severity": "warning",
+        "message": "This HTML file has 11 timed elements. Smaller sub-compositions keep timelines easier to read, iterate on, and diff.",
+        "selector": "[data-composition-id]",
+        "dataAttributes": {},
+        "sourceFile": "/home/atia-farha/Documents/Projects/Laravel-Projects/Rostrum/brag-output-2026-11-25-213641/composition/index.html",
+        "bbox": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0
+        },
+        "time": 0,
+        "fixHint": "Move coherent scene groups into separate .html files under compositions/ and mount them from the parent with data-composition-src so the timeline stays easier to inspect, revise, and validate."
+      },
+      {
+        "code": "font_family_without_font_face",
+        "severity": "error",
+        "message": "Font family used without @font-face declaration: noto sans bengali. These are not in the auto-resolved font list, so the renderer cannot supply them automatically. Text will fall back to a generic font, producing incorrect typography in the video.",
+        "selector": "[data-composition-id]",
+        "dataAttributes": {},
+        "sourceFile": "/home/atia-farha/Documents/Projects/Laravel-Projects/Rostrum/brag-output-2026-11-25-213641/composition/index.html",
+        "bbox": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0
+        },
+        "time": 0,
+        "fixHint": "Add @font-face { font-family: '...'; src: url('capture/assets/fonts/...woff2'); } for each font family, pointing to the captured .woff2 files, or switch to a Google Fonts family. An OS font such as PingFang SC or Hiragino Sans renders locally from the installed copy, but a cloud render has no copy and refuses it."
+      },
+      {
+        "code": "nested_structure_needs_subcomposition",
+        "severity": "warning",
+        "message": "<section id=\"s1\"> is a timeline element that contains nested <div>. The timeline shows one row per top-level element, and the root composition is built only from sub-compositions.",
+        "selector": "#s1",
+        "dataAttributes": {},
+        "sourceFile": "/home/atia-farha/Documents/Projects/Laravel-Projects/Rostrum/brag-output-2026-11-25-213641/composition/index.html",
+        "bbox": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0
+        },
+        "time": 0,
+        "fixHint": "Move <section id=\"s1\"> and its contents into a sub-composition file and mount it with data-composition-src."
+      },
+      {
+        "code": "nested_structure_needs_subcomposition",
+        "severity": "warning",
+        "message": "<section id=\"s2\"> is a timeline element that contains nested <div>. The timeline shows one row per top-level element, and the root composition is built only from sub-compositions.",
+        "selector": "#s2",
+        "dataAttributes": {},
+        "sourceFile": "/home/atia-farha/Documents/Projects/Laravel-Projects/Rostrum/brag-output-2026-11-25-213641/composition/index.html",
+        "bbox": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0
+        },
+        "time": 0,
+        "fixHint": "Move <section id=\"s2\"> and its contents into a sub-composition file and mount it with data-composition-src."
+      },
+      {
+        "code": "nested_structure_needs_subcomposition",
+        "severity": "warning",
+        "message": "<section id=\"s3\"> is a timeline element that contains nested <div>. The timeline shows one row per top-level element, and the root composition is built only from sub-compositions.",
+        "selector": "#s3",
+        "dataAttributes": {},
+        "sourceFile": "/home/atia-farha/Documents/Projects/Laravel-Projects/Rostrum/brag-output-2026-11-25-213641/composition/index.html",
+        "bbox": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0
+        },
+        "time": 0,
+        "fixHint": "Move <section id=\"s3\"> and its contents into a sub-composition file and mount it with data-composition-src."
+      },
+      {
+        "code": "nested_structure_needs_subcomposition",
+        "severity": "warning",
+        "message": "<section id=\"s4\"> is a timeline element that contains nested <div id=\"s4-a\">. The timeline shows one row per top-level element, and the root composition is built only from sub-compositions.",
+        "selector": "#s4",
+        "dataAttributes": {},
+        "sourceFile": "/home/atia-farha/Documents/Projects/Laravel-Projects/Rostrum/brag-output-2026-11-25-213641/composition/index.html",
+        "bbox": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0
+        },
+        "time": 0,
+        "fixHint": "Move <section id=\"s4\"> and its contents into a sub-composition file and mount it with data-composition-src."
+      },
+      {
+        "code": "nested_structure_needs_subcomposition",
+        "severity": "warning",
+        "message": "<section id=\"s5\"> is a timeline element that contains nested <div>. The timeline shows one row per top-level element, and the root composition is built only from sub-compositions.",
+        "selector": "#s5",
+        "dataAttributes": {},
+        "sourceFile": "/home/atia-farha/Documents/Projects/Laravel-Projects/Rostrum/brag-output-2026-11-25-213641/composition/index.html",
+        "bbox": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0
+        },
+        "time": 0,
+        "fixHint": "Move <section id=\"s5\"> and its contents into a sub-composition file and mount it with data-composition-src."
+      },
+      {
+        "code": "nested_structure_needs_subcomposition",
+        "severity": "warning",
+        "message": "<section id=\"s6\"> is a timeline element that contains nested <div>. The timeline shows one row per top-level element, and the root composition is built only from sub-compositions.",
+        "selector": "#s6",
+        "dataAttributes": {},
+        "sourceFile": "/home/atia-farha/Documents/Projects/Laravel-Projects/Rostrum/brag-output-2026-11-25-213641/composition/index.html",
+        "bbox": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0
+        },
+        "time": 0,
+        "fixHint": "Move <section id=\"s6\"> and its contents into a sub-composition file and mount it with data-composition-src."
+      },
+      {
+        "code": "nested_structure_needs_subcomposition",
+        "severity": "warning",
+        "message": "<section id=\"s7\"> is a timeline element that contains nested <div id=\"s7-a\">. The timeline shows one row per top-level element, and the root composition is built only from sub-compositions.",
+        "selector": "#s7",
+        "dataAttributes": {},
+        "sourceFile": "/home/atia-farha/Documents/Projects/Laravel-Projects/Rostrum/brag-output-2026-11-25-213641/composition/index.html",
+        "bbox": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0
+        },
+        "time": 0,
+        "fixHint": "Move <section id=\"s7\"> and its contents into a sub-composition file and mount it with data-composition-src."
+      }
+    ],
+    "filesScanned": 1
+  },
+  "runtime": {
+    "ok": true,
+    "errorCount": 0,
+    "warningCount": 0,
+    "infoCount": 0,
+    "findings": []
+  },
+  "layout": {
+    "ok": true,
+    "errorCount": 0,
+    "warningCount": 0,
+    "infoCount": 1,
+    "findings": [
+      {
+        "code": "panel_out_of_canvas",
+        "severity": "info",
+        "time": 24.889,
+        "selector": "#s4-a > div:nth-of-type(2)",
+        "message": "Painted panel extends outside the composition canvas.",
+        "rect": {
+          "left": 1002.97,
+          "top": 240.06,
+          "right": 1999.98,
+          "bottom": 899.94,
+          "width": 997.02,
+          "height": 659.88
+        },
+        "containerSelector": "#root",
+        "text": "rostrum.onrender.com/debates/01a1aa72 — Split-Pa",
+        "fixHint": "Move the panel inward, or mark intentional off-canvas animation with data-layout-allow-overflow.",
+        "containerRect": {
+          "left": 0,
+          "top": 0,
+          "right": 1920,
+          "bottom": 1080,
+          "width": 1920,
+          "height": 1080
+        },
+        "overflow": {
+          "right": 79.98
+        },
+        "dataAttributes": {},
+        "sourceFile": "index.html",
+        "bbox": {
+          "x": 1002.97,
+          "y": 240.06,
+          "width": 997.02,
+          "height": 659.88
+        },
+        "firstSeen": 24.889,
+        "lastSeen": 24.889,
+        "occurrences": 1,
+        "heldMs": 0,
+        "times": [
+          24.889
+        ]
+      }
+    ],
+    "duration": 64,
+    "samples": [
+      3.556,
+      10.667,
+      17.778,
+      24.889,
+      32,
+      39.111,
+      46.222,
+      53.333,
+      60.444
+    ],
+    "transitionSamples": [],
+    "transitionSamplesDropped": 0,
+    "tolerance": 2,
+    "totalIssueCount": 1,
+    "truncated": false,
+    "faceCheck": {
+      "ran": true,
+      "candidates": 0,
+      "faces": 0
+    }
+  },
+  "motion": {
+    "ok": true,
+    "errorCount": 0,
+    "warningCount": 0,
+    "infoCount": 0,
+    "findings": [],
+    "enabled": false,
+    "samples": 0
+  },
+  "contrast": {
+    "ok": true,
+    "errorCount": 0,
+    "warningCount": 0,
+    "infoCount": 0,
+    "findings": [],
+    "enabled": true,
+    "samples": [
+      3.556,
+      17.778,
+      32,
+      46.222,
+      60.444
+    ],
+    "checked": 68,
+    "passed": 68
+  },
+  "craft": {
+    "ok": true,
+    "errorCount": 0,
+    "warningCount": 6,
+    "infoCount": 0,
+    "findings": [
+      {
+        "code": "film_silent",
+        "severity": "warning",
+        "message": "This 64 s film has no sound source (no <audio>, no <video> with sound): add a music bed and sounds on the visible actions unless the person asked for silence; see references/sound.md.",
+        "selector": "[data-composition-id]",
+        "dataAttributes": {},
+        "sourceFile": "index.html",
+        "bbox": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0
+        },
+        "time": 0
+      },
+      {
+        "code": "text_below_floor",
+        "severity": "warning",
+        "message": "Type floor is 28 px (2.6% of the 1080 px short side, what a phone can read) and 93 text elements stay under it for 0.5 s or more, the smallest \"rostrum.onrender.com — Landing Page\" at 13 px: set reading text to at least 28 px, or put data-layout-ignore on text that is texture rather than reading; see references/look.md.",
+        "text": "rostrum.onrender.com — Landing Page",
+        "selector": "#s2-frame > div:nth-of-type(1) > span:nth-of-type(4)",
+        "dataAttributes": {},
+        "sourceFile": "index.html",
+        "bbox": {
+          "x": 1014.45,
+          "y": 279.58,
+          "width": 241.64,
+          "height": 15.88
+        },
+        "time": 8.625,
+        "times": [
+          0,
+          0,
+          0.125,
+          0.125,
+          1.375,
+          1.375,
+          1.375,
+          2.125,
+          2.125,
+          2.125,
+          3,
+          3,
+          3,
+          8.125,
+          8.125,
+          8.625,
+          8.875,
+          8.875,
+          8.875,
+          9.5,
+          9.5,
+          9.5,
+          10,
+          10,
+          10,
+          16.125,
+          16.125,
+          16.125,
+          16.125,
+          16.875,
+          16.875,
+          16.875,
+          17.5,
+          17.5,
+          17.5,
+          18.25,
+          18.25,
+          18.25,
+          24.125,
+          24.125,
+          24.125,
+          24.125,
+          24.125,
+          24.125,
+          24.125,
+          24.125,
+          24.125,
+          30.625,
+          30.625,
+          30.625,
+          30.625,
+          30.625,
+          30.625,
+          30.625,
+          30.625,
+          36.125,
+          36.125,
+          36.125,
+          36.125,
+          36.125,
+          36.125,
+          36.125,
+          36.125,
+          36.125,
+          36.125,
+          36.125,
+          36.125,
+          36.125,
+          41.625,
+          47.125,
+          47.125,
+          47.125,
+          47.125,
+          47.125,
+          47.125,
+          47.125,
+          47.125,
+          47.125,
+          47.125,
+          47.125,
+          55.125,
+          55.125,
+          55.125,
+          55.125,
+          55.125,
+          55.125,
+          55.125,
+          55.125,
+          55.125,
+          60,
+          60,
+          60,
+          60
+        ],
+        "fontPx": 12.9,
+        "floorPx": 28,
+        "seconds": 7.375,
+        "elements": [
+          {
+            "selector": "#s2-frame > div:nth-of-type(1) > span:nth-of-type(4)",
+            "text": "rostrum.onrender.com — Landing Page",
+            "fontPx": 12.9,
+            "time": 8.625,
+            "seconds": 7.375
+          },
+          {
+            "selector": "#s2-u1 > span:nth-of-type(1)",
+            "text": "USER 01",
+            "fontPx": 13,
+            "time": 8.875,
+            "seconds": 7.125
+          },
+          {
+            "selector": "#s2-u2 > span:nth-of-type(1)",
+            "text": "USER 02",
+            "fontPx": 13,
+            "time": 9.5,
+            "seconds": 6.5
+          },
+          {
+            "selector": "#s2-u3 > span:nth-of-type(1)",
+            "text": "USER 03",
+            "fontPx": 13,
+            "time": 10,
+            "seconds": 6
+          },
+          {
+            "selector": "#s3-frames > div:nth-of-type(1) > div:nth-of-type(1) > span:nth-of-type(4)",
+            "text": "rostrum.onrender.com/dashboard/setup — Configure Debate Session",
+            "fontPx": 13,
+            "time": 16.125,
+            "seconds": 7.875
+          },
+          {
+            "selector": "#s3-p1 > span:nth-of-type(1)",
+            "text": "01–02",
+            "fontPx": 13,
+            "time": 16.875,
+            "seconds": 7.125
+          },
+          {
+            "selector": "#s3-p2 > span:nth-of-type(1)",
+            "text": "03–04",
+            "fontPx": 13,
+            "time": 17.5,
+            "seconds": 6.5
+          },
+          {
+            "selector": "#s3-p3 > span:nth-of-type(1)",
+            "text": "05–06",
+            "fontPx": 13,
+            "time": 18.25,
+            "seconds": 5.75
+          },
+          {
+            "selector": "#s4-a > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(1) > span:nth-of-type(1)",
+            "text": "TURN",
+            "fontPx": 13,
+            "time": 24.125,
+            "seconds": 6.375
+          },
+          {
+            "selector": "#s4-a > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(2) > span:nth-of-type(1)",
+            "text": "VOICE",
+            "fontPx": 13,
+            "time": 24.125,
+            "seconds": 6.375
+          },
+          {
+            "selector": "#s4-a > div:nth-of-type(2) > div:nth-of-type(1) > span:nth-of-type(4)",
+            "text": "rostrum.onrender.com/debates/01a1aa72 — Split-Pane Arena",
+            "fontPx": 13,
+            "time": 24.125,
+            "seconds": 6.375
+          },
+          {
+            "selector": "span.tag-badge.tag-muted",
+            "text": "Original Opening Speech",
+            "fontPx": 13,
+            "time": 30.625,
+            "seconds": 5.375
+          },
+          {
+            "selector": "div.rewrite-grid > div:nth-of-type(2) > span:nth-of-type(1)",
+            "text": "Enhanced Version · Cached",
+            "fontPx": 13,
+            "time": 30.625,
+            "seconds": 5.375
+          },
+          {
+            "selector": "div.card-surface > div:nth-of-type(1) > span:nth-of-type(2)",
+            "text": "STRONG · 8 pts to Distinction",
+            "fontPx": 13,
+            "time": 36.125,
+            "seconds": 10.875
+          },
+          {
+            "selector": "#s5-img1 > div:nth-of-type(1) > span:nth-of-type(4)",
+            "text": "rostrum.onrender.com/debates/01a1aa72/feedback — Verdict & Brief",
+            "fontPx": 13,
+            "time": 36.125,
+            "seconds": 5.25
+          },
+          {
+            "selector": "#s5-img2 > div:nth-of-type(1) > span:nth-of-type(4)",
+            "text": "rostrum.onrender.com/debates/01a1aa72/feedback — Findings & Fallacies",
+            "fontPx": 13,
+            "time": 41.625,
+            "seconds": 5.375
+          },
+          {
+            "selector": "div.split-even > div:nth-of-type(1) > div:nth-of-type(1) > span:nth-of-type(4)",
+            "text": "rostrum.onrender.com/dashboard/overview",
+            "fontPx": 13,
+            "time": 47.125,
+            "seconds": 7.875
+          },
+          {
+            "selector": "div.split-even > div:nth-of-type(2) > div:nth-of-type(1) > span:nth-of-type(4)",
+            "text": "rostrum.onrender.com/dashboard/history",
+            "fontPx": 13,
+            "time": 47.125,
+            "seconds": 7.875
+          },
+          {
+            "selector": "div.pipeline > div:nth-of-type(1) > div:nth-of-type(2)",
+            "text": "Browser MediaRecorder (WebM)",
+            "fontPx": 13,
+            "time": 47.125,
+            "seconds": 7.875
+          },
+          {
+            "selector": "div.pipeline > div:nth-of-type(2) > div:nth-of-type(2)",
+            "text": "ElevenLabs Scribe · Gemini Multimodal fallback",
+            "fontPx": 13,
+            "time": 47.125,
+            "seconds": 7.875
+          },
+          {
+            "selector": "div.pipeline > div:nth-of-type(3) > div:nth-of-type(2)",
+            "text": "Gemini 3.6 Flash · English & বাংলা",
+            "fontPx": 13,
+            "time": 47.125,
+            "seconds": 7.875
+          },
+          {
+            "selector": "div.pipeline > div:nth-of-type(4) > div:nth-of-type(2)",
+            "text": "ElevenLabs TTS · Google TTS / Text fallback",
+            "fontPx": 13,
+            "time": 47.125,
+            "seconds": 7.875
+          },
+          {
+            "selector": "div.chrome-meta",
+            "text": "AI Debate Training Platform · Product Walkthrough",
+            "fontPx": 14,
+            "time": 0,
+            "seconds": 64
+          },
+          {
+            "selector": "#s1 > div:nth-of-type(1) > span:nth-of-type(1)",
+            "text": "01 · The Problem",
+            "fontPx": 14,
+            "time": 0.125,
+            "seconds": 7.875
+          },
+          {
+            "selector": "#s1-c1 > div:nth-of-type(1)",
+            "text": "01 / SCARCITY",
+            "fontPx": 14,
+            "time": 1.375,
+            "seconds": 6.625
+          },
+          {
+            "selector": "#s1-c2 > div:nth-of-type(1)",
+            "text": "02 / LANGUAGE GAP",
+            "fontPx": 14,
+            "time": 2.125,
+            "seconds": 5.875
+          },
+          {
+            "selector": "#s1-c3 > div:nth-of-type(1)",
+            "text": "03 / STATIC CHAT",
+            "fontPx": 14,
+            "time": 3,
+            "seconds": 5
+          },
+          {
+            "selector": "#s2 > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > span:nth-of-type(1)",
+            "text": "02 · Solution & Intended Users",
+            "fontPx": 14,
+            "time": 8.125,
+            "seconds": 7.875
+          },
+          {
+            "selector": "#s3 > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(1) > span:nth-of-type(1)",
+            "text": "03 · Working Demo: Setup",
+            "fontPx": 14,
+            "time": 16.125,
+            "seconds": 7.875
+          },
+          {
+            "selector": "#s4-a > div:nth-of-type(1) > div:nth-of-type(1) > span:nth-of-type(1)",
+            "text": "04 · Working Demo: Live Arena",
+            "fontPx": 14,
+            "time": 24.125,
+            "seconds": 6.375
+          },
+          {
+            "selector": "#s4-b > div:nth-of-type(1) > span:nth-of-type(1)",
+            "text": "04b · Mid-Debate Coaching",
+            "fontPx": 14,
+            "time": 30.625,
+            "seconds": 5.375
+          },
+          {
+            "selector": "#s5 > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > span:nth-of-type(1)",
+            "text": "05 · Working Demo: Adjudication",
+            "fontPx": 14,
+            "time": 36.125,
+            "seconds": 10.875
+          },
+          {
+            "selector": "#s6 > div:nth-of-type(1) > span:nth-of-type(1)",
+            "text": "06 · Analytics & Resilient Architecture",
+            "fontPx": 14,
+            "time": 47.125,
+            "seconds": 7.875
+          },
+          {
+            "selector": "#s7-a > div:nth-of-type(1) > span:nth-of-type(1)",
+            "text": "07 · Incomplete Features & Limitations",
+            "fontPx": 14,
+            "time": 55.125,
+            "seconds": 4.625
+          },
+          {
+            "selector": "ul.bullets > li:nth-of-type(1)",
+            "text": "Pre-empted the causation objection with independent-predictor framing.",
+            "fontPx": 15,
+            "time": 30.625,
+            "seconds": 5.375
+          },
+          {
+            "selector": "ul.bullets > li:nth-of-type(2)",
+            "text": "Named three concrete harm mechanisms and strengthened the policy analogy.",
+            "fontPx": 15,
+            "time": 30.625,
+            "seconds": 5.375
+          },
+          {
+            "selector": "div.card-surface > div:nth-of-type(3)",
+            "text": "Includes (Correlation ≠ Causation, Scope Creep, False Dilemma), verified quotes & practice drill.",
+            "fontPx": 15,
+            "time": 36.125,
+            "seconds": 10.875
+          },
+          {
+            "selector": "div.card-surface > div:nth-of-type(3) > strong:nth-of-type(1)",
+            "text": "3 flagged fallacies",
+            "fontPx": 15,
+            "time": 36.125,
+            "seconds": 10.875
+          },
+          {
+            "selector": "div.pipeline > div:nth-of-type(1) > div:nth-of-type(1)",
+            "text": "1. Capture",
+            "fontPx": 15,
+            "time": 47.125,
+            "seconds": 7.875
+          },
+          {
+            "selector": "div.pipeline > div:nth-of-type(2) > div:nth-of-type(1)",
+            "text": "2. Transcribe",
+            "fontPx": 15,
+            "time": 47.125,
+            "seconds": 7.875
+          },
+          {
+            "selector": "div.pipeline > div:nth-of-type(3) > div:nth-of-type(1)",
+            "text": "3. Reason",
+            "fontPx": 15,
+            "time": 47.125,
+            "seconds": 7.875
+          },
+          {
+            "selector": "div.pipeline > div:nth-of-type(4) > div:nth-of-type(1)",
+            "text": "4. Speak Back",
+            "fontPx": 15,
+            "time": 47.125,
+            "seconds": 7.875
+          },
+          {
+            "selector": "#s1-c1 > div:nth-of-type(3)",
+            "text": "University club sessions happen once a week, leaving debaters without solo round feedback.",
+            "fontPx": 16,
+            "time": 1.375,
+            "seconds": 6.625
+          },
+          {
+            "selector": "#s1-c2 > div:nth-of-type(3)",
+            "text": "Virtually all debate platforms exclude Bangla circuit debaters from localized sparring and judging.",
+            "fontPx": 16,
+            "time": 2.125,
+            "seconds": 5.875
+          },
+          {
+            "selector": "#s1-c3 > div:nth-of-type(3)",
+            "text": "Standard chatbots write essays instead of debating by Matter, Manner, and Method rules.",
+            "fontPx": 16,
+            "time": 3,
+            "seconds": 5
+          },
+          {
+            "selector": "#s2-u1 > div:nth-of-type(1)",
+            "text": "— Solo prep for Asian Parliamentary (AP) and WSDC rounds.",
+            "fontPx": 16,
+            "time": 8.875,
+            "seconds": 7.125
+          },
+          {
+            "selector": "#s2-u1 > div:nth-of-type(1) > strong:nth-of-type(1)",
+            "text": "University & School Debaters",
+            "fontPx": 16,
+            "time": 8.875,
+            "seconds": 7.125
+          },
+          {
+            "selector": "#s2-u2 > div:nth-of-type(1)",
+            "text": "— End-to-end Bangla motions, speech, rewrites, and judging.",
+            "fontPx": 16,
+            "time": 9.5,
+            "seconds": 6.5
+          },
+          {
+            "selector": "#s2-u2 > div:nth-of-type(1) > strong:nth-of-type(1)",
+            "text": "Bangla Circuit Participants",
+            "fontPx": 16,
+            "time": 9.5,
+            "seconds": 6.5
+          },
+          {
+            "selector": "#s2-u3 > div:nth-of-type(1)",
+            "text": "— Build structured reasoning under timed speaking pressure.",
+            "fontPx": 16,
+            "time": 10,
+            "seconds": 6
+          },
+          {
+            "selector": "#s2-u3 > div:nth-of-type(1) > strong:nth-of-type(1)",
+            "text": "Public Speaking Learners",
+            "fontPx": 16,
+            "time": 10,
+            "seconds": 6
+          },
+          {
+            "selector": "#s3-p1 > div:nth-of-type(1)",
+            "text": "— English or বাংলা; write your own or generate by topic with Gemini.",
+            "fontPx": 16,
+            "time": 16.875,
+            "seconds": 7.125
+          },
+          {
+            "selector": "#s3-p1 > div:nth-of-type(1) > strong:nth-of-type(1)",
+            "text": "Language & Motion",
+            "fontPx": 16,
+            "time": 16.875,
+            "seconds": 7.125
+          },
+          {
+            "selector": "#s3-p2 > div:nth-of-type(1)",
+            "text": "— Calm Logician, Aggressive Cross-Examiner, or Devil's Advocate.",
+            "fontPx": 16,
+            "time": 17.5,
+            "seconds": 6.5
+          },
+          {
+            "selector": "#s3-p2 > div:nth-of-type(1) > strong:nth-of-type(1)",
+            "text": "Side & Persona",
+            "fontPx": 16,
+            "time": 17.5,
+            "seconds": 6.5
+          },
+          {
+            "selector": "#s3-p3 > div:nth-of-type(1)",
+            "text": "— Beginner to World Champion · 3-phase Tournament or adaptive Sparring.",
+            "fontPx": 16,
+            "time": 18.25,
+            "seconds": 5.75
+          },
+          {
+            "selector": "#s3-p3 > div:nth-of-type(1) > strong:nth-of-type(1)",
+            "text": "Difficulty & Format",
+            "fontPx": 16,
+            "time": 18.25,
+            "seconds": 5.75
+          },
+          {
+            "selector": "#s4-a > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(1)",
+            "text": "— Gemini receives the exact speech to answer and remaining phases.",
+            "fontPx": 16,
+            "time": 24.125,
+            "seconds": 6.375
+          },
+          {
+            "selector": "#s4-a > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(1) > strong:nth-of-type(1)",
+            "text": "Phase & Slot-Aware Stage Brief",
+            "fontPx": 16,
+            "time": 24.125,
+            "seconds": 6.375
+          },
+          {
+            "selector": "#s4-a > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(1)",
+            "text": "— Scribe STT transcribes your mic; persona-matched voices argue back.",
+            "fontPx": 16,
+            "time": 24.125,
+            "seconds": 6.375
+          },
+          {
+            "selector": "#s4-a > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(1) > strong:nth-of-type(1)",
+            "text": "ElevenLabs Round-Trip",
+            "fontPx": 16,
+            "time": 24.125,
+            "seconds": 6.375
+          },
+          {
+            "selector": "div.rubric-bars > div:nth-of-type(1) > span:nth-of-type(1)",
+            "text": "Matter",
+            "fontPx": 16,
+            "time": 36.125,
+            "seconds": 10.875
+          },
+          {
+            "selector": "div.rubric-bars > div:nth-of-type(1) > span:nth-of-type(2)",
+            "text": "31 / 40",
+            "fontPx": 16,
+            "time": 36.125,
+            "seconds": 10.875
+          },
+          {
+            "selector": "div.rubric-bars > div:nth-of-type(2) > span:nth-of-type(1)",
+            "text": "Manner",
+            "fontPx": 16,
+            "time": 36.125,
+            "seconds": 10.875
+          },
+          {
+            "selector": "div.rubric-bars > div:nth-of-type(2) > span:nth-of-type(2)",
+            "text": "24 / 30",
+            "fontPx": 16,
+            "time": 36.125,
+            "seconds": 10.875
+          },
+          {
+            "selector": "div.rubric-bars > div:nth-of-type(3) > span:nth-of-type(1)",
+            "text": "Method",
+            "fontPx": 16,
+            "time": 36.125,
+            "seconds": 10.875
+          },
+          {
+            "selector": "div.rubric-bars > div:nth-of-type(3) > span:nth-of-type(2)",
+            "text": "22 / 30",
+            "fontPx": 16,
+            "time": 36.125,
+            "seconds": 10.875
+          },
+          {
+            "selector": "div.limit-grid > div:nth-of-type(1) > div:nth-of-type(2)",
+            "text": "ElevenLabs can sound unnaturally accented in Bengali. Written Bangla transcripts remain accurate and clear.",
+            "fontPx": 16,
+            "time": 55.125,
+            "seconds": 4.625
+          },
+          {
+            "selector": "div.limit-grid > div:nth-of-type(1) > div:nth-of-type(2) > code:nth-of-type(1)",
+            "text": "eleven_multilingual_v2",
+            "fontPx": 16,
+            "time": 55.125,
+            "seconds": 4.625
+          },
+          {
+            "selector": "div.limit-grid > div:nth-of-type(2) > div:nth-of-type(2)",
+            "text": "In Bangla debates, the judge's findings and transcript are Bangla, while PHP-derived brief labels, band summaries, and phase notes remain English.",
+            "fontPx": 16,
+            "time": 55.125,
+            "seconds": 4.625
+          },
+          {
+            "selector": "div.limit-grid > div:nth-of-type(3) > div:nth-of-type(2)",
+            "text": "Audio capture requires Chromium (Safari/Firefox show a fallback). Live hosting relies on Render free tier and external API credits.",
+            "fontPx": 16,
+            "time": 55.125,
+            "seconds": 4.625
+          },
+          {
+            "selector": "div.limit-grid > div:nth-of-type(3) > div:nth-of-type(2) > code:nth-of-type(1)",
+            "text": "MediaRecorder",
+            "fontPx": 16,
+            "time": 55.125,
+            "seconds": 4.625
+          },
+          {
+            "selector": "div.rewrite-grid > div:nth-of-type(1) > p:nth-of-type(1)",
+            "text": "\"Unrestricted access to social media is harming the mental health of adolescents at scale. Studies from the UK Mental Health Foundation show a 52% rise in anxiety... We propose a verified age-gate at sign-up.\"",
+            "fontPx": 17,
+            "time": 30.625,
+            "seconds": 5.375
+          },
+          {
+            "selector": "div.rewrite-grid > div:nth-of-type(2) > p:nth-of-type(1)",
+            "text": "\"This is not coincidence — it is mechanism: algorithmic content loops, social comparison, and cyberbullying are engineered features... Our proposal is targeted and proportionate — identical to France and Norway.\"",
+            "fontPx": 17,
+            "time": 30.625,
+            "seconds": 5.375
+          },
+          {
+            "selector": "div.cta-pill",
+            "text": "rostrum.onrender.com · Demo: demo@rostrum.app",
+            "fontPx": 17.86,
+            "time": 60,
+            "seconds": 4
+          },
+          {
+            "selector": "header.chrome-bar > div:nth-of-type(1) > span:nth-of-type(2)",
+            "text": "ROSTRUM",
+            "fontPx": 18,
+            "time": 0,
+            "seconds": 64
+          },
+          {
+            "selector": "div.limit-grid > div:nth-of-type(1) > div:nth-of-type(1)",
+            "text": "01 · Bangla TTS Phonetics",
+            "fontPx": 20,
+            "time": 55.125,
+            "seconds": 4.625
+          },
+          {
+            "selector": "div.limit-grid > div:nth-of-type(2) > div:nth-of-type(1)",
+            "text": "02 · Report Scaffolding",
+            "fontPx": 20,
+            "time": 55.125,
+            "seconds": 4.625
+          },
+          {
+            "selector": "div.limit-grid > div:nth-of-type(3) > div:nth-of-type(1)",
+            "text": "03 · Browser & Free-Tier Limits",
+            "fontPx": 20,
+            "time": 55.125,
+            "seconds": 4.625
+          },
+          {
+            "selector": "#s7-b > p:nth-of-type(1)",
+            "text": "Powered by &",
+            "fontPx": 21.83,
+            "time": 60,
+            "seconds": 4
+          },
+          {
+            "selector": "p.lead > strong:nth-of-type(1)",
+            "text": "Gemini 3.6 Flash",
+            "fontPx": 21.83,
+            "time": 60,
+            "seconds": 4
+          },
+          {
+            "selector": "p.lead > strong:nth-of-type(2)",
+            "text": "ElevenLabs Scribe & Voice",
+            "fontPx": 21.83,
+            "time": 60,
+            "seconds": 4
+          },
+          {
+            "selector": "#s1-lead",
+            "text": "Competitive debate demands three distinct roles: a sparring partner to test claims, a coach to sharpen rhetoric, and a judge to score structure.",
+            "fontPx": 22,
+            "time": 0.125,
+            "seconds": 7.875
+          },
+          {
+            "selector": "#s1-c1 > div:nth-of-type(2)",
+            "text": "Limited Judged Practice",
+            "fontPx": 22,
+            "time": 1.375,
+            "seconds": 6.625
+          },
+          {
+            "selector": "#s1-c2 > div:nth-of-type(2)",
+            "text": "English-Only Tools",
+            "fontPx": 22,
+            "time": 2.125,
+            "seconds": 5.875
+          },
+          {
+            "selector": "#s1-c3 > div:nth-of-type(2)",
+            "text": "Generic AI Responses",
+            "fontPx": 22,
+            "time": 3,
+            "seconds": 5
+          },
+          {
+            "selector": "#s2 > div:nth-of-type(1) > div:nth-of-type(1) > p:nth-of-type(1)",
+            "text": "Rostrum combines an AI sparring opponent, live argument coach, and formal adjudicator in one bilingual web arena.",
+            "fontPx": 22,
+            "time": 8.125,
+            "seconds": 7.875
+          },
+          {
+            "selector": "#s3 > div:nth-of-type(1) > div:nth-of-type(2) > p:nth-of-type(1)",
+            "text": "Sign in with the seeded demo account () and configure every axis of the round.",
+            "fontPx": 22,
+            "time": 16.125,
+            "seconds": 7.875
+          },
+          {
+            "selector": "p.lead > code:nth-of-type(1)",
+            "text": "demo@rostrum.app",
+            "fontPx": 22,
+            "time": 16.125,
+            "seconds": 7.875
+          },
+          {
+            "selector": "#s4-a > div:nth-of-type(1) > p:nth-of-type(1)",
+            "text": "Structured Opening (3m) → Rebuttal (2m) → Closing (2m) with WSDC/AP Closing order reversal.",
+            "fontPx": 22,
+            "time": 24.125,
+            "seconds": 6.375
+          },
+          {
+            "selector": "#s4-b > p:nth-of-type(1)",
+            "text": "Tap Improve argument on any turn to see a slot-aware rewrite without altering the scored transcript.",
+            "fontPx": 22,
+            "time": 30.625,
+            "seconds": 5.375
+          },
+          {
+            "selector": "#s5 > div:nth-of-type(1) > div:nth-of-type(1) > p:nth-of-type(1)",
+            "text": "One shared rubric in config drives both the Gemini judge and the live report view — with PDF export.",
+            "fontPx": 22,
+            "time": 36.125,
+            "seconds": 10.875
+          },
+          {
+            "selector": "div.card-surface > div:nth-of-type(1) > span:nth-of-type(1) > span:nth-of-type(1)",
+            "text": "/100",
+            "fontPx": 22,
+            "time": 36.125,
+            "seconds": 10.875
+          }
+        ]
+      },
+      {
+        "code": "line_unread",
+        "severity": "warning",
+        "message": "\"\"Unrestricted access to social media is harming the menta...\" (36 words) is on screen 5.34 s (±0.01 s), under its 8.47 s floor: hold it about 0.5 s + 0.3 s a word (11.30 s here) before it leaves or changes; see references/motion.md.",
+        "text": "\"Unrestricted access to social media is harming the mental health of adolescents at scale. Studies from the UK Mental Health Foundation show a 52% rise in anxiety... We propose a verified age-gate at sign-up.\"",
+        "selector": "div.rewrite-grid > div:nth-of-type(1) > p:nth-of-type(1)",
+        "dataAttributes": {},
+        "sourceFile": "index.html",
+        "bbox": {
+          "x": 111,
+          "y": 630.79,
+          "width": 800.59,
+          "height": 76.09000000000003
+        },
+        "time": 30.602,
+        "words": 36,
+        "seconds": 5.336,
+        "floorSeconds": 8.475,
+        "measured": [
+          {
+            "time": 30.25,
+            "opacity": null,
+            "heightPx": null
+          },
+          {
+            "time": 30.375,
+            "opacity": null,
+            "heightPx": null
+          },
+          {
+            "time": 30.5,
+            "opacity": null,
+            "heightPx": null
+          },
+          {
+            "time": 30.625,
+            "opacity": 0.59,
+            "heightPx": 76
+          },
+          {
+            "time": 30.75,
+            "opacity": 0.92,
+            "heightPx": 76
+          },
+          {
+            "time": 30.875,
+            "opacity": 0.99,
+            "heightPx": 76
+          },
+          {
+            "time": 31,
+            "opacity": 1,
+            "heightPx": 76
+          },
+          {
+            "time": 35.5,
+            "opacity": 1,
+            "heightPx": 76
+          },
+          {
+            "time": 35.625,
+            "opacity": 1,
+            "heightPx": 76
+          },
+          {
+            "time": 35.75,
+            "opacity": 0.96,
+            "heightPx": 76
+          },
+          {
+            "time": 35.875,
+            "opacity": 0.7,
+            "heightPx": 76
+          },
+          {
+            "time": 36,
+            "opacity": null,
+            "heightPx": null
+          },
+          {
+            "time": 36.125,
+            "opacity": null,
+            "heightPx": null
+          },
+          {
+            "time": 36.25,
+            "opacity": null,
+            "heightPx": null
+          }
+        ]
+      },
+      {
+        "code": "line_unread",
+        "severity": "warning",
+        "message": "\"\"This is not coincidence — it is mechanism: algorithmic c...\" (28 words) is on screen 5.34 s (±0.01 s), under its 6.68 s floor: hold it about 0.5 s + 0.3 s a word (8.90 s here) before it leaves or changes; see references/motion.md.",
+        "text": "\"This is not coincidence — it is mechanism: algorithmic content loops, social comparison, and cyberbullying are engineered features... Our proposal is targeted and proportionate — identical to France and Norway.\"",
+        "selector": "div.rewrite-grid > div:nth-of-type(2) > p:nth-of-type(1)",
+        "dataAttributes": {},
+        "sourceFile": "index.html",
+        "bbox": {
+          "x": 1005,
+          "y": 630.79,
+          "width": 782.31,
+          "height": 76.09000000000003
+        },
+        "time": 30.602,
+        "words": 28,
+        "seconds": 5.336,
+        "floorSeconds": 6.675,
+        "measured": [
+          {
+            "time": 30.25,
+            "opacity": null,
+            "heightPx": null
+          },
+          {
+            "time": 30.375,
+            "opacity": null,
+            "heightPx": null
+          },
+          {
+            "time": 30.5,
+            "opacity": null,
+            "heightPx": null
+          },
+          {
+            "time": 30.625,
+            "opacity": 0.59,
+            "heightPx": 76
+          },
+          {
+            "time": 30.75,
+            "opacity": 0.92,
+            "heightPx": 76
+          },
+          {
+            "time": 30.875,
+            "opacity": 0.99,
+            "heightPx": 76
+          },
+          {
+            "time": 31,
+            "opacity": 1,
+            "heightPx": 76
+          },
+          {
+            "time": 35.5,
+            "opacity": 1,
+            "heightPx": 76
+          },
+          {
+            "time": 35.625,
+            "opacity": 1,
+            "heightPx": 76
+          },
+          {
+            "time": 35.75,
+            "opacity": 0.96,
+            "heightPx": 76
+          },
+          {
+            "time": 35.875,
+            "opacity": 0.7,
+            "heightPx": 76
+          },
+          {
+            "time": 36,
+            "opacity": null,
+            "heightPx": null
+          },
+          {
+            "time": 36.125,
+            "opacity": null,
+            "heightPx": null
+          },
+          {
+            "time": 36.25,
+            "opacity": null,
+            "heightPx": null
+          }
+        ]
+      },
+      {
+        "code": "line_unread",
+        "severity": "warning",
+        "message": "\"In Bangla debates, the judge's findings and transcript ar...\" (22 words) is on screen 4.63 s (±0.01 s), under its 5.32 s floor: hold it about 0.5 s + 0.3 s a word (7.10 s here) before it leaves or changes; see references/motion.md.",
+        "text": "In Bangla debates, the judge's findings and transcript are Bangla, while PHP-derived brief labels, band summaries, and phase notes remain English.",
+        "selector": "div.limit-grid > div:nth-of-type(2) > div:nth-of-type(2)",
+        "dataAttributes": {},
+        "sourceFile": "index.html",
+        "bbox": {
+          "x": 705,
+          "y": 627.2,
+          "width": 497.29999999999995,
+          "height": 71.19000000000005
+        },
+        "time": 55.102,
+        "words": 22,
+        "seconds": 4.633,
+        "floorSeconds": 5.325,
+        "measured": [
+          {
+            "time": 54.75,
+            "opacity": null,
+            "heightPx": null
+          },
+          {
+            "time": 54.875,
+            "opacity": null,
+            "heightPx": null
+          },
+          {
+            "time": 55,
+            "opacity": null,
+            "heightPx": null
+          },
+          {
+            "time": 55.125,
+            "opacity": 0.59,
+            "heightPx": 71
+          },
+          {
+            "time": 55.25,
+            "opacity": 0.92,
+            "heightPx": 71
+          },
+          {
+            "time": 55.375,
+            "opacity": 0.99,
+            "heightPx": 71
+          },
+          {
+            "time": 55.5,
+            "opacity": 1,
+            "heightPx": 71
+          },
+          {
+            "time": 59.25,
+            "opacity": 1,
+            "heightPx": 71
+          },
+          {
+            "time": 59.375,
+            "opacity": 1,
+            "heightPx": 71
+          },
+          {
+            "time": 59.5,
+            "opacity": 0.98,
+            "heightPx": 71
+          },
+          {
+            "time": 59.625,
+            "opacity": 0.88,
+            "heightPx": 71
+          },
+          {
+            "time": 59.75,
+            "opacity": 0.42,
+            "heightPx": 71
+          },
+          {
+            "time": 59.875,
+            "opacity": null,
+            "heightPx": null
+          },
+          {
+            "time": 60,
+            "opacity": null,
+            "heightPx": null
+          }
+        ]
+      },
+      {
+        "code": "line_unread",
+        "severity": "warning",
+        "message": "\"Audio capture requires Chromium MediaRecorder (Safari/Fir...\" (21 words) is on screen 4.63 s (±0.01 s), under its 5.10 s floor: hold it about 0.5 s + 0.3 s a word (6.80 s here) before it leaves or changes; see references/motion.md.",
+        "text": "Audio capture requires Chromium MediaRecorder (Safari/Firefox show a fallback). Live hosting relies on Render free tier and external API credits.",
+        "selector": "div.limit-grid > div:nth-of-type(3) > div:nth-of-type(2)",
+        "dataAttributes": {},
+        "sourceFile": "index.html",
+        "bbox": {
+          "x": 1301,
+          "y": 627.2,
+          "width": 495.97,
+          "height": 73.19000000000005
+        },
+        "time": 55.102,
+        "words": 21,
+        "seconds": 4.633,
+        "floorSeconds": 5.1,
+        "measured": [
+          {
+            "time": 54.75,
+            "opacity": null,
+            "heightPx": null
+          },
+          {
+            "time": 54.875,
+            "opacity": null,
+            "heightPx": null
+          },
+          {
+            "time": 55,
+            "opacity": null,
+            "heightPx": null
+          },
+          {
+            "time": 55.125,
+            "opacity": 0.59,
+            "heightPx": 73
+          },
+          {
+            "time": 55.25,
+            "opacity": 0.92,
+            "heightPx": 73
+          },
+          {
+            "time": 55.375,
+            "opacity": 0.99,
+            "heightPx": 73
+          },
+          {
+            "time": 55.5,
+            "opacity": 1,
+            "heightPx": 73
+          },
+          {
+            "time": 59.25,
+            "opacity": 1,
+            "heightPx": 73
+          },
+          {
+            "time": 59.375,
+            "opacity": 1,
+            "heightPx": 73
+          },
+          {
+            "time": 59.5,
+            "opacity": 0.98,
+            "heightPx": 73
+          },
+          {
+            "time": 59.625,
+            "opacity": 0.88,
+            "heightPx": 73
+          },
+          {
+            "time": 59.75,
+            "opacity": 0.42,
+            "heightPx": 73
+          },
+          {
+            "time": 59.875,
+            "opacity": null,
+            "heightPx": null
+          },
+          {
+            "time": 60,
+            "opacity": null,
+            "heightPx": null
+          }
+        ]
+      }
+    ],
+    "enabled": true,
+    "step": 0.125,
+    "samples": 512
+  },
+  "audio": {
+    "ok": true,
+    "errorCount": 0,
+    "warningCount": 0,
+    "infoCount": 1,
+    "findings": [
+      {
+        "code": "audio_none",
+        "severity": "info",
+        "message": "The film has no sound: no clip in it plays audio.",
+        "selector": "[data-composition-id]",
+        "dataAttributes": {},
+        "sourceFile": "index.html",
+        "bbox": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0
+        },
+        "time": 0
+      }
+    ]
+  },
+  "hdr": {
+    "autoPromotion": null,
+    "inspection": "available"
+  },
+  "snapshots": {
+    "enabled": false,
+    "files": [],
+    "times": [],
+    "findingFiles": []
+  }
+}

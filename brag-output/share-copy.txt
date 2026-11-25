@@ -1,0 +1,3 @@
+Built Rostrum — an AI debate sparring partner that argues back in character, grades you on the same 100-point rubric used in university championships, and works in both English and Bangla. Powered by Gemini 3.6 Flash & ElevenLabs.
+
+rostrum.onrender.com

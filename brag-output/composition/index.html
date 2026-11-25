@@ -1,0 +1,926 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=1920, height=1080" />
+  <title>Rostrum — AI Debate Training Platform</title>
+  <script src="assets/gsap.min.js"></script>
+  <style>
+    @font-face {
+      font-family: 'Inter';
+      src: url('assets/fonts/inter-400.woff2') format('woff2');
+      font-weight: 400;
+      font-style: normal;
+    }
+    @font-face {
+      font-family: 'Inter';
+      src: url('assets/fonts/inter-500.woff2') format('woff2');
+      font-weight: 500;
+      font-style: normal;
+    }
+    @font-face {
+      font-family: 'Inter';
+      src: url('assets/fonts/inter-600.woff2') format('woff2');
+      font-weight: 600;
+      font-style: normal;
+    }
+    @font-face {
+      font-family: 'Inter';
+      src: url('assets/fonts/inter-700.woff2') format('woff2');
+      font-weight: 700;
+      font-style: normal;
+    }
+    @font-face {
+      font-family: 'Inter';
+      src: url('assets/fonts/inter-800.woff2') format('woff2');
+      font-weight: 800;
+      font-style: normal;
+    }
+
+    :root {
+      --bg: #090b10;
+      --surface: #0f131d;
+      --surface-2: #171c2b;
+      --card: #0a0d16;
+      --border: #1e2535;
+      --border-hi: #334155;
+      --accent: #4f5edd;
+      --accent-soft: #818cf8;
+      --sky: #38bdf8;
+      --success: #34d399;
+      --warning: #fbbf24;
+      --text: #f8fafc;
+      --label: #cbd5e1;
+      --muted: #94a3b8;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    html, body {
+      width: 1920px;
+      height: 1080px;
+      overflow: hidden;
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    #root {
+      position: relative;
+      width: 1920px;
+      height: 1080px;
+      overflow: hidden;
+      background: var(--bg);
+    }
+
+    /* Ambient lighting */
+    .ambient-glow {
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(ellipse 65% 55% at 50% 18%, rgba(79, 94, 221, 0.14), transparent 70%),
+        radial-gradient(ellipse 45% 40% at 85% 85%, rgba(56, 189, 248, 0.08), transparent 70%);
+      pointer-events: none;
+    }
+
+    .grid-bg {
+      position: absolute;
+      inset: 0;
+      background-image:
+        linear-gradient(to right, rgba(255, 255, 255, 0.025) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(255, 255, 255, 0.025) 1px, transparent 1px);
+      background-size: 64px 64px;
+      mask-image: radial-gradient(ellipse 85% 85% at 50% 50%, #000 40%, transparent 100%);
+      pointer-events: none;
+    }
+
+    /* Persistent subtle header */
+    .chrome-bar {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 64px;
+      padding: 0 64px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+      background: rgba(9, 11, 16, 0.85);
+      z-index: 20;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 20px;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      color: var(--text);
+    }
+
+    .brand-mark {
+      width: 10px;
+      height: 22px;
+      border-radius: 2px;
+      background: var(--accent);
+      box-shadow: 0 0 14px rgba(99, 102, 241, 0.65);
+    }
+
+    .chrome-meta {
+      font-size: 16px;
+      font-weight: 500;
+      color: var(--muted);
+      letter-spacing: 0.02em;
+    }
+
+    /* Progress bar */
+    .progress-track {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: rgba(255, 255, 255, 0.06);
+      z-index: 30;
+    }
+
+    #progress-fill {
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, var(--accent), var(--sky));
+      transform-origin: left center;
+      transform: scaleX(0);
+    }
+
+    /* Scene container — Hyperframes manages .clip visibility via data-start / data-duration */
+    .scene {
+      position: absolute;
+      top: 64px;
+      left: 0;
+      width: 1920px;
+      height: 1012px;
+      padding: 48px 80px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 15px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+      color: var(--accent-soft);
+      margin-bottom: 16px;
+    }
+
+    .eyebrow-pill {
+      padding: 6px 14px;
+      border-radius: 3px;
+      background: rgba(79, 94, 221, 0.16);
+      border: 1px solid rgba(129, 140, 248, 0.35);
+    }
+
+    h1.hero-title {
+      font-size: 72px;
+      font-weight: 800;
+      line-height: 1.08;
+      letter-spacing: -0.03em;
+      color: var(--text);
+    }
+
+    h2.section-title {
+      font-size: 48px;
+      font-weight: 800;
+      line-height: 1.14;
+      letter-spacing: -0.025em;
+      color: var(--text);
+    }
+
+    .accent-text {
+      color: var(--accent-soft);
+    }
+
+    .sky-text {
+      color: var(--sky);
+    }
+
+    .lead {
+      font-size: 28px;
+      line-height: 1.48;
+      color: var(--label);
+      max-width: 820px;
+      margin-top: 18px;
+    }
+
+    /* Cards */
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 28px 30px;
+    }
+
+    .card-surface {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 24px 28px;
+    }
+
+    /* Browser frame for real app screenshots */
+    .browser-frame {
+      background: var(--surface);
+      border: 1px solid var(--border-hi);
+      border-radius: 8px;
+      overflow: hidden;
+      width: 100%;
+      box-shadow: 0 28px 70px rgba(0, 0, 0, 0.65), 0 0 0 1px rgba(255, 255, 255, 0.04);
+    }
+
+    .browser-bar {
+      height: 36px;
+      background: #0d111a;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      padding: 0 16px;
+      gap: 8px;
+    }
+
+    .dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: #334155;
+    }
+
+    .browser-url {
+      margin-left: 12px;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--muted);
+    }
+
+    .browser-frame img {
+      display: block;
+      width: 100%;
+      height: auto;
+    }
+
+    /* Split layouts */
+    .split-2 {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1.12fr);
+      gap: 52px;
+      align-items: center;
+      width: 100%;
+    }
+
+    .split-even {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+      gap: 36px;
+      align-items: stretch;
+      width: 100%;
+    }
+
+    .cards-3 {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 28px;
+      margin-top: 40px;
+      width: 100%;
+    }
+
+    .card-num {
+      font-size: 15px;
+      font-weight: 800;
+      color: var(--accent-soft);
+      letter-spacing: 0.1em;
+      margin-bottom: 10px;
+    }
+
+    .card-title {
+      font-size: 28px;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 10px;
+    }
+
+    .card-desc {
+      font-size: 20px;
+      line-height: 1.5;
+      color: var(--label);
+    }
+
+    /* Step badges */
+    .step-list {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      margin-top: 24px;
+    }
+
+    .step-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 14px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 16px 20px;
+    }
+
+    .step-num {
+      font-size: 14px;
+      font-weight: 800;
+      color: var(--accent-soft);
+      background: rgba(79, 94, 221, 0.15);
+      border: 1px solid rgba(129, 140, 248, 0.3);
+      padding: 4px 10px;
+      border-radius: 3px;
+      flex-shrink: 0;
+    }
+
+    .step-text {
+      font-size: 20px;
+      line-height: 1.45;
+      color: var(--label);
+    }
+
+    .step-text strong {
+      color: var(--text);
+    }
+
+    /* Rewrite comparison */
+    .rewrite-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+      gap: 28px;
+      margin-top: 28px;
+      width: 100%;
+    }
+
+    .tag-badge {
+      display: inline-block;
+      font-size: 14px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      padding: 6px 12px;
+      border-radius: 3px;
+      margin-bottom: 16px;
+    }
+
+    .tag-muted {
+      background: rgba(148, 163, 184, 0.14);
+      color: var(--label);
+      border: 1px solid rgba(148, 163, 184, 0.25);
+    }
+
+    .tag-success {
+      background: rgba(52, 211, 153, 0.14);
+      color: var(--success);
+      border: 1px solid rgba(52, 211, 153, 0.3);
+    }
+
+    .quote-text {
+      font-size: 22px;
+      line-height: 1.55;
+      color: var(--label);
+    }
+
+    .bullets {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-top: 20px;
+    }
+
+    .bullets li {
+      font-size: 19px;
+      line-height: 1.45;
+      color: var(--label);
+      padding-left: 22px;
+      position: relative;
+    }
+
+    .bullets li::before {
+      content: '→';
+      position: absolute;
+      left: 0;
+      color: var(--sky);
+      font-weight: 700;
+    }
+
+    /* Scorecard bars */
+    .rubric-bars {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      margin-top: 22px;
+    }
+
+    .bar-row {
+      display: grid;
+      grid-template-columns: 120px 1fr 90px;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .bar-label {
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--text);
+    }
+
+    .bar-track {
+      height: 14px;
+      background: var(--surface-2);
+      border-radius: 3px;
+      overflow: hidden;
+      border: 1px solid var(--border);
+    }
+
+    .bar-fill {
+      height: 100%;
+      background: var(--accent);
+      border-radius: 2px;
+    }
+
+    .bar-fill.sky {
+      background: var(--sky);
+    }
+
+    .bar-score {
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--label);
+      text-align: right;
+      font-variant-numeric: tabular-nums;
+    }
+
+    /* Pipeline architecture */
+    .pipeline {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-top: 24px;
+      width: 100%;
+    }
+
+    .pipe-node {
+      flex: 1;
+      background: var(--surface);
+      border: 1px solid var(--border-hi);
+      border-radius: 6px;
+      padding: 16px 18px;
+    }
+
+    .pipe-title {
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 4px;
+    }
+
+    .pipe-sub {
+      font-size: 16px;
+      color: var(--label);
+      line-height: 1.4;
+    }
+
+    .pipe-arrow {
+      font-size: 24px;
+      font-weight: 700;
+      color: var(--accent-soft);
+      flex-shrink: 0;
+    }
+
+    /* Limitations */
+    .limit-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 28px;
+      margin-top: 36px;
+      width: 100%;
+    }
+
+    .limit-card {
+      background: var(--card);
+      border: 1px solid rgba(251, 191, 36, 0.35);
+      border-radius: 6px;
+      padding: 28px;
+    }
+
+    .limit-title {
+      font-size: 28px;
+      font-weight: 700;
+      color: var(--warning);
+      margin-bottom: 12px;
+    }
+
+    .limit-desc {
+      font-size: 22px;
+      line-height: 1.5;
+      color: var(--label);
+    }
+
+    /* Outro */
+    .center-stack {
+      align-items: center;
+      text-align: center;
+    }
+
+    .cta-pill {
+      margin-top: 30px;
+      padding: 16px 36px;
+      background: var(--accent);
+      color: #ffffff;
+      font-size: 22px;
+      font-weight: 700;
+      border-radius: 4px;
+      letter-spacing: 0.01em;
+      box-shadow: 0 8px 30px rgba(79, 94, 221, 0.45);
+    }
+  </style>
+</head>
+<body>
+  <div id="root" data-composition-id="main" data-start="0" data-duration="100.6" data-width="1920" data-height="1080">
+    <div class="ambient-glow"></div>
+    <div class="grid-bg"></div>
+
+    <!-- Top Chrome -->
+    <header class="chrome-bar">
+      <div class="brand">
+        <span class="brand-mark"></span>
+        <span>ROSTRUM</span>
+      </div>
+      <div class="chrome-meta" data-layout-ignore>AI Debate Training Platform</div>
+    </header>
+
+    <!-- SCENE 1: HOOK & PROBLEM (0s - 8s) -->
+    <section id="s1" class="clip scene" data-start="0" data-duration="11.0">
+      <div class="eyebrow" data-layout-ignore><span class="eyebrow-pill">01 · The Problem</span></div>
+      <h1 id="s1-title" class="hero-title">
+        Between tournaments,<br />
+        <span class="accent-text">who coaches you?</span>
+      </h1>
+      <p id="s1-lead" class="lead">
+        Competitive debate demands a sparring partner, a coach, and a judge.
+      </p>
+      <div class="cards-3">
+        <div id="s1-c1" class="card">
+          <div class="card-num" data-layout-ignore>01 / SCARCITY</div>
+          <div class="card-title">Limited Judged Practice</div>
+          <div class="card-desc">Weekly club sessions leave solo debaters without structured round feedback.</div>
+        </div>
+        <div id="s1-c2" class="card">
+          <div class="card-num" data-layout-ignore>02 / LANGUAGE GAP</div>
+          <div class="card-title">English-Only Tools</div>
+          <div class="card-desc">Practice platforms overlook native Bangla circuit debaters.</div>
+        </div>
+        <div id="s1-c3" class="card">
+          <div class="card-num" data-layout-ignore>03 / STATIC CHAT</div>
+          <div class="card-title">Generic AI Chatbots</div>
+          <div class="card-desc">Standard LLMs ignore Matter, Manner, and Method rules.</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SCENE 2: SOLUTION & INTENDED USERS (8s - 16s) -->
+    <section id="s2" class="clip scene" data-start="11.0" data-duration="11.2">
+      <div class="split-2">
+        <div>
+          <div class="eyebrow" data-layout-ignore><span class="eyebrow-pill">02 · Solution &amp; Intended Users</span></div>
+          <h2 class="section-title">Debate Sharper.<br /><span class="accent-text">Score Higher.</span></h2>
+          <p class="lead">
+            An AI sparring opponent, live coach, and formal adjudicator in one bilingual arena.
+          </p>
+          <div class="step-list">
+            <div id="s2-u1" class="step-item">
+              <span class="step-num" data-layout-ignore>USER 01</span>
+              <div class="step-text"><strong>University &amp; School Debaters</strong> — Solo prep for AP and WSDC rounds.</div>
+            </div>
+            <div id="s2-u2" class="step-item">
+              <span class="step-num" data-layout-ignore>USER 02</span>
+              <div class="step-text"><strong>Bangla Circuit Participants</strong> — Bilingual motions, voice, and judging.</div>
+            </div>
+            <div id="s2-u3" class="step-item">
+              <span class="step-num" data-layout-ignore>USER 03</span>
+              <div class="step-text"><strong>Public Speaking Learners</strong> — Structured reasoning under timed pressure.</div>
+            </div>
+          </div>
+        </div>
+        <div id="s2-frame" class="browser-frame">
+          <div class="browser-bar">
+            <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+            <span class="browser-url" data-layout-ignore>rostrum.onrender.com — Landing Page</span>
+          </div>
+          <img src="assets/screens/landing.png" alt="Rostrum landing page" />
+        </div>
+      </div>
+    </section>
+
+    <!-- SCENE 3: WORKING APP — 6-STEP SETUP (16s - 24s) -->
+    <section id="s3" class="clip scene" data-start="22.2" data-duration="11.2">
+      <div class="split-2">
+        <div id="s3-frame" class="browser-frame">
+          <div class="browser-bar">
+            <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+            <span class="browser-url" data-layout-ignore>rostrum.onrender.com/dashboard/setup — Configure Debate Session</span>
+          </div>
+          <img src="assets/screens/setup.png" alt="Rostrum 6-step debate setup" />
+        </div>
+        <div>
+          <div class="eyebrow" data-layout-ignore><span class="eyebrow-pill">03 · Working Demo: Setup</span></div>
+          <h2 class="section-title">6-Step Session<br /><span class="sky-text">Configuration</span></h2>
+          <p class="lead">Sign in and configure every axis of the round.</p>
+          <div class="step-list">
+            <div id="s3-p1" class="step-item">
+              <span class="step-num" data-layout-ignore>01–02</span>
+              <div class="step-text"><strong>Language &amp; Motion</strong> — English or বাংলা; write or generate with Gemini.</div>
+            </div>
+            <div id="s3-p2" class="step-item">
+              <span class="step-num" data-layout-ignore>03–04</span>
+              <div class="step-text"><strong>Side &amp; Persona</strong> — Calm Logician, Aggressive Cross-Examiner, Devil's Advocate.</div>
+            </div>
+            <div id="s3-p3" class="step-item">
+              <span class="step-num" data-layout-ignore>05–06</span>
+              <div class="step-text"><strong>Difficulty &amp; Format</strong> — Beginner to World Champion · Tournament or Sparring.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SCENE 4A: WORKING APP — LIVE ARENA (24s - 31.5s) -->
+    <section id="s4a" class="clip scene" data-start="33.4" data-duration="10.5">
+      <div class="split-2">
+        <div>
+          <div class="eyebrow" data-layout-ignore><span class="eyebrow-pill">04 · Working Demo: Live Arena</span></div>
+          <h2 class="section-title">Speak Aloud.<br /><span class="accent-text">Debate in Character.</span></h2>
+          <p class="lead">
+            Opening (3m) → Rebuttal (2m) → Closing (2m) with WSDC/AP order reversal.
+          </p>
+          <div class="step-list">
+            <div class="step-item">
+              <span class="step-num" data-layout-ignore>BRIEF</span>
+              <div class="step-text"><strong>Slot-Aware Stage Brief</strong> — Gemini answers your exact speech in role.</div>
+            </div>
+            <div class="step-item">
+              <span class="step-num" data-layout-ignore>VOICE</span>
+              <div class="step-text"><strong>ElevenLabs Round-Trip</strong> — Scribe STT transcribes; persona voices reply.</div>
+            </div>
+          </div>
+        </div>
+        <div class="browser-frame">
+          <div class="browser-bar">
+            <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+            <span class="browser-url" data-layout-ignore>rostrum.onrender.com/debates/01a1aa72 — Split-Pane Arena</span>
+          </div>
+          <img src="assets/screens/arena.png" alt="Rostrum live debate arena" />
+        </div>
+      </div>
+    </section>
+
+    <!-- SCENE 4B: MID-DEBATE ARGUMENT REWRITE (31.5s - 39s) -->
+    <section id="s4b" class="clip scene" data-start="43.9" data-duration="11.0">
+      <div class="eyebrow" data-layout-ignore><span class="eyebrow-pill">04b · Mid-Debate Coaching</span></div>
+      <h2 class="section-title">Live <span class="sky-text">"Improve Argument"</span> Rewrites</h2>
+      <p class="lead">Tap Improve argument mid-round for a slot-aware rewrite without altering the scored transcript.</p>
+      <div class="rewrite-grid">
+        <div class="card">
+          <span class="tag-badge tag-muted" data-layout-ignore>Original Opening Speech</span>
+          <p class="quote-text">
+            "Studies show a 52% rise in anxiety correlated with social media. We propose a verified age-gate."
+          </p>
+        </div>
+        <div class="card" style="border-color: rgba(52, 211, 153, 0.35);">
+          <span class="tag-badge tag-success" data-layout-ignore>Enhanced Version · Cached</span>
+          <p class="quote-text" style="color: var(--text);">
+            "Not coincidence — mechanism: algorithmic loops and cyberbullying drive the surge. Enforce age-gates like France."
+          </p>
+          <ul class="bullets">
+            <li>Pre-empted the causation objection.</li>
+            <li>Named concrete harm mechanisms and policy precedent.</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- SCENE 5: WORKING APP — ADJUDICATION REPORT (39s - 50s) -->
+    <section id="s5" class="clip scene" data-start="54.9" data-duration="11.3">
+      <div class="split-2">
+        <div>
+          <div class="eyebrow" data-layout-ignore><span class="eyebrow-pill">05 · Working Demo: Adjudication</span></div>
+          <h2 class="section-title">Official <span class="accent-text">100-Point</span><br />Adjudication Report</h2>
+          <p class="lead">One shared rubric drives both the Gemini judge and the printable PDF report.</p>
+          <div class="card-surface" style="margin-top:24px;">
+            <div style="display:flex; align-items:baseline; gap:16px;">
+              <span style="font-size:52px; font-weight:800; color:var(--text);">77<span style="font-size:22px; color:var(--muted);">/100</span></span>
+              <span class="tag-badge tag-success" data-layout-ignore style="margin:0; background:rgba(56,189,248,0.15); color:var(--sky); border-color:rgba(56,189,248,0.35);">STRONG · 8 pts to Distinction</span>
+            </div>
+            <div class="rubric-bars">
+              <div class="bar-row">
+                <span class="bar-label">Matter</span>
+                <div class="bar-track"><div class="bar-fill" style="width:77.5%;"></div></div>
+                <span class="bar-score">31 / 40</span>
+              </div>
+              <div class="bar-row">
+                <span class="bar-label">Manner</span>
+                <div class="bar-track"><div class="bar-fill sky" style="width:80%;"></div></div>
+                <span class="bar-score">24 / 30</span>
+              </div>
+              <div class="bar-row">
+                <span class="bar-label">Method</span>
+                <div class="bar-track"><div class="bar-fill sky" style="width:73.3%;"></div></div>
+                <span class="bar-score">22 / 30</span>
+              </div>
+            </div>
+            <div style="margin-top:18px; font-size:18px; color:var(--label);">
+              Flags <strong style="color:var(--text);">3 fallacies</strong>, verified quotes &amp; practice drill.
+            </div>
+          </div>
+        </div>
+        <div style="position:relative;">
+          <div id="s5-img1" class="browser-frame">
+            <div class="browser-bar">
+              <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+              <span class="browser-url" data-layout-ignore>rostrum.onrender.com/debates/01a1aa72/feedback — Verdict &amp; Brief</span>
+            </div>
+            <img src="assets/screens/report-top.png" alt="Rostrum adjudication report verdict" />
+          </div>
+          <div id="s5-img2" class="browser-frame" style="position:absolute; inset:0; opacity:0;">
+            <div class="browser-bar">
+              <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+              <span class="browser-url" data-layout-ignore>rostrum.onrender.com/debates/01a1aa72/feedback — Findings &amp; Fallacies</span>
+            </div>
+            <img src="assets/screens/report-findings.png" alt="Rostrum adjudication findings" />
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SCENE 6: ANALYTICS, HISTORY & ARCHITECTURE (50s - 57s) -->
+    <section id="s6" class="clip scene" data-start="66.2" data-duration="13.7">
+      <div class="eyebrow" data-layout-ignore><span class="eyebrow-pill">06 · Analytics &amp; Resilient Architecture</span></div>
+      <h2 class="section-title">Practice Telemetry &amp; <span class="sky-text">Fallback Pipeline</span></h2>
+      <div class="split-even" style="margin-top:24px;">
+        <div class="browser-frame">
+          <div class="browser-bar">
+            <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+            <span class="browser-url" data-layout-ignore>rostrum.onrender.com/dashboard/overview</span>
+          </div>
+          <img src="assets/screens/dashboard.png" alt="Rostrum overview dashboard" />
+        </div>
+        <div class="browser-frame">
+          <div class="browser-bar">
+            <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+            <span class="browser-url" data-layout-ignore>rostrum.onrender.com/dashboard/history</span>
+          </div>
+          <img src="assets/screens/history.png" alt="Rostrum session history" />
+        </div>
+      </div>
+      <div class="pipeline">
+        <div class="pipe-node">
+          <div class="pipe-title">1. Capture</div>
+          <div class="pipe-sub" data-layout-ignore>Browser MediaRecorder (WebM)</div>
+        </div>
+        <span class="pipe-arrow" data-layout-ignore>→</span>
+        <div class="pipe-node">
+          <div class="pipe-title">2. Transcribe</div>
+          <div class="pipe-sub" data-layout-ignore>ElevenLabs Scribe · Gemini fallback</div>
+        </div>
+        <span class="pipe-arrow" data-layout-ignore>→</span>
+        <div class="pipe-node">
+          <div class="pipe-title">3. Reason</div>
+          <div class="pipe-sub" data-layout-ignore>Gemini 3.6 Flash · EN &amp; বাংলা</div>
+        </div>
+        <span class="pipe-arrow" data-layout-ignore>→</span>
+        <div class="pipe-node">
+          <div class="pipe-title">4. Speak Back</div>
+          <div class="pipe-sub" data-layout-ignore>ElevenLabs TTS · Google TTS fallback</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SCENE 7A: INCOMPLETE FEATURES & LIMITATIONS (57s - 63.5s) -->
+    <section id="s7a" class="clip scene" data-start="79.9" data-duration="13.2">
+      <div class="eyebrow" data-layout-ignore><span class="eyebrow-pill" style="color:var(--warning); border-color:rgba(251,191,36,0.35); background:rgba(251,191,36,0.12);">07 · Incomplete Features &amp; Limitations</span></div>
+      <h2 class="section-title">What Is Still <span style="color:var(--warning);">Incomplete</span></h2>
+      <div class="limit-grid">
+        <div class="limit-card">
+          <div class="limit-title">01 · Bangla TTS</div>
+          <div class="limit-desc">Multilingual voice audio can sound accented in Bengali; transcripts stay clear.</div>
+        </div>
+        <div class="limit-card">
+          <div class="limit-title">02 · Report Prose</div>
+          <div class="limit-desc">Judge findings are Bangla, but brief and band labels stay English.</div>
+        </div>
+        <div class="limit-card">
+          <div class="limit-title">03 · Browser &amp; Tier</div>
+          <div class="limit-desc">Requires Chromium MediaRecorder.</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SCENE 7B: OUTRO (63.5s - 68s) -->
+    <section id="s7b" class="clip scene center-stack" data-start="93.1" data-duration="7.5">
+      <div class="brand" style="font-size:28px; margin-bottom:24px;">
+        <span class="brand-mark" style="width:14px; height:32px;"></span>
+        <span>ROSTRUM</span>
+      </div>
+      <h1 class="hero-title">Debate Sharper.<br /><span class="accent-text">Score Higher.</span></h1>
+      <p class="lead" style="text-align:center;">
+        Powered by <strong style="color:var(--text);">Gemini 3.6 Flash</strong> &amp; <strong style="color:var(--text);">ElevenLabs Scribe &amp; Voice</strong>
+      </p>
+      <div class="cta-pill">rostrum.onrender.com · demo@rostrum.app · password: rostrum-demo</div>
+    </section>
+
+    <div class="progress-track">
+      <div id="progress-fill"></div>
+    </div>
+  </div>
+
+  <script>
+    const tl = gsap.timeline({ paused: true });
+
+    // Overall progress bar across full 68s
+    tl.fromTo("#progress-fill", { scaleX: 0 }, { scaleX: 1, duration: 100.6, ease: "none" }, 0);
+
+    // Helper for clean scene fade-in/fade-out (never touching visibility)
+    function showScene(id, start, dur) {
+      tl.fromTo(id, { opacity: 0, y: 18 }, { opacity: 1, y: 0, duration: 0.45, ease: "power3.out" }, start);
+      if (start + dur < 100.6) {
+        tl.to(id, { opacity: 0, y: -12, duration: 0.35, ease: "power2.in" }, start + dur - 0.35);
+      }
+    }
+
+    // Scene 1: Hook & Problem (0 - 8s)
+    showScene("#s1", 0, 11.0);
+    tl.fromTo("#s1-c1", { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 0.4, ease: "power3.out" }, 1.1);
+    tl.fromTo("#s1-c2", { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 0.4, ease: "power3.out" }, 1.8);
+    tl.fromTo("#s1-c3", { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 0.4, ease: "power3.out" }, 2.5);
+
+    // Scene 2: Solution & Users (8 - 16s)
+    showScene("#s2", 11.0, 11.2);
+    tl.fromTo("#s2-u1", { opacity: 0, x: -16 }, { opacity: 1, x: 0, duration: 0.4, ease: "power2.out" }, 11.6);
+    tl.fromTo("#s2-u2", { opacity: 0, x: -16 }, { opacity: 1, x: 0, duration: 0.4, ease: "power2.out" }, 12.2);
+    tl.fromTo("#s2-u3", { opacity: 0, x: -16 }, { opacity: 1, x: 0, duration: 0.4, ease: "power2.out" }, 12.8);
+    tl.fromTo("#s2-frame", { opacity: 0, scale: 0.97 }, { opacity: 1, scale: 1, duration: 0.6, ease: "power3.out" }, 11.3);
+
+    // Scene 3: Setup Flow (16 - 24s)
+    showScene("#s3", 22.2, 11.2);
+    tl.fromTo("#s3-p1", { opacity: 0, x: 16 }, { opacity: 1, x: 0, duration: 0.4, ease: "power2.out" }, 22.8);
+    tl.fromTo("#s3-p2", { opacity: 0, x: 16 }, { opacity: 1, x: 0, duration: 0.4, ease: "power2.out" }, 23.5);
+    tl.fromTo("#s3-p3", { opacity: 0, x: 16 }, { opacity: 1, x: 0, duration: 0.4, ease: "power2.out" }, 24.2);
+
+    // Scene 4A: Arena (24 - 31.5s)
+    showScene("#s4a", 33.4, 10.5);
+
+    // Scene 4B: Argument Rewrite (31.5 - 39s)
+    showScene("#s4b", 43.9, 11.0);
+
+    // Scene 5: Adjudication Report (39 - 50s)
+    showScene("#s5", 54.9, 11.3);
+    tl.to("#s5-img1", { opacity: 0, duration: 0.45 }, 60.2);
+    tl.fromTo("#s5-img2", { opacity: 0 }, { opacity: 1, duration: 0.45 }, 60.4);
+
+    // Scene 6: Analytics, History & Architecture (50 - 57s)
+    showScene("#s6", 66.2, 13.7);
+
+    // Scene 7A: Incomplete Features (57 - 63.5s)
+    showScene("#s7a", 79.9, 13.2);
+
+    // Scene 7B: Outro (63.5 - 68s)
+    showScene("#s7b", 93.1, 7.5);
+
+    window.__timelines = window.__timelines || {};
+    window.__timelines["main"] = tl;
+    tl.seek(0);
+  </script>
+  <!-- Voice narration audio tracks — Hyperframes drives playback, no autoplay -->
+  <audio id="audio-s1" src="assets/audio/s1.wav" data-start="0.15" data-duration="10.41" data-volume="0.95"></audio>
+  <audio id="audio-s2" src="assets/audio/s2.wav" data-start="11.15" data-duration="10.65" data-volume="0.95"></audio>
+  <audio id="audio-s3" src="assets/audio/s3.wav" data-start="22.35" data-duration="10.58" data-volume="0.95"></audio>
+  <audio id="audio-s4a" src="assets/audio/s4a.wav" data-start="33.55" data-duration="9.88" data-volume="0.95"></audio>
+  <audio id="audio-s4b" src="assets/audio/s4b.wav" data-start="44.05" data-duration="10.37" data-volume="0.95"></audio>
+  <audio id="audio-s5" src="assets/audio/s5.wav" data-start="55.05" data-duration="10.69" data-volume="0.95"></audio>
+  <audio id="audio-s6" src="assets/audio/s6.wav" data-start="66.35" data-duration="13.12" data-volume="0.95"></audio>
+  <audio id="audio-s7a" src="assets/audio/s7a.wav" data-start="80.05" data-duration="12.61" data-volume="0.95"></audio>
+  <audio id="audio-s7b" src="assets/audio/s7b.wav" data-start="93.25" data-duration="6.51" data-volume="0.95"></audio>
+</body>
+</html>

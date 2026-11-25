@@ -1,0 +1,10 @@
+{
+  "name": "rostrum-demo-composition",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "npx --yes hyperframes@0.9.94 preview",
+    "check": "npx --yes hyperframes@0.9.94 check",
+    "render": "npx --yes hyperframes@0.9.94 render"
+  }
+}

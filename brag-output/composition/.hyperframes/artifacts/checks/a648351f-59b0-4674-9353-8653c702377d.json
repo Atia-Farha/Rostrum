@@ -1,0 +1,631 @@
+{
+  "ok": true,
+  "strict": false,
+  "browserSkipped": false,
+  "lint": {
+    "ok": true,
+    "errorCount": 0,
+    "warningCount": 11,
+    "infoCount": 0,
+    "findings": [
+      {
+        "code": "composition_file_too_large",
+        "severity": "warning",
+        "message": "This HTML composition file has 376 lines. Smaller sub-compositions are easier to read, iterate on, and diff.",
+        "selector": "[data-composition-id]",
+        "dataAttributes": {},
+        "sourceFile": "/home/atia-farha/Documents/Projects/Laravel-Projects/Rostrum/brag-output-2026-11-25-213641/composition/index.html",
+        "bbox": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0
+        },
+        "time": 0,
+        "fixHint": "Split coherent scenes or layers into separate .html files under compositions/, then mount them from the parent with data-composition-src so each file stays small enough to inspect, revise, and validate independently."
+      },
+      {
+        "code": "timeline_track_too_dense",
+        "severity": "warning",
+        "message": "This HTML file has 9 timed elements. Smaller sub-compositions keep timelines easier to read, iterate on, and diff.",
+        "selector": "[data-composition-id]",
+        "dataAttributes": {},
+        "sourceFile": "/home/atia-farha/Documents/Projects/Laravel-Projects/Rostrum/brag-output-2026-11-25-213641/composition/index.html",
+        "bbox": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0
+        },
+        "time": 0,
+        "fixHint": "Move coherent scene groups into separate .html files under compositions/ and mount them from the parent with data-composition-src so the timeline stays easier to inspect, revise, and validate."
+      },
+      {
+        "code": "nested_structure_needs_subcomposition",
+        "severity": "warning",
+        "message": "<section id=\"s1\"> is a timeline element that contains nested <div>. The timeline shows one row per top-level element, and the root composition is built only from sub-compositions.",
+        "selector": "#s1",
+        "dataAttributes": {},
+        "sourceFile": "/home/atia-farha/Documents/Projects/Laravel-Projects/Rostrum/brag-output-2026-11-25-213641/composition/index.html",
+        "bbox": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0
+        },
+        "time": 0,
+        "fixHint": "Move <section id=\"s1\"> and its contents into a sub-composition file and mount it with data-composition-src."
+      },
+      {
+        "code": "nested_structure_needs_subcomposition",
+        "severity": "warning",
+        "message": "<section id=\"s2\"> is a timeline element that contains nested <div>. The timeline shows one row per top-level element, and the root composition is built only from sub-compositions.",
+        "selector": "#s2",
+        "dataAttributes": {},
+        "sourceFile": "/home/atia-farha/Documents/Projects/Laravel-Projects/Rostrum/brag-output-2026-11-25-213641/composition/index.html",
+        "bbox": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0
+        },
+        "time": 0,
+        "fixHint": "Move <section id=\"s2\"> and its contents into a sub-composition file and mount it with data-composition-src."
+      },
+      {
+        "code": "nested_structure_needs_subcomposition",
+        "severity": "warning",
+        "message": "<section id=\"s3\"> is a timeline element that contains nested <div>. The timeline shows one row per top-level element, and the root composition is built only from sub-compositions.",
+        "selector": "#s3",
+        "dataAttributes": {},
+        "sourceFile": "/home/atia-farha/Documents/Projects/Laravel-Projects/Rostrum/brag-output-2026-11-25-213641/composition/index.html",
+        "bbox": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0
+        },
+        "time": 0,
+        "fixHint": "Move <section id=\"s3\"> and its contents into a sub-composition file and mount it with data-composition-src."
+      },
+      {
+        "code": "nested_structure_needs_subcomposition",
+        "severity": "warning",
+        "message": "<section id=\"s4a\"> is a timeline element that contains nested <div>. The timeline shows one row per top-level element, and the root composition is built only from sub-compositions.",
+        "selector": "#s4a",
+        "dataAttributes": {},
+        "sourceFile": "/home/atia-farha/Documents/Projects/Laravel-Projects/Rostrum/brag-output-2026-11-25-213641/composition/index.html",
+        "bbox": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0
+        },
+        "time": 0,
+        "fixHint": "Move <section id=\"s4a\"> and its contents into a sub-composition file and mount it with data-composition-src."
+      },
+      {
+        "code": "nested_structure_needs_subcomposition",
+        "severity": "warning",
+        "message": "<section id=\"s4b\"> is a timeline element that contains nested <div>. The timeline shows one row per top-level element, and the root composition is built only from sub-compositions.",
+        "selector": "#s4b",
+        "dataAttributes": {},
+        "sourceFile": "/home/atia-farha/Documents/Projects/Laravel-Projects/Rostrum/brag-output-2026-11-25-213641/composition/index.html",
+        "bbox": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0
+        },
+        "time": 0,
+        "fixHint": "Move <section id=\"s4b\"> and its contents into a sub-composition file and mount it with data-composition-src."
+      },
+      {
+        "code": "nested_structure_needs_subcomposition",
+        "severity": "warning",
+        "message": "<section id=\"s5\"> is a timeline element that contains nested <div>. The timeline shows one row per top-level element, and the root composition is built only from sub-compositions.",
+        "selector": "#s5",
+        "dataAttributes": {},
+        "sourceFile": "/home/atia-farha/Documents/Projects/Laravel-Projects/Rostrum/brag-output-2026-11-25-213641/composition/index.html",
+        "bbox": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0
+        },
+        "time": 0,
+        "fixHint": "Move <section id=\"s5\"> and its contents into a sub-composition file and mount it with data-composition-src."
+      },
+      {
+        "code": "nested_structure_needs_subcomposition",
+        "severity": "warning",
+        "message": "<section id=\"s6\"> is a timeline element that contains nested <div>. The timeline shows one row per top-level element, and the root composition is built only from sub-compositions.",
+        "selector": "#s6",
+        "dataAttributes": {},
+        "sourceFile": "/home/atia-farha/Documents/Projects/Laravel-Projects/Rostrum/brag-output-2026-11-25-213641/composition/index.html",
+        "bbox": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0
+        },
+        "time": 0,
+        "fixHint": "Move <section id=\"s6\"> and its contents into a sub-composition file and mount it with data-composition-src."
+      },
+      {
+        "code": "nested_structure_needs_subcomposition",
+        "severity": "warning",
+        "message": "<section id=\"s7a\"> is a timeline element that contains nested <div>. The timeline shows one row per top-level element, and the root composition is built only from sub-compositions.",
+        "selector": "#s7a",
+        "dataAttributes": {},
+        "sourceFile": "/home/atia-farha/Documents/Projects/Laravel-Projects/Rostrum/brag-output-2026-11-25-213641/composition/index.html",
+        "bbox": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0
+        },
+        "time": 0,
+        "fixHint": "Move <section id=\"s7a\"> and its contents into a sub-composition file and mount it with data-composition-src."
+      },
+      {
+        "code": "nested_structure_needs_subcomposition",
+        "severity": "warning",
+        "message": "<section id=\"s7b\"> is a timeline element that contains nested <div>. The timeline shows one row per top-level element, and the root composition is built only from sub-compositions.",
+        "selector": "#s7b",
+        "dataAttributes": {},
+        "sourceFile": "/home/atia-farha/Documents/Projects/Laravel-Projects/Rostrum/brag-output-2026-11-25-213641/composition/index.html",
+        "bbox": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0
+        },
+        "time": 0,
+        "fixHint": "Move <section id=\"s7b\"> and its contents into a sub-composition file and mount it with data-composition-src."
+      }
+    ],
+    "filesScanned": 1
+  },
+  "runtime": {
+    "ok": true,
+    "errorCount": 0,
+    "warningCount": 0,
+    "infoCount": 0,
+    "findings": []
+  },
+  "layout": {
+    "ok": true,
+    "errorCount": 0,
+    "warningCount": 0,
+    "infoCount": 0,
+    "findings": [],
+    "duration": 100.6,
+    "samples": [
+      5.589,
+      16.767,
+      27.944,
+      39.122,
+      50.3,
+      61.478,
+      72.656,
+      83.833,
+      95.011
+    ],
+    "transitionSamples": [],
+    "transitionSamplesDropped": 0,
+    "tolerance": 2,
+    "totalIssueCount": 0,
+    "truncated": false,
+    "faceCheck": {
+      "ran": true,
+      "candidates": 0,
+      "faces": 0
+    }
+  },
+  "motion": {
+    "ok": true,
+    "errorCount": 0,
+    "warningCount": 0,
+    "infoCount": 0,
+    "findings": [],
+    "enabled": false,
+    "samples": 0
+  },
+  "contrast": {
+    "ok": true,
+    "errorCount": 0,
+    "warningCount": 0,
+    "infoCount": 0,
+    "findings": [],
+    "enabled": true,
+    "samples": [
+      5.589,
+      27.944,
+      50.3,
+      72.656,
+      95.011
+    ],
+    "checked": 43,
+    "passed": 43
+  },
+  "craft": {
+    "ok": true,
+    "errorCount": 0,
+    "warningCount": 1,
+    "infoCount": 0,
+    "findings": [
+      {
+        "code": "text_below_floor",
+        "severity": "warning",
+        "message": "Type floor is 28 px (2.6% of the 1080 px short side, what a phone can read) and 41 text elements stay under it for 0.5 s or more, the smallest \"Flags , verified quotes & practice dr...\" at 18 px: set reading text to at least 28 px, or put data-layout-ignore on text that is texture rather than reading; see references/look.md.",
+        "text": "Flags , verified quotes & practice drill.",
+        "selector": "div.card-surface > div:nth-of-type(3)",
+        "dataAttributes": {},
+        "sourceFile": "index.html",
+        "bbox": {
+          "x": 109,
+          "y": 807.47,
+          "width": 410.17,
+          "height": 21
+        },
+        "time": 55.086,
+        "times": [
+          0,
+          1.176,
+          2.015,
+          2.687,
+          11.756,
+          11.756,
+          12.428,
+          12.428,
+          12.932,
+          12.932,
+          23.009,
+          23.009,
+          23.68,
+          23.68,
+          24.352,
+          24.352,
+          33.589,
+          33.589,
+          33.589,
+          33.589,
+          44.002,
+          44.002,
+          44.002,
+          44.002,
+          55.086,
+          55.086,
+          55.086,
+          55.086,
+          55.086,
+          55.086,
+          55.086,
+          55.086,
+          55.086,
+          66.339,
+          66.339,
+          66.339,
+          66.339,
+          80.111,
+          80.111,
+          80.111,
+          93.21
+        ],
+        "fontPx": 18,
+        "floorPx": 28,
+        "seconds": 11.085,
+        "elements": [
+          {
+            "selector": "div.card-surface > div:nth-of-type(3)",
+            "text": "Flags , verified quotes & practice drill.",
+            "fontPx": 18,
+            "time": 55.086,
+            "seconds": 11.085
+          },
+          {
+            "selector": "div.card-surface > div:nth-of-type(3) > strong:nth-of-type(1)",
+            "text": "3 fallacies",
+            "fontPx": 18,
+            "time": 55.086,
+            "seconds": 11.085
+          },
+          {
+            "selector": "ul.bullets > li:nth-of-type(1)",
+            "text": "Pre-empted the causation objection.",
+            "fontPx": 19,
+            "time": 44.002,
+            "seconds": 10.917
+          },
+          {
+            "selector": "ul.bullets > li:nth-of-type(2)",
+            "text": "Named concrete harm mechanisms and policy precedent.",
+            "fontPx": 19,
+            "time": 44.002,
+            "seconds": 10.917
+          },
+          {
+            "selector": "header.chrome-bar > div:nth-of-type(1) > span:nth-of-type(2)",
+            "text": "ROSTRUM",
+            "fontPx": 20,
+            "time": 0,
+            "seconds": 100.6
+          },
+          {
+            "selector": "#s1-c1 > div:nth-of-type(3)",
+            "text": "Weekly club sessions leave solo debaters without structured round feedback.",
+            "fontPx": 20,
+            "time": 1.176,
+            "seconds": 9.909
+          },
+          {
+            "selector": "#s1-c2 > div:nth-of-type(3)",
+            "text": "Practice platforms overlook native Bangla circuit debaters.",
+            "fontPx": 20,
+            "time": 2.015,
+            "seconds": 9.07
+          },
+          {
+            "selector": "#s1-c3 > div:nth-of-type(3)",
+            "text": "Standard LLMs ignore Matter, Manner, and Method rules.",
+            "fontPx": 20,
+            "time": 2.687,
+            "seconds": 8.398
+          },
+          {
+            "selector": "#s2-u1 > div:nth-of-type(1)",
+            "text": "— Solo prep for AP and WSDC rounds.",
+            "fontPx": 20,
+            "time": 11.756,
+            "seconds": 10.413
+          },
+          {
+            "selector": "#s2-u1 > div:nth-of-type(1) > strong:nth-of-type(1)",
+            "text": "University & School Debaters",
+            "fontPx": 20,
+            "time": 11.756,
+            "seconds": 10.413
+          },
+          {
+            "selector": "#s2-u2 > div:nth-of-type(1)",
+            "text": "— Bilingual motions, voice, and judging.",
+            "fontPx": 20,
+            "time": 12.428,
+            "seconds": 9.741
+          },
+          {
+            "selector": "#s2-u2 > div:nth-of-type(1) > strong:nth-of-type(1)",
+            "text": "Bangla Circuit Participants",
+            "fontPx": 20,
+            "time": 12.428,
+            "seconds": 9.741
+          },
+          {
+            "selector": "#s2-u3 > div:nth-of-type(1)",
+            "text": "— Structured reasoning under timed pressure.",
+            "fontPx": 20,
+            "time": 12.932,
+            "seconds": 9.237
+          },
+          {
+            "selector": "#s2-u3 > div:nth-of-type(1) > strong:nth-of-type(1)",
+            "text": "Public Speaking Learners",
+            "fontPx": 20,
+            "time": 12.932,
+            "seconds": 9.237
+          },
+          {
+            "selector": "#s3-p1 > div:nth-of-type(1)",
+            "text": "— English or বাংলা; write or generate with Gemini.",
+            "fontPx": 20,
+            "time": 23.009,
+            "seconds": 10.412
+          },
+          {
+            "selector": "#s3-p1 > div:nth-of-type(1) > strong:nth-of-type(1)",
+            "text": "Language & Motion",
+            "fontPx": 20,
+            "time": 23.009,
+            "seconds": 10.412
+          },
+          {
+            "selector": "#s3-p2 > div:nth-of-type(1)",
+            "text": "— Calm Logician, Aggressive Cross-Examiner, Devil's Advocate.",
+            "fontPx": 20,
+            "time": 23.68,
+            "seconds": 9.741
+          },
+          {
+            "selector": "#s3-p2 > div:nth-of-type(1) > strong:nth-of-type(1)",
+            "text": "Side & Persona",
+            "fontPx": 20,
+            "time": 23.68,
+            "seconds": 9.741
+          },
+          {
+            "selector": "#s3-p3 > div:nth-of-type(1)",
+            "text": "— Beginner to World Champion · Tournament or Sparring.",
+            "fontPx": 20,
+            "time": 24.352,
+            "seconds": 9.069
+          },
+          {
+            "selector": "#s3-p3 > div:nth-of-type(1) > strong:nth-of-type(1)",
+            "text": "Difficulty & Format",
+            "fontPx": 20,
+            "time": 24.352,
+            "seconds": 9.069
+          },
+          {
+            "selector": "#s4a > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(1)",
+            "text": "— Gemini answers your exact speech in role.",
+            "fontPx": 20,
+            "time": 33.589,
+            "seconds": 10.245
+          },
+          {
+            "selector": "#s4a > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(1) > strong:nth-of-type(1)",
+            "text": "Slot-Aware Stage Brief",
+            "fontPx": 20,
+            "time": 33.589,
+            "seconds": 10.245
+          },
+          {
+            "selector": "#s4a > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(1)",
+            "text": "— Scribe STT transcribes; persona voices reply.",
+            "fontPx": 20,
+            "time": 33.589,
+            "seconds": 10.245
+          },
+          {
+            "selector": "#s4a > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(1) > strong:nth-of-type(1)",
+            "text": "ElevenLabs Round-Trip",
+            "fontPx": 20,
+            "time": 33.589,
+            "seconds": 10.245
+          },
+          {
+            "selector": "div.rubric-bars > div:nth-of-type(1) > span:nth-of-type(1)",
+            "text": "Matter",
+            "fontPx": 20,
+            "time": 55.086,
+            "seconds": 11.085
+          },
+          {
+            "selector": "div.rubric-bars > div:nth-of-type(1) > span:nth-of-type(2)",
+            "text": "31 / 40",
+            "fontPx": 20,
+            "time": 55.086,
+            "seconds": 11.085
+          },
+          {
+            "selector": "div.rubric-bars > div:nth-of-type(2) > span:nth-of-type(1)",
+            "text": "Manner",
+            "fontPx": 20,
+            "time": 55.086,
+            "seconds": 11.085
+          },
+          {
+            "selector": "div.rubric-bars > div:nth-of-type(2) > span:nth-of-type(2)",
+            "text": "24 / 30",
+            "fontPx": 20,
+            "time": 55.086,
+            "seconds": 11.085
+          },
+          {
+            "selector": "div.rubric-bars > div:nth-of-type(3) > span:nth-of-type(1)",
+            "text": "Method",
+            "fontPx": 20,
+            "time": 55.086,
+            "seconds": 11.085
+          },
+          {
+            "selector": "div.rubric-bars > div:nth-of-type(3) > span:nth-of-type(2)",
+            "text": "22 / 30",
+            "fontPx": 20,
+            "time": 55.086,
+            "seconds": 11.085
+          },
+          {
+            "selector": "div.pipeline > div:nth-of-type(1) > div:nth-of-type(1)",
+            "text": "1. Capture",
+            "fontPx": 20,
+            "time": 66.339,
+            "seconds": 13.604
+          },
+          {
+            "selector": "div.pipeline > div:nth-of-type(2) > div:nth-of-type(1)",
+            "text": "2. Transcribe",
+            "fontPx": 20,
+            "time": 66.339,
+            "seconds": 13.604
+          },
+          {
+            "selector": "div.pipeline > div:nth-of-type(3) > div:nth-of-type(1)",
+            "text": "3. Reason",
+            "fontPx": 20,
+            "time": 66.339,
+            "seconds": 13.604
+          },
+          {
+            "selector": "div.pipeline > div:nth-of-type(4) > div:nth-of-type(1)",
+            "text": "4. Speak Back",
+            "fontPx": 20,
+            "time": 66.339,
+            "seconds": 13.604
+          },
+          {
+            "selector": "div.rewrite-grid > div:nth-of-type(1) > p:nth-of-type(1)",
+            "text": "\"Studies show a 52% rise in anxiety correlated with social media. We propose a verified age-gate.\"",
+            "fontPx": 22,
+            "time": 44.002,
+            "seconds": 10.917
+          },
+          {
+            "selector": "div.rewrite-grid > div:nth-of-type(2) > p:nth-of-type(1)",
+            "text": "\"Not coincidence — mechanism: algorithmic loops and cyberbullying drive the surge. Enforce age-gates like France.\"",
+            "fontPx": 22,
+            "time": 44.002,
+            "seconds": 10.917
+          },
+          {
+            "selector": "div.card-surface > div:nth-of-type(1) > span:nth-of-type(1) > span:nth-of-type(1)",
+            "text": "/100",
+            "fontPx": 22,
+            "time": 55.086,
+            "seconds": 11.085
+          },
+          {
+            "selector": "div.limit-grid > div:nth-of-type(1) > div:nth-of-type(2)",
+            "text": "Multilingual voice audio can sound accented in Bengali; transcripts stay clear.",
+            "fontPx": 22,
+            "time": 80.111,
+            "seconds": 12.931
+          },
+          {
+            "selector": "div.limit-grid > div:nth-of-type(2) > div:nth-of-type(2)",
+            "text": "Judge findings are Bangla, but PHP brief and band labels stay English.",
+            "fontPx": 22,
+            "time": 80.111,
+            "seconds": 12.931
+          },
+          {
+            "selector": "div.limit-grid > div:nth-of-type(3) > div:nth-of-type(2)",
+            "text": "Requires Chromium MediaRecorder; live host uses Render free tier and API quotas.",
+            "fontPx": 22,
+            "time": 80.111,
+            "seconds": 12.931
+          },
+          {
+            "selector": "div.cta-pill",
+            "text": "rostrum.onrender.com · demo@rostrum.app · password: rostrum-demo",
+            "fontPx": 22,
+            "time": 93.21,
+            "seconds": 7.39
+          }
+        ]
+      }
+    ],
+    "enabled": true,
+    "step": 0.16799999999999926,
+    "samples": 599
+  },
+  "audio": {
+    "ok": true,
+    "errorCount": 0,
+    "warningCount": 0,
+    "infoCount": 0,
+    "findings": []
+  },
+  "hdr": {
+    "autoPromotion": null,
+    "inspection": "available"
+  },
+  "snapshots": {
+    "enabled": false,
+    "files": [],
+    "times": [],
+    "findingFiles": []
+  }
+}
