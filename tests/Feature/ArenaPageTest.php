@@ -38,22 +38,22 @@ class ArenaPageTest extends TestCase
     private function makeDebate(User $user): Debate
     {
         $motion = Motion::create([
-            'text_en'  => 'This House would ban social media for users under the age of 16.',
-            'text_bn'  => 'এই সভা মনে করে যে ১৬ বছরের কম বয়সীদের জন্য সোশ্যাল মিডিয়া নিষিদ্ধ করা উচিত।',
+            'text_en' => 'This House would ban social media for users under the age of 16.',
+            'text_bn' => 'এই সভা মনে করে যে ১৬ বছরের কম বয়সীদের জন্য সোশ্যাল মিডিয়া নিষিদ্ধ করা উচিত।',
             'category' => 'Society',
-            'source'   => 'manual',
+            'source' => 'manual',
         ]);
 
         return Debate::create([
             'session_id' => 'session-'.uniqid(),
-            'user_id'    => $user->id,
-            'motion_id'  => $motion->id,
+            'user_id' => $user->id,
+            'motion_id' => $motion->id,
             'persona_id' => Persona::first()->id,
-            'user_side'  => 'government',
+            'user_side' => 'government',
             'difficulty' => 'intermediate',
-            'mode'       => 'tournament',
-            'language'   => 'en',
-            'status'     => 'in_progress',
+            'mode' => 'tournament',
+            'language' => 'en',
+            'status' => 'in_progress',
         ]);
     }
 
@@ -90,7 +90,7 @@ class ArenaPageTest extends TestCase
         $html = $this->arenaHtml(User::factory()->create());
 
         $this->assertStringContainsString('class="app-side-open"', $html);
-        $this->assertStringContainsString("sidebarOpen = true", $html);
+        $this->assertStringContainsString('sidebarOpen = true', $html);
     }
 
     /**
@@ -168,17 +168,18 @@ class ArenaPageTest extends TestCase
     }
 
     /**
-     * The switcher is a pair of pressed-state toggles rather than
-     * links to separate pages, because the panels are two views of one
-     * round rather than two places.
+     * The switcher implements the WCAG 2.2 tablist/tab/tabpanel pattern
+     * so screen readers can navigate between the Transcript and Podium panels.
      */
     public function test_the_panel_switcher_is_a_group_of_toggles(): void
     {
         $html = $this->arenaHtml(User::factory()->create());
 
-        $this->assertStringContainsString('role="group"', $html);
-        $this->assertStringContainsString('aria-pressed="pane === \'transcript\'"', $html);
-        $this->assertStringContainsString('aria-pressed="pane === \'podium\'"', $html);
+        $this->assertStringContainsString('role="tablist"', $html);
+        $this->assertStringContainsString('role="tab"', $html);
+        $this->assertStringContainsString(':aria-selected="pane === \'transcript\'"', $html);
+        $this->assertStringContainsString(':aria-selected="pane === \'podium\'"', $html);
+        $this->assertStringContainsString('role="tabpanel"', $html);
     }
 
     /**

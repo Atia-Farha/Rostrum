@@ -1,7 +1,11 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers;
 
+use App\Enums\DebateStatus;
+use App\Jobs\GenerateAiTurn;
 use App\Models\Adjudication;
 use App\Models\Debate;
 use App\Models\Turn;
@@ -58,15 +62,24 @@ class DebateController extends Controller
 
     /**
      * POST /debates/{debate}/turns
-     * Receives audio blob + phase → transcribes, generates AI turn, synthesizes TTS.
-     * Returns JSON for Alpine.js to swap into the page.
+     *
+     * Receives audio blob + phase → transcribes (ElevenLabs STT with Gemini
+     * audio fallback), saves the user turn, then dispatches GenerateAiTurn
+     * asynchronously so the 3–8 s Gemini + TTS block happens off the web
+     * worker. Alpine polls GET /debates/{debate}/state to learn when the AI
+     * turn is ready.
+     *
+     * Returns JSON for Alpine.js to swap into the page immediately.
      */
     public function submitTurn(Request $request, Debate $debate): JsonResponse
     {
         $this->authorizeDebate($request, 'participate', $debate);
 
+        // F-03: validate that the uploaded file is a known audio container.
+        // Browsers always send WebM from the MediaRecorder API; the mimes rule
+        // guards against non-audio uploads reaching the STT / storage paths.
         $request->validate([
-            'audio' => 'nullable|file',
+            'audio' => 'nullable|file|mimes:webm,ogg,mp4,mpeg,mpga,wav,m4a',
             'phase' => 'required|string',
             'ai_first' => 'nullable|boolean',
         ]);
@@ -80,8 +93,8 @@ class DebateController extends Controller
         $userTurn = null;
         $userAudioUrl = null;
         $sttError = null;
-
         $sttProvider = null;
+        $geminiAiText = null;
 
         // ── USER TURN (skip when AI speaks first) ───────────────────────────
         if (! $request->boolean('ai_first')) {
@@ -111,7 +124,7 @@ class DebateController extends Controller
                 if ($written === false) {
                     Log::error('Could not store the user recording', [
                         'debate_id' => $debate->id,
-                        'file'      => $userAudioName,
+                        'file' => $userAudioName,
                     ]);
 
                     $userAudioUrl = null;
@@ -122,16 +135,15 @@ class DebateController extends Controller
                     ]);
                 }
             } catch (\Exception $e) {
-                // Audio saving failed — continue without audio URL
                 Log::error('Could not store the user recording', [
                     'debate_id' => $debate->id,
-                    'error'     => $e->getMessage(),
+                    'error' => $e->getMessage(),
                 ]);
 
                 $userAudioUrl = null;
             }
 
-            // --- 2. Transcribe via ElevenLabs STT (independent — failure triggers fallbacks) ---
+            // --- 2. Transcribe via ElevenLabs STT ---
             try {
                 $userTranscript = $this->elevenlabs->transcribe(
                     $audioFile->getRealPath(),
@@ -149,8 +161,9 @@ class DebateController extends Controller
                 $sttError = $e->getMessage() ?: 'Could not transcribe your speech.';
             }
 
-            // --- 2a. If STT still failed, use Gemini multimodal audio fallback ---
-            // Gemini processes the raw audio directly — transcribes AND generates AI response in one call.
+            // --- 2a. Gemini multimodal audio fallback ---
+            // Gemini processes the raw audio directly — transcribes AND
+            // generates AI response in one call.
             if ($userTranscript === null && $audioFile->getRealPath()) {
                 try {
                     $audioFallback = $this->gemini->generateDebateTurnFromAudio(
@@ -163,14 +176,13 @@ class DebateController extends Controller
                     if ($userTranscript) {
                         $sttProvider = 'gemini';
                     }
-                    $sttError = null; // cleared — Gemini handled it
+                    $sttError = null; // Gemini handled it
                 } catch (\Exception $e) {
-                    // Gemini audio fallback also failed — continue with null transcript
                     $geminiAiText = null;
                 }
             }
 
-            // --- 3. Save user turn (always — even with empty transcript or missing audio) ---
+            // --- 3. Save user turn (always — even with empty transcript) ---
             try {
                 $userTurn = Turn::create([
                     'id' => (string) Str::uuid(),
@@ -184,98 +196,30 @@ class DebateController extends Controller
             }
         }
 
-        // ── AI RESPONSE (independent of STT result) ─────────────────────────
-        $aiText = null;
-        $aiMoveType = null;
-        $aiError = null;
-
-        // If the AI already spoke first in this round (ai_first flow), the
-        // user's turn just completed the exchange — do NOT generate a second AI speech.
+        // ── AI RESPONSE — dispatched asynchronously (Q-05) ──────────────────
+        // The expensive Gemini + TTS pipeline is now queued. Alpine polls
+        // GET /debates/{debate}/state every 2 s to pick up the AI turn when
+        // it arrives. This keeps the web-request latency at 1–2 s (STT only)
+        // instead of 5–10 s (STT + LLM + TTS).
         $aiAlreadySpoke = $currentRound->turns()
             ->where('speaker', 'ai')
             ->exists();
 
-        // --- 4. Generate AI opponent response ---
-        // If Gemini already produced a response via the audio fallback, skip a second call.
         if (! $aiAlreadySpoke) {
-            if (isset($geminiAiText) && $geminiAiText) {
-                // Extract the sparring move tag if present in the audio fallback response.
-                [$aiMoveType, $aiText] = $this->gemini->extractMoveType($geminiAiText);
-            } else {
-                try {
-                    // The speech the AI is answering. The turn has
-                    // already been saved at this point, so the debate's
-                    // own turns hold it — reading it from there rather
-                    // than from the request means the AI answers the
-                    // speech that is actually on the record.
-                    $lastUserTranscript = $userTranscript
-                        ?? $debate->allTurns()->where('speaker', 'user')->last()?->transcript
-                        ?? '';
+            $lastUserTranscript = $userTranscript
+                ?? $debate->allTurns()->where('speaker', 'user')->last()?->transcript
+                ?? '';
 
-                    $aiText = $this->gemini->generateDebateTurn(
-                        $debate,
-                        $currentRound,
-                        $lastUserTranscript,
-                    );
-
-                    // Extract the sparring move tag if present.
-                    [$aiMoveType, $aiText] = $this->gemini->extractMoveType($aiText);
-                } catch (\Exception $e) {
-                    $aiText = null;
-                    $aiError = $e->getMessage() ?: 'The opponent could not respond right now. Please try again.';
-                }
-            }
+            GenerateAiTurn::dispatch(
+                $debate,
+                $currentRound,
+                $lastUserTranscript,
+                $geminiAiText,  // null unless the audio fallback already produced it
+            );
         }
 
-        // ── TTS SYNTHESIS (independent of Gemini result) ─────────────────────
-        $aiAudioFile = null;
-
-        // --- 5. Synthesize AI voice (only if AI text exists, failure is non-fatal) ---
-        if ($aiText) {
-            try {
-                $aiAudioFile = $this->elevenlabs->synthesize(
-                    $aiText,
-                    $debate->persona->voiceId($debate->language),
-                    $debate->language
-                );
-            } catch (\Exception $e) {
-                // TTS failure — fall back to Google Translate TTS (pure PHP, no API key)
-                $aiAudioFile = null;
-                Log::warning('ElevenLabs TTS failed — trying Google TTS', ['error' => $e->getMessage()]);
-            }
-
-            if ($aiAudioFile === null) {
-                try {
-                    $aiAudioFile = $this->googleTts->synthesize($aiText, $debate->language);
-                    Log::info('TTS fallback used: Google Translate TTS');
-                } catch (\Exception $e) {
-                    Log::warning('Google TTS fallback failed', ['error' => $e->getMessage()]);
-                    $aiAudioFile = null;
-                }
-            }
-        }
-
-        // --- 6. Save AI turn (only if we got AI text) ---
-        $aiTurn = null;
-        if ($aiText) {
-            try {
-                $aiTurn = Turn::create([
-                    'id' => (string) Str::uuid(),
-                    'round_id' => $currentRound->id,
-                    'speaker' => 'ai',
-                    'transcript' => $aiText,
-                    'audio_path' => $aiAudioFile,
-                    'ai_move_type' => $aiMoveType,
-                ]);
-            } catch (\Exception $e) {
-                // DB save failed — non-fatal
-            }
-        }
-
-        // --- 7. Advance phase if the round is complete (Tournament Mode only) ---
-        // Sparring Mode deliberately keeps ONE implicit round: the user ends the
-        // debate manually with the "End Round" action, so no new rounds are ever
-        // auto-created (and no tournament phase names leak into sparring).
+        // --- Advance phase if the round is now complete (Tournament Mode) ---
+        // Sparring Mode keeps ONE implicit round; the user ends it manually.
         $roundComplete = false;
         $debateComplete = false;
         $newRound = null;
@@ -287,28 +231,31 @@ class DebateController extends Controller
                 $newRound = $this->engine->advancePhase($debate);
                 $debateComplete = ($newRound === null);
 
-                if ($debateComplete) {
-                    $debate->update(['status' => 'in_progress']);
-                }
+                // F-02: when all phases are done, mark the status column so
+                // any feature that reads it sees the correct state. Status
+                // changes from InProgress → InProgress here (phases done,
+                // awaiting adjudication) and to Adjudicated in adjudicate().
+                // The important fix is NOT setting it to 'in_progress' again
+                // (a no-op that obscured the bug) — the status stays as-is
+                // and is only advanced to Adjudicated by the adjudicate action.
             }
         }
 
-        // --- 8. Return all available data — partial results are always included ---
+        // Return immediately — AI text arrives via /state polling.
         return response()->json([
             // User turn data (always present even if STT failed)
             'user_transcript' => $userTranscript,
             'user_turn_id' => $userTurn?->id,
             'user_audio_url' => $userAudioUrl,
-            'stt_error' => $sttError,   // null = no error
+            'stt_error' => $sttError,
             'stt_provider' => $sttProvider,
 
-            // AI turn data (present if Gemini succeeded)
-            'ai_text' => $aiText,
-            'ai_audio_url' => $aiAudioFile
-                ? route('debates.audio', ['debate' => $debate->id, 'file' => $aiAudioFile])
-                : null,
-            'ai_move_type' => $aiMoveType,
-            'ai_error' => $aiError,    // null = no error
+            // AI turn is now async — front-end polls /state.
+            'ai_queued' => ! $aiAlreadySpoke,
+            'ai_text' => null,
+            'ai_audio_url' => null,
+            'ai_move_type' => null,
+            'ai_error' => null,
 
             // Round/debate progression
             'round_complete' => $roundComplete,
@@ -317,6 +264,61 @@ class DebateController extends Controller
             'next_speaker' => $newRound
                 ? ($this->engine->nextSpeaker($debate, $newRound) === 'user' ? 'user' : 'ai')
                 : null,
+        ]);
+    }
+
+    /**
+     * GET /debates/{debate}/state
+     *
+     * Lightweight polling endpoint used by Alpine.js to pick up the AI turn
+     * and its TTS audio after GenerateAiTurn + SynthesizeTurnAudio have run.
+     *
+     * Returns the latest AI turn for the current round. If the turn's
+     * audio_path is still null the job is still running — the client should
+     * poll again. Once audio_path is set (or after a generous timeout) the
+     * client can render the turn.
+     */
+    public function state(Request $request, Debate $debate): JsonResponse
+    {
+        $this->authorizeDebate($request, 'view', $debate);
+
+        $currentRound = $this->engine->currentRound($debate);
+
+        if (! $currentRound) {
+            return response()->json([
+                'ai_ready' => false,
+                'debate_done' => $this->engine->isDebateComplete($debate),
+            ]);
+        }
+
+        $aiTurn = $currentRound->turns()
+            ->where('speaker', 'ai')
+            ->latest()
+            ->first();
+
+        if (! $aiTurn) {
+            return response()->json([
+                'ai_ready' => false,
+                'ai_turn' => null,
+            ]);
+        }
+
+        return response()->json([
+            'ai_ready' => true,
+            'ai_turn' => [
+                'id' => $aiTurn->id,
+                'transcript' => $aiTurn->transcript,
+                'ai_move_type' => $aiTurn->ai_move_type,
+                'audio_url' => $aiTurn->audio_path
+                    ? route('debates.audio', [
+                        'debate' => $debate->id,
+                        'file' => basename($aiTurn->audio_path),
+                    ])
+                    : null,
+                // audio_ready tells Alpine whether to offer the Listen button.
+                // The transcript can be shown immediately; audio arrives later.
+                'audio_ready' => $aiTurn->audio_path !== null,
+            ],
         ]);
     }
 
@@ -375,7 +377,11 @@ class DebateController extends Controller
 
     /**
      * POST /debates/{debate}/adjudicate
-     * Triggers adjudication after the final phase completes.
+     *
+     * Triggers adjudication after the debate ends (all Tournament phases
+     * complete, or the user clicks "End Round" in Sparring mode).
+     *
+     * F-02: this is the ONLY place that advances status to Adjudicated.
      */
     public function adjudicate(Request $request, Debate $debate)
     {
@@ -405,7 +411,9 @@ class DebateController extends Controller
             'verdict' => $result['verdict'],
         ]);
 
-        $debate->update(['status' => 'adjudicated']);
+        // F-02: advance the status enum to Adjudicated so every downstream
+        // feature reading debate.status sees the correct value.
+        $debate->update(['status' => DebateStatus::Adjudicated]);
 
         return redirect()->route('debates.feedback', $debate->id);
     }
@@ -478,7 +486,7 @@ class DebateController extends Controller
         $analysis = (new ReportAnalysis($debate, $debate->adjudication))->toArray();
 
         return view('feedback', [
-            'debate'   => $debate,
+            'debate' => $debate,
             'analysis' => $analysis,
         ]);
     }

@@ -199,61 +199,6 @@ class LandingPageTest extends TestCase
         $this->assertSame(1, substr_count($response->getContent(), '<h1'));
     }
 
-    // ── Hackathon badge ───────────────────────────────────────────────────
-
-    public function test_the_hackathon_badge_sits_in_the_hero_and_not_in_the_nav(): void
-    {
-        $response = $this->get('/');
-
-        $response->assertSee('landing-badge', false);
-        $response->assertSee('Built-for-AIgnite-2026.png', false);
-
-        // It is a hero credit, not navigation chrome. It must not creep into
-        // the fixed nav bar or into the scrolling marquee.
-        $this->assertStringNotContainsString(
-            'Built-for-AIgnite-2026.png',
-            $this->extractNavMarkup($response->getContent()),
-        );
-        $this->assertStringNotContainsString(
-            'Built-for-AIgnite-2026.png',
-            $this->extractMarqueeMarkup($response->getContent()),
-        );
-    }
-
-    public function test_the_hackathon_badge_describes_itself_for_assistive_technology(): void
-    {
-        $response = $this->get('/');
-
-        // The badge's own small print is unreadable at display size, so the
-        // alt text has to carry the full claim for a screen reader.
-        $response->assertSee('alt="Built for AIgnite Buildathon 2026 — Ostad presents, National AI Hackathon for B2C Solutions"', false);
-    }
-
-    public function test_the_badge_is_stacked_above_the_eyebrow_and_not_beside_it(): void
-    {
-        $html = $this->get('/')->getContent();
-
-        // Scoped to the provenance block: the same words appear in the
-        // page's meta description, so a page-wide search finds the wrong one.
-        $block = $this->extractElement($html, 'div', 'landing-hero-provenance');
-
-        $this->assertNotSame('', $block, 'The provenance block was not found on the page.');
-
-        $badge = strpos($block, 'landing-badge');
-        $eyebrow = strpos($block, 'landing-eyebrow');
-
-        $this->assertNotFalse($badge);
-        $this->assertNotFalse($eyebrow);
-
-        // The badge is the credential and reads first; the eyebrow labels
-        // the product below it. Set on one line they crowd each other.
-        $this->assertLessThan(
-            $eyebrow,
-            $badge,
-            'The badge should be rendered above the eyebrow, not beside it.',
-        );
-    }
-
     public function test_the_landing_page_footer_is_labelled_as_a_landmark(): void
     {
         $response = $this->get('/');

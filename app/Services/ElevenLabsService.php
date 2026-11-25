@@ -1,7 +1,11 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Services;
 
+use Illuminate\Filesystem\FilesystemAdapter;
+use Illuminate\Http\Client\Response;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
@@ -10,6 +14,7 @@ use Illuminate\Support\Str;
 class ElevenLabsService
 {
     private string $apiKey;
+
     private string $baseUrl = 'https://api.elevenlabs.io/v1';
 
     /**
@@ -66,8 +71,9 @@ class ElevenLabsService
                 Log::warning('ElevenLabs model not available to this account — trying the next one', [
                     'voice_id' => $voiceId,
                     'model_id' => $model,
-                    'status'   => $response->status(),
+                    'status' => $response->status(),
                 ]);
+
                 continue;
             }
 
@@ -80,7 +86,7 @@ class ElevenLabsService
             if ($shorter !== $text) {
                 Log::warning('ElevenLabs TTS quota — retrying with trimmed text', [
                     'original_chars' => mb_strlen($text),
-                    'trimmed_chars'  => mb_strlen($shorter),
+                    'trimmed_chars' => mb_strlen($shorter),
                 ]);
                 $response = $this->callTts($shorter, $voiceId, $usedModel);
             }
@@ -88,20 +94,20 @@ class ElevenLabsService
 
         if (! $response || $response->failed()) {
             Log::error('ElevenLabs TTS failed', [
-                'status'   => $response?->status(),
-                'body'     => $response?->body(),
+                'status' => $response?->status(),
+                'body' => $response?->body(),
                 'voice_id' => $voiceId,
                 'model_id' => $usedModel,
             ]);
-            throw new \RuntimeException('ElevenLabs TTS API call failed: ' . ($response?->status() ?? 'no response'));
+            throw new \RuntimeException('ElevenLabs TTS API call failed: '.($response?->status() ?? 'no response'));
         }
 
         // Store the audio file on the private disk. We return only the file
         // name — the caller builds the URL, so the file keeps working no
         // matter which host/port serves the app (absolute URLs bake in
         // APP_URL and break on other machines).
-        $filename = 'audio/' . Str::uuid() . '.mp3';
-        /** @var \Illuminate\Filesystem\FilesystemAdapter $disk */
+        $filename = 'audio/'.Str::uuid().'.mp3';
+        /** @var FilesystemAdapter $disk */
         $disk = Storage::disk('local');
         $disk->put($filename, $response->body());
 
@@ -143,7 +149,7 @@ class ElevenLabsService
         if ($response->failed()) {
             Log::warning('Could not read ElevenLabs voice metadata — using the default model', [
                 'voice_id' => $voiceId,
-                'status'   => $response->status(),
+                'status' => $response->status(),
             ]);
 
             return $this->modelByVoice[$voiceId] = [$fallback];
@@ -161,7 +167,7 @@ class ElevenLabsService
      * first; the voice's other fine-tuned models come next, because they
      * are still the voice's own delivery. The general model is last.
      *
-     * @param array<string, mixed> $voice
+     * @param  array<string, mixed>  $voice
      * @return list<string>
      */
     private function candidateModels(array $voice, string $fallback): array
@@ -208,15 +214,15 @@ class ElevenLabsService
     /**
      * Call the ElevenLabs text-to-speech endpoint.
      */
-    private function callTts(string $text, string $voiceId, string $model): \Illuminate\Http\Client\Response
+    private function callTts(string $text, string $voiceId, string $model): Response
     {
         return Http::withHeaders([
-            'xi-api-key'   => $this->apiKey,
+            'xi-api-key' => $this->apiKey,
             'Content-Type' => 'application/json',
         ])
             ->timeout(60)
             ->post("{$this->baseUrl}/text-to-speech/{$voiceId}", [
-                'text'     => $text,
+                'text' => $text,
                 'model_id' => $model,
             ]);
     }
@@ -283,8 +289,8 @@ class ElevenLabsService
     /**
      * Transcribe user audio using ElevenLabs Scribe STT API.
      *
-     * @param string $audioFilePath Absolute path to the local audio file (.webm or .mp3)
-     * @param string|null $language ISO language code (e.g., 'en', 'bn')
+     * @param  string  $audioFilePath  Absolute path to the local audio file (.webm or .mp3)
+     * @param  string|null  $language  ISO language code (e.g., 'en', 'bn')
      * @return string The transcribed text
      */
     public function transcribe(string $audioFilePath, ?string $language = null): string
@@ -310,9 +316,9 @@ class ElevenLabsService
         if ($request->failed()) {
             Log::error('ElevenLabs Scribe STT failed', [
                 'status' => $request->status(),
-                'body'   => $request->body(),
+                'body' => $request->body(),
             ]);
-            throw new \RuntimeException('ElevenLabs Scribe STT failed: ' . $request->status());
+            throw new \RuntimeException('ElevenLabs Scribe STT failed: '.$request->status());
         }
 
         return $request->json('text', '');

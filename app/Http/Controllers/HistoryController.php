@@ -1,7 +1,10 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers;
 
+use App\Enums\DebateMode;
 use App\Models\Debate;
 use Illuminate\Http\Request;
 
@@ -31,12 +34,12 @@ class HistoryController extends Controller
         // page never opens on an empty tab. With no records at all there
         // is nothing to prefer, and the page opens on Tournament — the
         // primary format, and the first tab on the page.
-        $defaultTab = $debates->isEmpty() || $debates->contains(fn ($d) => $d->mode === 'tournament')
+        $defaultTab = $debates->isEmpty() || $debates->contains(fn ($d) => $d->mode === DebateMode::Tournament)
             ? 'tournament'
             : 'sparring';
 
-        $tournamentCount = $debates->where('mode', 'tournament')->count();
-        $sparringCount   = $debates->where('mode', 'sparring')->count();
+        $tournamentCount = $debates->where('mode', DebateMode::Tournament)->count();
+        $sparringCount = $debates->where('mode', DebateMode::Sparring)->count();
 
         // The delete button is only shown on debates the viewer actually owns,
         // so nobody is offered an action that would be rejected. Every row

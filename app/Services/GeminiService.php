@@ -1,23 +1,28 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Services;
 
 use App\Models\Debate;
 use App\Models\Round;
+use Illuminate\Http\Client\RequestException;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
 class GeminiService
 {
     private string $apiKey;
+
     private string $model;
+
     private string $baseUrl;
 
     public function __construct(
         private DebateStage $stage,
     ) {
-        $this->apiKey  = (string) config('services.gemini.key', env('GEMINI_API_KEY', ''));
-        $this->model   = (string) config('debate.gemini_model', 'gemini-2.0-flash');
+        $this->apiKey = (string) config('services.gemini.key', env('GEMINI_API_KEY', ''));
+        $this->model = (string) config('debate.gemini_model', 'gemini-2.0-flash');
         $this->baseUrl = 'https://generativelanguage.googleapis.com/v1beta';
     }
 
@@ -43,9 +48,9 @@ class GeminiService
             : 'English';
 
         $prompt = "Generate one debatable, balanced motion {$categoryPhrase} for a university debate. "
-            . "{$phraseFormat} "
-            . "Respond in {$langTarget}. "
-            . "Output only the motion, no preamble, no explanation.";
+            ."{$phraseFormat} "
+            ."Respond in {$langTarget}. "
+            .'Output only the motion, no preamble, no explanation.';
 
         return $this->generateText($prompt);
     }
@@ -66,15 +71,15 @@ class GeminiService
      */
     public function generateDebateTurn(
         Debate $debate,
-        Round  $round,
+        Round $round,
         string $userTranscript,
     ): string {
         $debate->load(['motion', 'persona']);
 
-        $stage   = $this->stage->brief($debate, $round, 'ai', $debate->aiSide());
-        $aiSide  = $debate->aiSide();
-        $lang    = $this->languageName($debate->language);
-        $motion  = $debate->motion->textFor($debate->language);
+        $stage = $this->stage->brief($debate, $round, 'ai', $debate->aiSide());
+        $aiSide = $debate->aiSide();
+        $lang = $this->languageName($debate->language);
+        $motion = $debate->motion->textFor($debate->language);
         $transcript = $debate->buildTranscript();
 
         $systemPrompt = $this->buildDebateSystemPrompt($debate);
@@ -110,9 +115,9 @@ class GeminiService
      */
     private function buildDebateSystemPrompt(Debate $debate): string
     {
-        $personaPrompt     = $debate->persona->system_prompt;
-        $difficultyPrompt  = config('debate.difficulty_prompts', [])[$debate->difficulty] ?? '';
-        $style             = config('debate.debate_style', []);
+        $personaPrompt = $debate->persona->system_prompt;
+        $difficultyPrompt = config('debate.difficulty_prompts', [])[$debate->difficulty] ?? '';
+        $style = config('debate.debate_style', []);
 
         $layers = array_filter([
             $personaPrompt,
@@ -158,7 +163,7 @@ class GeminiService
      * @param  array<string, mixed>  $stage
      */
     private function buildDebateUserMessage(
-        array  $stage,
+        array $stage,
         string $motion,
         string $transcript,
         string $userTranscript,
@@ -177,9 +182,9 @@ class GeminiService
         // addressing the other side by name. That is not how a speech at a
         // podium works, and in Bangla it comes out as a formal address
         // in the first line.
-        $sections[] = "IN YOUR SPEECH, REFER TO THE SIDES, NOT TO THE SPEAKERS: "
+        $sections[] = 'IN YOUR SPEECH, REFER TO THE SIDES, NOT TO THE SPEAKERS: '
             ."call your own side \"{$stage['side_self']}\" and the other side \"{$stage['opponent_in_speech']}\". "
-            ."Do not name either speaker, and do not address anyone directly. "
+            .'Do not name either speaker, and do not address anyone directly. '
             ."A speech answers the other side's ARGUMENT — \"their claim\", \"their evidence\" — "
             ."not \"the last speaker said\" or \"my opponent's point\".";
 
@@ -245,8 +250,8 @@ class GeminiService
         }
 
         $sections[] = "DELIVER YOUR SPEECH NOW. {$stage['word_count']} words, in {$lang}. "
-            ."Speak it — no headings, no bullet points, no markdown, no stage directions. "
-            ."Output only the speech itself, nothing before or after it.";
+            .'Speak it — no headings, no bullet points, no markdown, no stage directions. '
+            .'Output only the speech itself, nothing before or after it.';
 
         return implode("\n\n", $sections);
     }
@@ -326,12 +331,12 @@ Original argument:
 {$transcript}
 PROMPT;
 
-        $raw  = $this->generateText($prompt);
+        $raw = $this->generateText($prompt);
         $data = $this->parseJson($raw);
 
         return [
-            'rewritten_text'       => $data['rewritten_text']       ?? $raw,
-            'explanation_bullets'  => $data['explanation_bullets']  ?? [],
+            'rewritten_text' => $data['rewritten_text'] ?? $raw,
+            'explanation_bullets' => $data['explanation_bullets'] ?? [],
         ];
     }
 
@@ -353,7 +358,7 @@ PROMPT;
         }
 
         $slot = $this->stage->slotOf($debate, $round, 'user');
-        $key  = "{$phase}.{$slot}";
+        $key = "{$phase}.{$slot}";
 
         $profile = config('debate.stage_profiles', [])[$key] ?? null;
 
@@ -386,12 +391,12 @@ PROMPT;
     public function adjudicate(Debate $debate): array
     {
         $debate->load(['motion', 'persona']);
-        $motionText      = $debate->motion->textFor($debate->language);
+        $motionText = $debate->motion->textFor($debate->language);
         $lang = match ($debate->language) {
-            'bn'    => 'Bangla',
+            'bn' => 'Bangla',
             default => 'English',
         };
-        $fullTranscript  = $debate->buildTranscript();
+        $fullTranscript = $debate->buildTranscript();
 
         // The rubric is written out from the shared config rather than
         // typed into the prompt. The report prints the same rubric back
@@ -434,17 +439,17 @@ Output ONLY valid JSON matching this schema (no markdown fences, no preamble):
 }
 PROMPT;
 
-        $raw  = $this->generateText($prompt);
+        $raw = $this->generateText($prompt);
         $data = $this->parseJson($raw);
 
         return [
-            'matter_score'     => (int) ($data['matter_score']     ?? 0),
-            'manner_score'     => (int) ($data['manner_score']     ?? 0),
-            'method_score'     => (int) ($data['method_score']     ?? 0),
-            'total_score'      => (int) ($data['total_score']      ?? 0),
-            'fallacies'        => $data['fallacies']               ?? [],
-            'feedback_bullets' => $data['feedback_bullets']        ?? [],
-            'verdict'          => $data['verdict']                 ?? '',
+            'matter_score' => (int) ($data['matter_score'] ?? 0),
+            'manner_score' => (int) ($data['manner_score'] ?? 0),
+            'method_score' => (int) ($data['method_score'] ?? 0),
+            'total_score' => (int) ($data['total_score'] ?? 0),
+            'fallacies' => $data['fallacies'] ?? [],
+            'feedback_bullets' => $data['feedback_bullets'] ?? [],
+            'verdict' => $data['verdict'] ?? '',
         ];
     }
 
@@ -470,7 +475,7 @@ PROMPT;
     private function rubricPromptText(): string
     {
         $criteria = config('debate.rubric.criteria', []);
-        $grades   = config('debate.rubric.grades', []);
+        $grades = config('debate.rubric.grades', []);
 
         $lines = [];
 
@@ -508,7 +513,7 @@ PROMPT;
         if ($overall !== []) {
             $lines[] = '';
             $lines[] = 'Overall band (out of 100):';
-            $lines[] = implode("\n", array_map(fn (string $line) => '    · ' . $line, $overall));
+            $lines[] = implode("\n", array_map(fn (string $line) => '    · '.$line, $overall));
         }
 
         return implode("\n", $lines);
@@ -531,19 +536,19 @@ PROMPT;
      */
     public function generateDebateTurnFromAudio(
         Debate $debate,
-        Round  $round,
+        Round $round,
         string $audioFilePath,
     ): array {
         $debate->load(['motion', 'persona']);
 
-        $stage      = $this->stage->brief($debate, $round, 'ai', $debate->aiSide());
-        $aiSide     = $debate->aiSide();
-        $lang       = $this->languageName($debate->language);
+        $stage = $this->stage->brief($debate, $round, 'ai', $debate->aiSide());
+        $aiSide = $debate->aiSide();
+        $lang = $this->languageName($debate->language);
         $motionText = $debate->motion->textFor($debate->language);
         $transcript = $debate->buildTranscript();
 
         $audioContent = base64_encode(file_get_contents($audioFilePath));
-        $mimeType     = 'audio/webm';
+        $mimeType = 'audio/webm';
 
         $prompt = $this->buildAudioTurnPrompt(
             $stage,
@@ -562,7 +567,7 @@ PROMPT;
                     [
                         'inlineData' => [
                             'mimeType' => $mimeType,
-                            'data'     => $audioContent,
+                            'data' => $audioContent,
                         ],
                     ],
                     ['text' => $prompt],
@@ -573,9 +578,10 @@ PROMPT;
 
         $response = Http::timeout(90)
             ->retry(3, 3000, function (\Exception $exception) {
-                if ($exception instanceof \Illuminate\Http\Client\RequestException) {
+                if ($exception instanceof RequestException) {
                     return in_array($exception->response->status(), [429, 500, 502, 503, 504]);
                 }
+
                 return true;
             }, throw: false)
             ->post(
@@ -592,12 +598,12 @@ PROMPT;
             throw new \RuntimeException('Unable to process the audio with the AI service. Please try again.');
         }
 
-        $raw  = $this->extractText($response->json());
+        $raw = $this->extractText($response->json());
         $data = $this->parseJson($raw);
 
         return [
             'transcript' => trim($data['transcript'] ?? ''),
-            'ai_text'    => trim($data['ai_text']    ?? $raw),
+            'ai_text' => trim($data['ai_text'] ?? $raw),
         ];
     }
 
@@ -613,7 +619,7 @@ PROMPT;
      * @param  array<string, mixed>  $stage
      */
     private function buildAudioTurnPrompt(
-        array  $stage,
+        array $stage,
         string $motion,
         string $transcript,
         string $aiSide,
@@ -628,9 +634,9 @@ PROMPT;
         // The roles are for the model's own bookkeeping. The speech itself
         // refers to the SIDES, not to the speakers — see the same
         // instruction in the text-turn prompt.
-        $sections[] = "IN YOUR SPEECH, REFER TO THE SIDES, NOT TO THE SPEAKERS: "
+        $sections[] = 'IN YOUR SPEECH, REFER TO THE SIDES, NOT TO THE SPEAKERS: '
             ."call your own side \"{$stage['side_self']}\" and the other side \"{$stage['opponent_in_speech']}\". "
-            ."Do not name either speaker, and do not address anyone directly. "
+            .'Do not name either speaker, and do not address anyone directly. '
             ."A speech answers the other side's ARGUMENT — \"their claim\", \"their evidence\" — "
             ."not \"the last speaker said\" or \"my opponent's point\".";
 
@@ -673,7 +679,7 @@ PROMPT;
         }
 
         $sections[] = "DELIVER YOUR SPEECH NOW. {$stage['word_count']} words, in {$lang}. "
-            ."Speak it — no headings, no bullet points, no markdown, no stage directions.";
+            .'Speak it — no headings, no bullet points, no markdown, no stage directions.';
 
         $instructions = implode("\n\n", $sections);
 
@@ -713,9 +719,10 @@ PROMPT;
         $response = Http::timeout(60)
             ->retry(5, 3000, function (\Exception $exception, $request) {
                 // Exponential sleep / retry on rate limit (429) or temporary server errors (5xx)
-                if ($exception instanceof \Illuminate\Http\Client\RequestException) {
+                if ($exception instanceof RequestException) {
                     return in_array($exception->response->status(), [429, 500, 502, 503, 504]);
                 }
+
                 return true;
             }, throw: false)
             ->post(
@@ -752,9 +759,10 @@ PROMPT;
         $response = Http::timeout(60)
             ->retry(5, 3000, function (\Exception $exception, $request) {
                 // Exponential sleep / retry on rate limit (429) or temporary server errors (5xx)
-                if ($exception instanceof \Illuminate\Http\Client\RequestException) {
+                if ($exception instanceof RequestException) {
                     return in_array($exception->response->status(), [429, 500, 502, 503, 504]);
                 }
+
                 return true;
             }, throw: false)
             ->post(
@@ -828,7 +836,7 @@ PROMPT;
         }
 
         return "The AI's daily request limit has been reached, so it cannot speak right now. "
-            ."Please try again later today.";
+            .'Please try again later today.';
     }
 
     /**
@@ -843,9 +851,11 @@ PROMPT;
 
         $decoded = json_decode($cleaned, true);
         if (json_last_error() !== JSON_ERROR_NONE) {
-            Log::warning('Gemini JSON parse failed, raw output: ' . $raw);
+            Log::warning('Gemini JSON parse failed, raw output: '.$raw);
+
             return [];
         }
+
         return $decoded;
     }
 

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Services;
 
 use Illuminate\Support\Facades\Http;
@@ -27,32 +29,32 @@ class GoogleTtsService
      */
     public function synthesize(string $text, string $language): string
     {
-        $lang   = $language === 'bn' ? 'bn' : 'en';
+        $lang = $language === 'bn' ? 'bn' : 'en';
         $chunks = $this->chunkText($text);
 
         $audio = '';
         foreach ($chunks as $index => $chunk) {
             $response = Http::withHeaders([
                 'User-Agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0 Safari/537.36',
-                'Referer'    => 'https://translate.google.com/',
+                'Referer' => 'https://translate.google.com/',
             ])
                 ->timeout(30)
                 ->get('https://translate.google.com/translate_tts', [
-                    'ie'     => 'UTF-8',
+                    'ie' => 'UTF-8',
                     'client' => 'tw-ob',
-                    'q'      => $chunk,
-                    'tl'     => $lang,
-                    'total'  => count($chunks),
-                    'idx'    => $index,
+                    'q' => $chunk,
+                    'tl' => $lang,
+                    'total' => count($chunks),
+                    'idx' => $index,
                 ]);
 
             if ($response->failed()) {
                 Log::error('Google TTS chunk failed', [
-                    'status'   => $response->status(),
-                    'body'     => mb_substr($response->body(), 0, 300),
+                    'status' => $response->status(),
+                    'body' => mb_substr($response->body(), 0, 300),
                     'language' => $lang,
                 ]);
-                throw new \RuntimeException('Google TTS failed: ' . $response->status());
+                throw new \RuntimeException('Google TTS failed: '.$response->status());
             }
 
             $audio .= $response->body();
@@ -63,7 +65,7 @@ class GoogleTtsService
             }
         }
 
-        $filename = 'audio/google_tts_' . Str::uuid() . '.mp3';
+        $filename = 'audio/google_tts_'.Str::uuid().'.mp3';
         Storage::disk('local')->put($filename, $audio);
 
         // File name only — the caller builds the URL.
@@ -90,11 +92,11 @@ class GoogleTtsService
 
             if ($cut === false || $cut < self::MAX_CHUNK / 2) {
                 $lastSpace = mb_strrpos($part, ' ');
-                $cut       = ($lastSpace !== false && $lastSpace > self::MAX_CHUNK / 2) ? $lastSpace : self::MAX_CHUNK;
+                $cut = ($lastSpace !== false && $lastSpace > self::MAX_CHUNK / 2) ? $lastSpace : self::MAX_CHUNK;
             }
 
             $chunks[] = mb_substr($text, 0, $cut + 1);
-            $text     = trim(mb_substr($text, $cut + 1));
+            $text = trim(mb_substr($text, $cut + 1));
         }
 
         if (mb_strlen($text) > 0) {

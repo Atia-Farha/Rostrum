@@ -9,6 +9,7 @@ use App\Models\Persona;
 use App\Models\Round;
 use App\Models\Turn;
 use App\Models\User;
+use Database\Seeders\PersonaSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -28,53 +29,53 @@ class ReportPageTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $this->seed(\Database\Seeders\PersonaSeeder::class);
+        $this->seed(PersonaSeeder::class);
     }
 
     private function makeDebate(User $user): Debate
     {
         $motion = Motion::create([
-            'text_en'  => 'This House believes that open-sourced AI should be regulated.',
-            'text_bn'  => 'এই সভা মনে করে যে ওপেন-সোর্সড এআই নিয়ন্ত্রণ করা উচিত।',
+            'text_en' => 'This House believes that open-sourced AI should be regulated.',
+            'text_bn' => 'এই সভা মনে করে যে ওপেন-সোর্সড এআই নিয়ন্ত্রণ করা উচিত।',
             'category' => 'Technology',
-            'source'   => 'manual',
+            'source' => 'manual',
         ]);
 
         $debate = Debate::create([
             'session_id' => 'session-'.uniqid(),
-            'user_id'    => $user->id,
-            'motion_id'  => $motion->id,
+            'user_id' => $user->id,
+            'motion_id' => $motion->id,
             'persona_id' => Persona::first()->id,
-            'user_side'  => 'government',
+            'user_side' => 'government',
             'difficulty' => 'advanced',
-            'mode'       => 'tournament',
-            'language'   => 'en',
-            'status'     => 'adjudicated',
+            'mode' => 'tournament',
+            'language' => 'en',
+            'status' => 'adjudicated',
         ]);
 
         $round = Round::create([
-            'debate_id'   => $debate->id,
-            'phase'       => 'opening',
+            'debate_id' => $debate->id,
+            'phase' => 'opening',
             'phase_order' => 1,
         ]);
 
         Turn::create([
-            'round_id'   => $round->id,
-            'speaker'    => 'user',
+            'round_id' => $round->id,
+            'speaker' => 'user',
             'transcript' => 'We should regulate the deployment of general-purpose models.',
             'created_at' => now(),
         ]);
 
         Adjudication::create([
-            'debate_id'    => $debate->id,
-            'total_score'  => 77,
+            'debate_id' => $debate->id,
+            'total_score' => 77,
             'matter_score' => 31,
             'manner_score' => 24,
             'method_score' => 22,
-            'verdict'      => 'A disciplined round with one weak warrant.',
-            'fallacies'    => [[
-                'phase'       => 'Rebuttal',
-                'type'        => 'Unwarranted Assumption',
+            'verdict' => 'A disciplined round with one weak warrant.',
+            'fallacies' => [[
+                'phase' => 'Rebuttal',
+                'type' => 'Unwarranted Assumption',
                 'explanation' => 'The claim was never supported.',
             ]],
             'feedback_bullets' => [
@@ -89,7 +90,7 @@ class ReportPageTest extends TestCase
 
     public function test_the_report_states_the_mark_and_the_band_it_fell_in(): void
     {
-        $user   = User::factory()->create();
+        $user = User::factory()->create();
         $debate = $this->makeDebate($user);
 
         $html = $this->actingAs($user)
@@ -114,7 +115,7 @@ class ReportPageTest extends TestCase
 
     public function test_the_report_shows_every_criterion_with_its_band(): void
     {
-        $user   = User::factory()->create();
+        $user = User::factory()->create();
         $debate = $this->makeDebate($user);
 
         $html = $this->actingAs($user)
@@ -136,7 +137,7 @@ class ReportPageTest extends TestCase
 
     public function test_the_report_shows_the_judges_reasoning_errors(): void
     {
-        $user   = User::factory()->create();
+        $user = User::factory()->create();
         $debate = $this->makeDebate($user);
 
         $html = $this->actingAs($user)
@@ -151,7 +152,7 @@ class ReportPageTest extends TestCase
 
     public function test_the_report_groups_the_findings_by_kind(): void
     {
-        $user   = User::factory()->create();
+        $user = User::factory()->create();
         $debate = $this->makeDebate($user);
 
         $html = $this->actingAs($user)
@@ -166,7 +167,7 @@ class ReportPageTest extends TestCase
 
     public function test_the_report_is_numbered_and_listed_in_the_contents(): void
     {
-        $user   = User::factory()->create();
+        $user = User::factory()->create();
         $debate = $this->makeDebate($user);
 
         $html = $this->actingAs($user)
@@ -187,7 +188,7 @@ class ReportPageTest extends TestCase
 
     public function test_the_report_does_not_repeat_the_verdict(): void
     {
-        $user   = User::factory()->create();
+        $user = User::factory()->create();
         $debate = $this->makeDebate($user);
 
         $html = $this->actingAs($user)
@@ -208,7 +209,7 @@ class ReportPageTest extends TestCase
 
     public function test_the_report_places_the_mark_on_the_grade_ladder(): void
     {
-        $user   = User::factory()->create();
+        $user = User::factory()->create();
         $debate = $this->makeDebate($user);
 
         $html = $this->actingAs($user)
@@ -224,7 +225,7 @@ class ReportPageTest extends TestCase
 
     public function test_the_report_shows_the_transcript_for_reference(): void
     {
-        $user   = User::factory()->create();
+        $user = User::factory()->create();
         $debate = $this->makeDebate($user);
 
         $html = $this->actingAs($user)
@@ -241,7 +242,7 @@ class ReportPageTest extends TestCase
 
     public function test_the_report_is_not_open_to_another_account(): void
     {
-        $owner  = User::factory()->create();
+        $owner = User::factory()->create();
         $debate = $this->makeDebate($owner);
 
         $this->actingAs(User::factory()->create())
@@ -255,7 +256,7 @@ class ReportPageTest extends TestCase
 
     public function test_the_report_opens_with_the_short_version(): void
     {
-        $user   = User::factory()->create();
+        $user = User::factory()->create();
         $debate = $this->makeDebate($user);
 
         $html = $this->actingAs($user)
@@ -274,7 +275,7 @@ class ReportPageTest extends TestCase
 
     public function test_the_brief_comes_before_the_detail_it_summarises(): void
     {
-        $user   = User::factory()->create();
+        $user = User::factory()->create();
         $debate = $this->makeDebate($user);
 
         $html = $this->actingAs($user)
@@ -292,7 +293,7 @@ class ReportPageTest extends TestCase
 
     public function test_the_report_explains_the_two_scales_it_uses(): void
     {
-        $user   = User::factory()->create();
+        $user = User::factory()->create();
         $debate = $this->makeDebate($user);
 
         $html = $this->actingAs($user)
@@ -307,7 +308,7 @@ class ReportPageTest extends TestCase
 
     public function test_each_criterion_shows_the_scale_it_was_scored_on(): void
     {
-        $user   = User::factory()->create();
+        $user = User::factory()->create();
         $debate = $this->makeDebate($user);
 
         $html = $this->actingAs($user)
@@ -323,7 +324,7 @@ class ReportPageTest extends TestCase
 
     public function test_the_criteria_are_glossed_into_plain_words(): void
     {
-        $user   = User::factory()->create();
+        $user = User::factory()->create();
         $debate = $this->makeDebate($user);
 
         $html = $this->actingAs($user)

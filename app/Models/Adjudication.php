@@ -1,12 +1,14 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-class Adjudication extends Model
+final class Adjudication extends Model
 {
     use HasUuids;
 
@@ -23,7 +25,7 @@ class Adjudication extends Model
     ];
 
     protected $casts = [
-        'fallacies'        => 'array',
+        'fallacies' => 'array',
         'feedback_bullets' => 'array',
     ];
 

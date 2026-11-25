@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Policies;
 
 use App\Models\Debate;
@@ -16,7 +18,7 @@ use App\Models\User;
  * account's own practice and nobody else's. A newly registered account
  * starts with an empty record and fills it by debating.
  */
-class DebatePolicy
+final class DebatePolicy
 {
     /**
      * Does the user own this debate?

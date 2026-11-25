@@ -98,6 +98,43 @@ return new class extends Migration
             SQL,
     ];
 
+    /**
+     * Hardcoded copy / drop / rename statements for each table rebuild step.
+     *
+     * SQL identifiers (table names) cannot be parameterised with placeholders,
+     * so the only way to eliminate string interpolation from DDL is to inline
+     * every literal here.  No variable is ever interpolated into a SQL string;
+     * each statement is a plain string constant that the scanner can verify
+     * statically.  Each entry maps table → [copy, drop, rename].
+     */
+    private const TABLE_STEPS = [
+        'debates' => [
+            'INSERT INTO debates_new SELECT * FROM debates',
+            'DROP TABLE debates',
+            'ALTER TABLE debates_new RENAME TO debates',
+        ],
+        'rounds' => [
+            'INSERT INTO rounds_new SELECT * FROM rounds',
+            'DROP TABLE rounds',
+            'ALTER TABLE rounds_new RENAME TO rounds',
+        ],
+        'turns' => [
+            'INSERT INTO turns_new SELECT * FROM turns',
+            'DROP TABLE turns',
+            'ALTER TABLE turns_new RENAME TO turns',
+        ],
+        'turn_rewrites' => [
+            'INSERT INTO turn_rewrites_new SELECT * FROM turn_rewrites',
+            'DROP TABLE turn_rewrites',
+            'ALTER TABLE turn_rewrites_new RENAME TO turn_rewrites',
+        ],
+        'adjudications' => [
+            'INSERT INTO adjudications_new SELECT * FROM adjudications',
+            'DROP TABLE adjudications',
+            'ALTER TABLE adjudications_new RENAME TO adjudications',
+        ],
+    ];
+
     public function up(): void
     {
         // SQLite migrations are not wrapped in a transaction, so PRAGMA
@@ -105,12 +142,16 @@ return new class extends Migration
         DB::statement('PRAGMA foreign_keys = OFF');
 
         try {
-            foreach (array_keys(self::TABLES) as $table) {
-                $new = "{$table}_new";
-                DB::statement(self::TABLES[$table]);
-                DB::statement("INSERT INTO {$new} SELECT * FROM {$table}");
-                DB::statement("DROP TABLE {$table}");
-                DB::statement("ALTER TABLE {$new} RENAME TO {$table}");
+            foreach (self::TABLES as $table => $createSql) {
+                // Create the shadow table with the new constraints.
+                DB::statement($createSql);
+
+                // Execute copy / drop / rename using only hardcoded string
+                // literals from TABLE_STEPS — no variable is interpolated
+                // into any SQL string (resolves SQL-injection finding).
+                foreach (self::TABLE_STEPS[$table] as $step) {
+                    DB::statement($step);
+                }
             }
         } finally {
             DB::statement('PRAGMA foreign_keys = ON');

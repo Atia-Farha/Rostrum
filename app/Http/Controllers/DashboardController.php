@@ -1,7 +1,11 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers;
 
+use App\Enums\DebateMode;
+use App\Enums\DebateStatus;
 use App\Models\Debate;
 use Illuminate\Http\Request;
 
@@ -23,9 +27,9 @@ class DashboardController extends Controller
      * The difficulties a debate can be set at, easiest first.
      */
     private const DIFFICULTIES = [
-        'beginner'       => 'Beginner',
-        'intermediate'   => 'Intermediate',
-        'advanced'       => 'Advanced',
+        'beginner' => 'Beginner',
+        'intermediate' => 'Intermediate',
+        'advanced' => 'Advanced',
         'world_champion' => 'World Champion',
     ];
 
@@ -55,8 +59,8 @@ class DashboardController extends Controller
 
         $stats = [
             'total' => $debates->count(),
-            'tournament' => $debates->where('mode', 'tournament')->count(),
-            'sparring' => $debates->where('mode', 'sparring')->count(),
+            'tournament' => $debates->where('mode', DebateMode::Tournament)->count(),
+            'sparring' => $debates->where('mode', DebateMode::Sparring)->count(),
             'adjudicated' => $adjudicated->count(),
 
             // The format split of the *reports*, kept apart from the
@@ -64,8 +68,8 @@ class DashboardController extends Controller
             // reports count has to describe the same set the count
             // names — the two splits are different numbers, because a
             // debate in progress is counted in one and not the other.
-            'tournament_reports' => $adjudicated->where('mode', 'tournament')->count(),
-            'sparring_reports' => $adjudicated->where('mode', 'sparring')->count(),
+            'tournament_reports' => $adjudicated->where('mode', DebateMode::Tournament)->count(),
+            'sparring_reports' => $adjudicated->where('mode', DebateMode::Sparring)->count(),
 
             'in_progress' => $debates->count() - $adjudicated->count(),
             'avg_score' => $adjudicated->isEmpty()
@@ -91,7 +95,7 @@ class DashboardController extends Controller
         $trend = $adjudicated
             ->sortBy('created_at')
             ->map(fn (Debate $debate) => [
-                'id'    => $debate->id,
+                'id' => $debate->id,
                 'score' => (int) $debate->adjudication->total_score,
                 'label' => $debate->created_at->format('d M'),
             ])
@@ -103,7 +107,7 @@ class DashboardController extends Controller
         // shape between visits is harder to read, not easier.
         $byDifficulty = collect(self::DIFFICULTIES)
             ->map(fn (string $label, string $key) => [
-                'key'   => $key,
+                'key' => $key,
                 'label' => $label,
                 'count' => $adjudicated->where('difficulty', $key)->count(),
             ])
@@ -117,7 +121,7 @@ class DashboardController extends Controller
         ];
 
         // The debate the user was last in, so "Continue" can point at it.
-        $resumable = $debates->first(fn (Debate $debate) => $debate->status !== 'adjudicated');
+        $resumable = $debates->first(fn (Debate $debate) => $debate->status !== DebateStatus::Adjudicated);
 
         // The four most recent debates. Four is enough to show a shape
         // without turning the page into a second copy of the history
@@ -125,15 +129,15 @@ class DashboardController extends Controller
         $recentDebates = $debates->take(4)->values();
 
         return view('dashboard', [
-            'user'          => $user,
-            'stats'         => $stats,
-            'breakdown'     => $breakdown,
-            'trend'         => $trend,
-            'byDifficulty'  => $byDifficulty,
-            'byFormat'      => $byFormat,
+            'user' => $user,
+            'stats' => $stats,
+            'breakdown' => $breakdown,
+            'trend' => $trend,
+            'byDifficulty' => $byDifficulty,
+            'byFormat' => $byFormat,
             'recentDebates' => $recentDebates,
-            'resumable'     => $resumable,
-            'criteria'      => self::CRITERIA,
+            'resumable' => $resumable,
+            'criteria' => self::CRITERIA,
         ]);
     }
 }

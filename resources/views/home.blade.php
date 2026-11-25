@@ -24,21 +24,7 @@
         <div class="landing-hero-grid">
 
             <div class="landing-hero-copy">
-                {{-- Two rows, not one. The badge is a wide, detailed graphic
-                     and the eyebrow is a thin pill; set side by side they
-                     fight for the same horizontal space and neither reads
-                     properly. Stacked, the badge leads as the credential
-                     and the eyebrow labels what the product is. --}}
                 <div class="landing-reveal landing-hero-provenance">
-                    <span class="landing-badge">
-                        <img src="{{ asset('Built-for-AIgnite-2026.png') }}"
-                             alt="Built for AIgnite Buildathon 2026 — Ostad presents, National AI Hackathon for B2C Solutions"
-                             width="2105"
-                             height="747"
-                             loading="eager"
-                             decoding="async">
-                    </span>
-
                     <span class="landing-eyebrow">AI Debate Training Platform</span>
                 </div>
 

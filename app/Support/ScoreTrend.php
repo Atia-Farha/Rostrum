@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Support;
 
 /**
@@ -42,9 +44,7 @@ class ScoreTrend
     /**
      * @param  array<int, array{score: int, label: string}>  $points  Oldest first.
      */
-    public function __construct(private readonly array $points)
-    {
-    }
+    public function __construct(private readonly array $points) {}
 
     public function isEmpty(): bool
     {
@@ -161,14 +161,14 @@ class ScoreTrend
         $xs = $this->xs();
         $ys = $this->ys();
 
-        $path = 'M ' . round($xs[0], 2) . ' ' . round($ys[0], 2);
+        $path = 'M '.round($xs[0], 2).' '.round($ys[0], 2);
 
         foreach ($xs as $index => $x) {
             if ($index === 0) {
                 continue;
             }
 
-            $path .= ' L ' . round($x, 2) . ' ' . round($ys[$index], 2);
+            $path .= ' L '.round($x, 2).' '.round($ys[$index], 2);
         }
 
         return $path;
@@ -189,9 +189,9 @@ class ScoreTrend
         $baseline = self::yForScore(0);
 
         return $this->linePath()
-            . ' L ' . round($xs[$last], 2) . ' ' . round($baseline, 2)
-            . ' L ' . round($xs[0], 2) . ' ' . round($baseline, 2)
-            . ' Z';
+            .' L '.round($xs[$last], 2).' '.round($baseline, 2)
+            .' L '.round($xs[0], 2).' '.round($baseline, 2)
+            .' Z';
     }
 
     /**

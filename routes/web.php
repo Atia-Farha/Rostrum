@@ -108,6 +108,9 @@ Route::middleware('auth')->group(function () {
     Route::post('/debates/{debate}/turns', [DebateController::class, 'submitTurn'])
         ->middleware(['can:participate,debate', 'throttle:api'])
         ->name('debates.turns.submit');
+    Route::get('/debates/{debate}/state', [DebateController::class, 'state'])
+        ->middleware('can:view,debate')
+        ->name('debates.state');
     Route::post('/debates/{debate}/turns/{turn}/rewrite', [DebateController::class, 'rewriteTurn'])
         ->middleware(['can:rewrite,debate', 'throttle:api'])
         ->name('debates.turns.rewrite');

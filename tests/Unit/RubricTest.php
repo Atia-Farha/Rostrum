@@ -34,7 +34,7 @@ class RubricTest extends TestCase
                 [],
                 array_values($shared),
                 "The overall bands and the {$criterion['label']} bands share a word: "
-                . implode(', ', $shared) . '. The report shows both scales, so they must not.',
+                .implode(', ', $shared).'. The report shows both scales, so they must not.',
             );
         }
     }

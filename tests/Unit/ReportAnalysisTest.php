@@ -10,6 +10,7 @@ use App\Models\Round;
 use App\Models\Turn;
 use App\Models\User;
 use App\Support\ReportAnalysis;
+use Database\Seeders\PersonaSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -33,52 +34,52 @@ class ReportAnalysisTest extends TestCase
      */
     private function makeDebate(array $adjudication = [], string $language = 'en'): Debate
     {
-        $this->seed(\Database\Seeders\PersonaSeeder::class);
+        $this->seed(PersonaSeeder::class);
 
         $user = User::factory()->create();
 
         $motion = Motion::create([
-            'text_en'  => 'This House would regulate open-source AI.',
-            'text_bn'  => 'এই সভা মনে করে যে ওপেন-সোর্সড এআই নিয়ন্ত্রণ করা উচিত।',
+            'text_en' => 'This House would regulate open-source AI.',
+            'text_bn' => 'এই সভা মনে করে যে ওপেন-সোর্সড এআই নিয়ন্ত্রণ করা উচিত।',
             'category' => 'Technology',
-            'source'   => 'manual',
+            'source' => 'manual',
         ]);
 
         $debate = Debate::create([
             'session_id' => 'session-'.uniqid(),
-            'user_id'    => $user->id,
-            'motion_id'  => $motion->id,
+            'user_id' => $user->id,
+            'motion_id' => $motion->id,
             'persona_id' => Persona::first()->id,
-            'user_side'  => 'government',
+            'user_side' => 'government',
             'difficulty' => 'advanced',
-            'mode'       => 'tournament',
-            'language'   => $language,
-            'status'     => 'adjudicated',
+            'mode' => 'tournament',
+            'language' => $language,
+            'status' => 'adjudicated',
         ]);
 
         $this->addRound($debate, 'opening', 1, [
             'user' => 'We should regulate the deployment of general-purpose models.',
-            'ai'   => 'Regulation slows innovation and chills open research.',
+            'ai' => 'Regulation slows innovation and chills open research.',
         ]);
 
         $this->addRound($debate, 'rebuttal', 2, [
             'user' => 'Your innovation argument ignores the externality of unchecked deployment.',
-            'ai'   => 'That externality is speculative and poorly evidenced.',
+            'ai' => 'That externality is speculative and poorly evidenced.',
         ]);
 
         $this->addRound($debate, 'closing', 3, [
             'user' => 'The risks are real and the evidence for them is growing.',
-            'ai'   => 'The harms have been exaggerated by certain labs.',
+            'ai' => 'The harms have been exaggerated by certain labs.',
         ]);
 
         Adjudication::create(array_merge([
-            'debate_id'    => $debate->id,
-            'total_score'  => 77,
+            'debate_id' => $debate->id,
+            'total_score' => 77,
             'matter_score' => 31,
             'manner_score' => 24,
             'method_score' => 22,
-            'verdict'      => 'A disciplined round that ran out of time before the Closing.',
-            'fallacies'    => [],
+            'verdict' => 'A disciplined round that ran out of time before the Closing.',
+            'fallacies' => [],
             'feedback_bullets' => [],
         ], $adjudication));
 
@@ -91,17 +92,17 @@ class ReportAnalysisTest extends TestCase
     private function addRound(Debate $debate, string $phase, int $order, array $turns): void
     {
         $round = Round::create([
-            'debate_id'  => $debate->id,
-            'phase'      => $phase,
-            'phase_order'=> $order,
+            'debate_id' => $debate->id,
+            'phase' => $phase,
+            'phase_order' => $order,
         ]);
 
         foreach ($turns as $speaker => $transcript) {
             Turn::create([
-                'round_id'    => $round->id,
-                'speaker'     => $speaker,
-                'transcript'  => $transcript,
-                'created_at'  => now(),
+                'round_id' => $round->id,
+                'speaker' => $speaker,
+                'transcript' => $transcript,
+                'created_at' => now(),
             ]);
         }
     }
@@ -152,7 +153,7 @@ class ReportAnalysisTest extends TestCase
 
         // The band below the mark was passed; the band above was not.
         $passed = array_filter($ladder, fn (array $band) => $band['passed']);
-        $ahead  = array_filter($ladder, fn (array $band) => $band['ahead']);
+        $ahead = array_filter($ladder, fn (array $band) => $band['ahead']);
 
         $this->assertNotEmpty($passed);
         $this->assertNotEmpty($ahead);
@@ -555,7 +556,7 @@ class ReportAnalysisTest extends TestCase
         ]);
 
         $groups = $this->analysis($debate)->findings();
-        $kinds  = array_column($groups, 'kind');
+        $kinds = array_column($groups, 'kind');
 
         // The prompt's contract puts the practice plan last, so the last
         // recommendation is promoted to the drill.

@@ -319,7 +319,7 @@
                         <span><strong>{{ ucfirst($debate->user_side) }}</strong> argued</span>
                         <span>against <strong>{{ $debate->persona->name }}</strong></span>
                         <span>{{ str_replace('_', ' ', $debate->difficulty) }}</span>
-                        <span>{{ ucfirst($debate->mode) }} format</span>
+                        <span>{{ ucfirst($debate->mode->value) }} format</span>
                         <span>Adjudicated {{ $debate->updated_at->format('d M Y') }}</span>
                     </div>
                 </div>
@@ -726,7 +726,7 @@
                         </div>
                         <div class="rpt-fact">
                             <span class="rpt-fact-label">Format</span>
-                            <span class="rpt-fact-value">{{ ucfirst($debate->mode) }}</span>
+                            <span class="rpt-fact-value">{{ ucfirst($debate->mode->value) }}</span>
                         </div>
                         <div class="rpt-fact">
                             <span class="rpt-fact-label">Language</span>

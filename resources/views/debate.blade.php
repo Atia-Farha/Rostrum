@@ -92,7 +92,7 @@
             background: var(--color-surface-2);
         }
 
-        .arena-tab[aria-pressed="true"] {
+        .arena-tab[aria-selected="true"] {
             background: var(--color-surface-2);
             border-color: var(--color-border);
             color: var(--color-text);
@@ -897,11 +897,14 @@
              The buttons are pressed-state toggles rather than tabs,
              because the panels are not separate pages — they are two
              views of the same round. --}}
-        <div class="arena-tabs" role="group" aria-label="Arena panels">
+        {{-- A-02: proper ARIA tablist / tab / tabpanel pattern --}}
+        <div class="arena-tabs" role="tablist" aria-label="Arena panels">
             <button type="button"
                     class="arena-tab"
+                    role="tab"
+                    id="tab-transcript"
                     @click="showPane('transcript')"
-                    :aria-pressed="pane === 'transcript'"
+                    :aria-selected="pane === 'transcript'"
                     aria-controls="transcript-pane">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                     <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
@@ -911,8 +914,10 @@
             </button>
             <button type="button"
                     class="arena-tab"
+                    role="tab"
+                    id="tab-podium"
                     @click="showPane('podium')"
-                    :aria-pressed="pane === 'podium'"
+                    :aria-selected="pane === 'podium'"
                     aria-controls="podium-pane">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                     <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/>
@@ -929,7 +934,7 @@
         {{-- ═══════════════════════════════════════════
          LEFT: TRANSCRIPT COLUMN
          ═══════════════════════════════════════════ --}}
-        <div class="transcript-col" id="transcript-pane">
+        <div class="transcript-col" id="transcript-pane" role="tabpanel" aria-labelledby="tab-transcript">
 
             {{-- Top header: motion + badges + timeline --}}
             <div class="transcript-header">
@@ -957,14 +962,14 @@
                     <span class="badge badge-success">
                         {{ $debate->persona->name }}
                     </span>
-                    @if ($debate->mode === 'sparring')
+                    @if ($debate->mode->value === 'sparring')
                         <span class="badge" style="background:rgba(245,158,11,0.1); color:#fcd34d; border:1px solid rgba(245,158,11,0.2);">
                             Sparring · Turn <span x-text="turnCount" style="margin-left:2px; color:var(--color-text);">{{ $rounds->flatMap->turns->count() }}</span>
                         </span>
                     @endif
                 </div>
 
-                @if ($debate->mode !== 'sparring')
+                @if ($debate->mode->value !== 'sparring')
                     {{-- Horizontal Dynamic Timeline --}}
                     <div class="timeline-container">
                         @foreach ($phases as $i => $phase)
@@ -1157,11 +1162,11 @@
         {{-- ═══════════════════════════════════════════
          RIGHT: PODIUM CONTROL PANEL
          ═══════════════════════════════════════════ --}}
-        <div class="podium-col" id="podium-pane">
+        <div class="podium-col" id="podium-pane" role="tabpanel" aria-labelledby="tab-podium">
 
             <div class="podium-header">
                 <p class="section-label" style="margin-bottom:0.3rem;">Debate Podium</p>
-                @if ($debate->mode === 'sparring')
+                @if ($debate->mode->value === 'sparring')
                     <div style="font-size:0.88rem; font-weight:700; color:var(--color-text); {{ $fontStyle }}">
                         Free Practice Round
                     </div>
@@ -1212,6 +1217,7 @@
     'isBn' => $isBn,
     'csrfToken' => csrf_token(),
     'submitUrl' => route('debates.turns.submit', $debate->id),
+    'stateUrl' => route('debates.state', $debate->id),
     'nextSpeaker' => $nextSpeaker,
     'personaName' => $debate->persona->name,
     'userSide' => $debate->user_side,
@@ -1274,7 +1280,7 @@
                         <div x-show="state === 'idle' || state === 'recording'" x-cloak
                             class="podium-mic"
                             style="display:flex; flex-direction:column; align-items:center; justify-content:center; width:100%; gap:2rem; margin-block:1.25rem;">
-                            <button class="mic-orb" style="margin:0 auto;"
+                            <button type="button" class="mic-orb" style="margin:0 auto;"
                                 :class="{ 'idle': state==='idle', 'recording': state==='recording' }"
                                 :aria-label="state === 'recording' ? 'Stop recording' : 'Start recording (press Space)'"
                                 :aria-pressed="state === 'recording'"
@@ -1282,7 +1288,7 @@
                                 <template x-if="state !== 'recording'">
                                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
                                         viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"
-                                        stroke-linecap="round" stroke-linejoin="round">
+                                        stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                                         <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z" />
                                         <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
                                         <line x1="12" x2="12" y1="19" y2="22" />
@@ -1291,7 +1297,7 @@
                                 <template x-if="state === 'recording'">
                                     <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22"
                                         viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"
-                                        stroke-linecap="round" stroke-linejoin="round">
+                                        stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                                         <rect x="6" y="6" width="12" height="12" rx="2" fill="white" />
                                     </svg>
                                 </template>
@@ -1304,9 +1310,9 @@
                         </div>
 
                         {{-- AI thinking spinner --}}
-                        <div x-show="state === 'ai_thinking'" x-cloak
+                        <div x-show="state === 'ai_thinking'" x-cloak role="status" aria-live="polite"
                             style="display:flex; flex-direction:column; align-items:center; justify-content:center; width:100%; gap:0.85rem; margin-block:1.5rem;">
-                            <div class="spinner" style="width:36px; height:36px; margin:0 auto;"></div>
+                            <div class="spinner" style="width:36px; height:36px; margin:0 auto;" aria-hidden="true"></div>
                             <p style="font-size:0.8rem; font-weight:500; color:var(--color-text-dim); text-align:center; margin:0;"
                                 x-text="aiThinkingMsg"></p>
                         </div>
@@ -1327,7 +1333,7 @@
                                 @click="errorMsg=''; state='idle'">Dismiss</button>
                         </div>
 
-                        @if ($debate->mode === 'sparring' && ! $debate->adjudication)
+                        @if ($debate->mode->value === 'sparring' && ! $debate->adjudication)
                             {{-- End round: sparring has no fixed phases — the user ends it anytime --}}
                             <div style="padding:0.75rem; background:rgba(99,102,241,0.05); border:1px solid rgba(99,102,241,0.2); border-radius:var(--radius-lg); text-align:center;">
                                 <p style="font-size:0.72rem; color:var(--color-text-dim); margin-bottom:0.6rem; line-height:1.5;">
@@ -1352,7 +1358,7 @@
                     <p class="section-label" style="margin-bottom:0.5rem;">Match Info</p>
                     <div class="info-row"><span>Persona</span><span>{{ $debate->persona->name }}</span></div>
                     <div class="info-row"><span>Difficulty</span><span style="text-transform:capitalize;">{{ str_replace('_', ' ', $debate->difficulty) }}</span></div>
-                    <div class="info-row"><span>Format</span><span style="text-transform:capitalize;">{{ $debate->mode }}</span></div>
+                    <div class="info-row"><span>Format</span><span style="text-transform:capitalize;">{{ $debate->mode->value }}</span></div>
                     <div class="info-row"><span>Language</span><span style="text-transform:uppercase;">{{ $debate->language }}</span></div>
                 </div>
 
@@ -1429,6 +1435,21 @@
                         x-text="formatClock(podiumTimeLeft)" aria-hidden="true"></span>
                 </div>
 
+                {{-- F-11: End & Adjudicate button in Sparring mode — always
+                     visible in the dock (mobile) so it is reachable from
+                     both the transcript and the podium pane. --}}
+                @if ($debate->mode->value === 'sparring' && ! $debate->adjudication)
+                    <form action="{{ route('debates.adjudicate', $debate->id) }}" method="POST"
+                          style="margin:0; flex-shrink:0;">
+                        @csrf
+                        <button type="submit"
+                                class="btn btn-primary btn-sm"
+                                style="height:44px; padding:0 1rem; font-size:0.78rem; white-space:nowrap;"
+                                aria-label="End sparring round and get adjudication feedback">
+                            End &amp; Adjudicate
+                        </button>
+                    </form>
+                @else
                 {{-- The microphone. It is the one control the reader
                      has to reach, so it is a wide target at the edge
                      of the screen where a thumb already is. --}}
@@ -1454,6 +1475,7 @@
                     <span class="arena-dock-mic-label"
                         x-text="podiumState === 'recording' ? 'Stop' : 'Speak'"></span>
                 </button>
+                @endif
 
             </div>
         </div>
@@ -2332,7 +2354,13 @@
                         }
 
                         // ── AI TURN: render independently of STT result ────────────────
-                        if (data.ai_text) {
+                        if (data.ai_queued) {
+                            // Q-05: AI turn dispatched to queue — poll /state every 2 s until ready
+                            this.state = 'ai_thinking';
+                            this.aiThinkingMsg = `${cfg.personaName} is crafting a response…`;
+                            window.debateArena?.showAiThinking(this.aiThinkingMsg);
+                            this.pollForAiTurn(data);
+                        } else if (data.ai_text) {
                             // AI succeeded — show the thinking bubble, then the speech
                             this.state = 'ai_thinking';
                             this.aiThinkingMsg = `${cfg.personaName} is crafting a response…`;
@@ -2419,7 +2447,9 @@
                         });
                         const data = await res.json();
 
-                        if (data.ai_text) {
+                        if (data.ai_queued) {
+                            this.pollForAiTurn(data);
+                        } else if (data.ai_text) {
                             window.debateArena?.appendAiTurn(data, () => {
                                 // The server may have moved the debate
                                 // on. Follow it, the same way the normal
@@ -2492,12 +2522,15 @@
                         // bubble and hand the microphone back with no word of
                         // explanation, which is what a failed opening looked
                         // like on the page.
-                        const failed = !data.ai_text
-                            || data.error
-                            || data.errors
-                            || data.ai_error;
+                        if (data.ai_queued) {
+                            this.pollForAiTurn(data);
+                        } else {
+                            const failed = !data.ai_text
+                                || data.error
+                                || data.errors
+                                || data.ai_error;
 
-                        if (!failed) {
+                            if (!failed) {
                             window.debateArena?.appendAiTurn(data, () => {
                                 // The opponent may have just closed a
                                 // phase. When it did, the debate moved
@@ -2548,10 +2581,69 @@
                             this.state = 'idle';
                             this.showRetry = true;
                         }
+                        }
                     } catch (err) {
                         window.debateArena?.removeStatusBubbles();
                         this.errorMsg = 'Network error loading opponent response.';
                         this.state = 'idle';
+                    }
+                },
+
+                async pollForAiTurn(submitData, attempt = 0) {
+                    const MAX_ATTEMPTS = 30;
+                    const INTERVAL_MS  = 2000;
+
+                    if (attempt >= MAX_ATTEMPTS) {
+                        window.debateArena?.showAiError(
+                            'The opponent took too long to respond. Please retry.',
+                            () => this.retryAiGeneration()
+                        );
+                        this.state = 'idle';
+                        return;
+                    }
+
+                    await new Promise(r => setTimeout(r, INTERVAL_MS));
+
+                    try {
+                        const res  = await fetch(cfg.stateUrl, {
+                            headers: { 'Accept': 'application/json' }
+                        });
+                        const poll = await res.json();
+
+                        if (!poll.ai_ready) {
+                            this.pollForAiTurn(submitData, attempt + 1);
+                            return;
+                        }
+
+                        const aiData = {
+                            ...submitData,
+                            ai_text:      poll.ai_turn.transcript,
+                            ai_audio_url: poll.ai_turn.audio_url,
+                            ai_move_type: poll.ai_turn.ai_move_type,
+                        };
+
+                        window.debateArena?.appendAiTurn(aiData, () => {
+                            if (submitData.debate_complete) {
+                                setTimeout(() => location.reload(), 1500);
+                            } else if (submitData.round_complete && submitData.new_phase) {
+                                if (submitData.next_speaker === 'user') {
+                                    this.advancePhase(submitData.new_phase);
+                                    this.state = 'idle';
+                                    this.timeLeft = this.durationFor(cfg.currentPhase);
+                                } else {
+                                    this.advancePhase(submitData.new_phase);
+                                    this.state = 'ai_thinking';
+                                    this.aiThinkingMsg = `${cfg.personaName} is preparing their ${submitData.new_phase} speech…`;
+                                    window.debateArena?.showAiThinking(this.aiThinkingMsg);
+                                    this.triggerAiFirst();
+                                }
+                            } else {
+                                this.state = 'idle';
+                                this.timeLeft = this.durationFor(cfg.currentPhase);
+                            }
+                        });
+                    } catch (err) {
+                        this.pollForAiTurn(submitData, attempt + 1);
                     }
                 }
             };

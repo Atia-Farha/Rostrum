@@ -56,9 +56,9 @@ class PersonaVoiceTest extends TestCase
     public function test_the_bangla_voices_are_the_chosen_ones(): void
     {
         $expected = [
-            'Calm Logician'             => 'd532cgnzlrx7AWL3CD9i',
+            'Calm Logician' => 'd532cgnzlrx7AWL3CD9i',
             'Aggressive Cross-Examiner' => 'vvOYlSJHf8lTWIG4tDNP',
-            "Devil's Advocate"          => 'VizHiwkPO7hXc967v4tE',
+            "Devil's Advocate" => 'VizHiwkPO7hXc967v4tE',
         ];
 
         foreach ($expected as $name => $voiceId) {

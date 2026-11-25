@@ -1,10 +1,12 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Support;
 
 use App\Models\Adjudication;
 use App\Models\Debate;
-use Illuminate\Support\Collection;
+use Illuminate\Support\Str;
 
 /**
  * The analysis behind the adjudication report.
@@ -38,14 +40,14 @@ class ReportAnalysis
      */
     private const TAG_KINDS = [
         'STRENGTH' => 'strength',
-        'GOOD'     => 'strength',
-        'ISSUE'    => 'issue',
-        'WARNING'  => 'issue',
-        'WEAK'     => 'issue',
-        'TIP'      => 'tip',
-        'ADVICE'   => 'tip',
-        'DRILL'    => 'drill',
-        'NOTE'     => 'note',
+        'GOOD' => 'strength',
+        'ISSUE' => 'issue',
+        'WARNING' => 'issue',
+        'WEAK' => 'issue',
+        'TIP' => 'tip',
+        'ADVICE' => 'tip',
+        'DRILL' => 'drill',
+        'NOTE' => 'note',
     ];
 
     /**
@@ -63,10 +65,10 @@ class ReportAnalysis
      */
     private const KIND_LABELS = [
         'strength' => 'Strengths',
-        'issue'    => 'Areas to work on',
-        'tip'      => 'Recommendations',
-        'drill'    => 'Practice drill',
-        'note'     => 'Further notes',
+        'issue' => 'Areas to work on',
+        'tip' => 'Recommendations',
+        'drill' => 'Practice drill',
+        'note' => 'Further notes',
     ];
 
     /**
@@ -77,8 +79,7 @@ class ReportAnalysis
     public function __construct(
         private readonly Debate $debate,
         private readonly Adjudication $adjudication,
-    ) {
-    }
+    ) {}
 
     /**
      * The report's whole analysis, in one structure.
@@ -88,15 +89,15 @@ class ReportAnalysis
     public function toArray(): array
     {
         return [
-            'grade'      => $this->grade(),
-            'criteria'   => $this->criteria(),
-            'readout'    => $this->readout(),
-            'brief'      => $this->brief(),
-            'findings'   => $this->findings(),
-            'phases'     => $this->phases(),
-            'delivery'   => $this->delivery(),
+            'grade' => $this->grade(),
+            'criteria' => $this->criteria(),
+            'readout' => $this->readout(),
+            'brief' => $this->brief(),
+            'findings' => $this->findings(),
+            'phases' => $this->phases(),
+            'delivery' => $this->delivery(),
             'transcript' => $this->transcript(),
-            'ladder'     => $this->ladder(),
+            'ladder' => $this->ladder(),
         ];
     }
 
@@ -116,7 +117,7 @@ class ReportAnalysis
      */
     public function ladder(): array
     {
-        $total  = (int) $this->adjudication->total_score;
+        $total = (int) $this->adjudication->total_score;
         $grades = config('debate.rubric.grades', []);
 
         // The bands run from the top down, which is the order a ladder
@@ -127,20 +128,20 @@ class ReportAnalysis
 
         foreach ($sorted as $index => $grade) {
             $floor = (int) $grade['min'];
-            $ceil  = $index === 0 ? 100 : (int) $sorted[$index - 1]['min'];
+            $ceil = $index === 0 ? 100 : (int) $sorted[$index - 1]['min'];
 
             $rows[] = [
-                'label'    => $grade['label'] ?? 'Ungraded',
+                'label' => $grade['label'] ?? 'Ungraded',
                 'summary' => $grade['summary'] ?? '',
-                'floor'    => $floor,
-                'ceiling'  => $ceil,
-                'span'     => max(1, $ceil - $floor),
+                'floor' => $floor,
+                'ceiling' => $ceil,
+                'span' => max(1, $ceil - $floor),
                 // The band the mark falls in.
-                'current'  => $total >= $floor && $total < $ceil,
+                'current' => $total >= $floor && $total < $ceil,
                 // The mark is above this band — the band was surpassed.
-                'passed'   => $total >= $ceil,
+                'passed' => $total >= $ceil,
                 // The band is above the mark — it was not reached.
-                'ahead'    => $total < $floor,
+                'ahead' => $total < $floor,
                 // How far through this band the mark sits, as a
                 // percentage of the band's own range. For the band the
                 // mark is in, this is the mark's position inside it; for
@@ -152,7 +153,7 @@ class ReportAnalysis
                 // is. On the band above the mark this is the gap to
                 // close; on the band the mark is in it is how far past
                 // the floor it went.
-                'gap'      => max(0, $floor - $total),
+                'gap' => max(0, $floor - $total),
             ];
         }
 
@@ -185,9 +186,9 @@ class ReportAnalysis
      */
     public function brief(): array
     {
-        $grade    = $this->grade();
+        $grade = $this->grade();
         $criteria = $this->criteria();
-        $readout  = $this->readout();
+        $readout = $this->readout();
         $delivery = $this->delivery();
 
         if ($criteria === []) {
@@ -202,9 +203,9 @@ class ReportAnalysis
 
         // 1. What the mark means, in the rubric's own word for it.
         $lines[] = [
-            'kind'  => 'mark',
+            'kind' => 'mark',
             'label' => 'Your mark',
-            'text'  => sprintf(
+            'text' => sprintf(
                 'You scored %d out of 100 — %s. %s',
                 $grade['total'],
                 $grade['label'],
@@ -217,9 +218,9 @@ class ReportAnalysis
             $strongest = $readout['strongest'];
 
             $lines[] = [
-                'kind'  => 'strength',
+                'kind' => 'strength',
                 'label' => 'What worked',
-                'text'  => sprintf(
+                'text' => sprintf(
                     '%s scored highest at %d%% of the marks available for it. %s',
                     $this->subjectCriterion($strongest['label']),
                     (int) $strongest['percent'],
@@ -231,9 +232,9 @@ class ReportAnalysis
             $weakest = $readout['weakest'];
 
             $lines[] = [
-                'kind'  => 'weakness',
+                'kind' => 'weakness',
                 'label' => 'What cost you',
-                'text'  => sprintf(
+                'text' => sprintf(
                     '%s scored lowest at %d%%, leaving %d of the %d marks on the table.',
                     $this->subjectCriterion($weakest['label']),
                     (int) $weakest['percent'],
@@ -256,9 +257,9 @@ class ReportAnalysis
 
         if ($urgent !== null) {
             $lines[] = [
-                'kind'  => 'action',
+                'kind' => 'action',
                 'label' => 'Do this next',
-                'text'  => $urgent['phase'] !== null
+                'text' => $urgent['phase'] !== null
                     ? sprintf(
                         'Start with the %s. %s',
                         ucfirst($urgent['phase']),
@@ -268,25 +269,25 @@ class ReportAnalysis
             ];
         } elseif ($delivery['available'] && $delivery['fill'] !== null && $delivery['fill'] < 60) {
             $lines[] = [
-                'kind'  => 'action',
+                'kind' => 'action',
                 'label' => 'Do this next',
-                'text'  => 'Say more. You used only about '
-                    . (int) $delivery['fill']
-                    . '% of the time you were given, so there is material you have not yet put on the table.',
+                'text' => 'Say more. You used only about '
+                    .(int) $delivery['fill']
+                    .'% of the time you were given, so there is material you have not yet put on the table.',
             ];
         }
 
         return [
             'available' => true,
-            'lines'     => $lines,
+            'lines' => $lines,
             // The key to the two vocabularies in the rest of the
             // report. The reader meets an overall band (Strong, Pass)
             // and a criterion band (Solid, Adequate) in the same
             // document, and nothing on the page says how they relate.
             // One line here saves the reader from working it out.
-            'key'       => 'Two scales are used below. Your overall mark falls in a band — ' . $grade['label']
-                . '. Each criterion also falls in a band of its own. Every band is shown with the '
-                . 'points it starts at, so you can always see the line you reached and the line you did not.',
+            'key' => 'Two scales are used below. Your overall mark falls in a band — '.$grade['label']
+                .'. Each criterion also falls in a band of its own. Every band is shown with the '
+                .'points it starts at, so you can always see the line you reached and the line you did not.',
         ];
     }
 
@@ -299,10 +300,10 @@ class ReportAnalysis
     private function plainCriterion(string $label): string
     {
         return match ($label) {
-            'Matter'  => 'arguments and evidence',
-            'Manner'  => 'delivery',
-            'Method'  => 'structure and rebuttal',
-            default   => strtolower($label),
+            'Matter' => 'arguments and evidence',
+            'Manner' => 'delivery',
+            'Method' => 'structure and rebuttal',
+            default => strtolower($label),
         };
     }
 
@@ -316,10 +317,10 @@ class ReportAnalysis
     private function subjectCriterion(string $label): string
     {
         return match ($label) {
-            'Matter'  => 'Your arguments and evidence',
-            'Manner'  => 'Your delivery',
-            'Method'  => 'Your structure and rebuttal',
-            default   => 'Your ' . strtolower($label),
+            'Matter' => 'Your arguments and evidence',
+            'Manner' => 'Your delivery',
+            'Method' => 'Your structure and rebuttal',
+            default => 'Your '.strtolower($label),
         };
     }
 
@@ -337,7 +338,7 @@ class ReportAnalysis
         // trailing full stop so it can sit inside a larger sentence.
         $text = rtrim(trim($text), '.');
 
-        return $text === '' ? '' : $text . '.';
+        return $text === '' ? '' : $text.'.';
     }
 
     // -------------------------------------------------------------------------
@@ -375,7 +376,7 @@ class ReportAnalysis
         $ranked = collect($criteria)->sortByDesc(fn (array $c) => (int) $c['percent']);
 
         $strongest = $ranked->first();
-        $weakest   = $ranked->last();
+        $weakest = $ranked->last();
 
         $delivery = $this->delivery();
 
@@ -417,7 +418,7 @@ class ReportAnalysis
                 '%s was %d %s short of %s, on a criterion worth %d marks.',
                 $weakest['label'],
                 (int) $weakest['next_band']['gap'],
-                \Illuminate\Support\Str::plural('point', (int) $weakest['next_band']['gap']),
+                Str::plural('point', (int) $weakest['next_band']['gap']),
                 $weakest['next_band']['label'],
                 (int) $weakest['weight'],
             );
@@ -441,11 +442,11 @@ class ReportAnalysis
         }
 
         return [
-            'available'  => true,
-            'strongest'  => $strongest,
-            'weakest'    => $weakest,
-            'urgent'     => $urgent,
-            'sentences'  => $sentences,
+            'available' => true,
+            'strongest' => $strongest,
+            'weakest' => $weakest,
+            'urgent' => $urgent,
+            'sentences' => $sentences,
         ];
     }
 
@@ -461,7 +462,7 @@ class ReportAnalysis
      */
     public function grade(): array
     {
-        $total  = (int) $this->adjudication->total_score;
+        $total = (int) $this->adjudication->total_score;
         $grades = config('debate.rubric.grades', []);
 
         // The bands are listed from the top down, so the band is the
@@ -485,17 +486,17 @@ class ReportAnalysis
         }
 
         $band ??= [
-            'label'   => 'Ungraded',
+            'label' => 'Ungraded',
             'summary' => '',
         ];
 
         return [
-            'total'        => $total,
-            'label'        => $band['label'],
-            'summary'      => $band['summary'] ?? '',
-            'next_label'   => $next['label'] ?? null,
-            'next_at'      => $next['min'] ?? null,
-            'next_gap'     => $next ? $next['min'] - $total : null,
+            'total' => $total,
+            'label' => $band['label'],
+            'summary' => $band['summary'] ?? '',
+            'next_label' => $next['label'] ?? null,
+            'next_at' => $next['min'] ?? null,
+            'next_gap' => $next ? $next['min'] - $total : null,
         ];
     }
 
@@ -521,38 +522,38 @@ class ReportAnalysis
         $rows = [];
 
         foreach ($criteria as $key => $criterion) {
-            $score  = (int) $this->adjudication->{$key . '_score'};
+            $score = (int) $this->adjudication->{$key.'_score'};
             $weight = (int) ($criterion['weight'] ?? 0);
-            $pct    = $weight > 0 ? (int) round(($score / $weight) * 100) : 0;
+            $pct = $weight > 0 ? (int) round(($score / $weight) * 100) : 0;
 
             $band = $this->bandFor($criterion['bands'] ?? [], $score);
 
             $rows[] = [
-                'key'      => $key,
-                'label'    => $criterion['label'] ?? ucfirst((string) $key),
+                'key' => $key,
+                'label' => $criterion['label'] ?? ucfirst((string) $key),
                 // The same criterion in the language of the person who
                 // has to act on it. "Manner" is the judge's word;
                 // "delivery" is the one the reader uses.
-                'plain'    => $this->plainCriterion($criterion['label'] ?? ucfirst((string) $key)),
+                'plain' => $this->plainCriterion($criterion['label'] ?? ucfirst((string) $key)),
                 'question' => $criterion['question'] ?? '',
-                'score'    => $score,
-                'weight'   => $weight,
-                'percent'  => $pct,
-                'band'     => $band['label'] ?? '—',
-                'band_note'=> $band['note'] ?? '',
-                'meter'    => $weight > 0 ? max(0, min(100, $pct)) : 0,
+                'score' => $score,
+                'weight' => $weight,
+                'percent' => $pct,
+                'band' => $band['label'] ?? '—',
+                'band_note' => $band['note'] ?? '',
+                'meter' => $weight > 0 ? max(0, min(100, $pct)) : 0,
                 // The marks that were available and not taken. This is
                 // the number that says how much was on the table, which
                 // the percentage alone does not: a criterion worth 40
                 // can lose more points than one worth 30 at a higher
                 // percentage.
-                'left'     => max(0, $weight - $score),
+                'left' => max(0, $weight - $score),
                 // The criterion's own scale, with the band the score
                 // landed in marked. A reader who is told only that the
                 // score was "Solid" has to take the word on trust; a
                 // reader who can see that 34 was the line for
                 // "Excellent" can see how close the round came.
-                'ladder'   => $this->bandLadder($criterion['bands'] ?? [], $band),
+                'ladder' => $this->bandLadder($criterion['bands'] ?? [], $band),
                 // The band above this one, and how many points it was
                 // short by. A score with a "what now" attached to it
                 // tells the reader where to aim; a score on its own
@@ -604,9 +605,9 @@ class ReportAnalysis
 
         foreach ($bands as $band) {
             $rows[] = [
-                'label'   => $band['label'] ?? '',
-                'note'    => $band['note'] ?? '',
-                'min'     => (int) ($band['min'] ?? 0),
+                'label' => $band['label'] ?? '',
+                'note' => $band['note'] ?? '',
+                'min' => (int) ($band['min'] ?? 0),
                 'current' => $current !== null
                     && ($current['label'] ?? null) === ($band['label'] ?? null),
             ];
@@ -641,8 +642,8 @@ class ReportAnalysis
             if ((int) ($band['min'] ?? 0) > $score) {
                 return [
                     'label' => $band['label'] ?? '',
-                    'at'    => (int) ($band['min'] ?? 0),
-                    'gap'   => max(0, (int) ($band['min'] ?? 0) - $score),
+                    'at' => (int) ($band['min'] ?? 0),
+                    'gap' => max(0, (int) ($band['min'] ?? 0) - $score),
                 ];
             }
         }
@@ -684,7 +685,7 @@ class ReportAnalysis
             $last = array_pop($groups['tip']);
 
             $last['kind'] = 'drill';
-            $last['tag']  = $last['tag'] ?? 'DRILL';
+            $last['tag'] = $last['tag'] ?? 'DRILL';
 
             $groups['drill'][] = $last;
         }
@@ -697,7 +698,7 @@ class ReportAnalysis
             }
 
             $ordered[] = [
-                'kind'  => $kind,
+                'kind' => $kind,
                 'label' => self::KIND_LABELS[$kind],
                 'items' => $groups[$kind],
             ];
@@ -713,21 +714,21 @@ class ReportAnalysis
      */
     private function parseBullet(string $bullet, int $index): array
     {
-        $tag   = null;
-        $kind  = 'note';
+        $tag = null;
+        $kind = 'note';
         $clean = $bullet;
 
         // A leading [TAG] is the judge's own label for the finding.
         if (preg_match('/^\[([A-Z]+)\]\s*/u', $bullet, $matches) === 1) {
-            $tag   = $matches[1];
-            $kind  = self::TAG_KINDS[strtoupper($tag)] ?? 'note';
+            $tag = $matches[1];
+            $kind = self::TAG_KINDS[strtoupper($tag)] ?? 'note';
             $clean = ltrim(substr($bullet, strlen($matches[0])));
         }
 
         // The judge sometimes opens the finding with the words the
         // speaker used. Pulling the quote out lets the report set the
         // finding beside the speech it is about.
-        $quote      = $this->quoteIn($clean);
+        $quote = $this->quoteIn($clean);
         $quotePhase = $quote !== null ? $this->phaseOfQuote($quote) : null;
 
         // Whether the judge's sentence ended with a full stop. Lifting
@@ -759,7 +760,7 @@ class ReportAnalysis
 
         // The first letter is capitalised so a body that has had its
         // quote lifted out still reads as a sentence.
-        $clean = mb_strtoupper(mb_substr($clean, 0, 1)) . mb_substr($clean, 1);
+        $clean = mb_strtoupper(mb_substr($clean, 0, 1)).mb_substr($clean, 1);
 
         // The sentence is closed. A quote lifted out of the middle of
         // it took the full stop with it, so it is put back — but only
@@ -771,11 +772,11 @@ class ReportAnalysis
         return [
             'index' => $index,
             'number' => str_pad((string) ($index + 1), 2, '0', STR_PAD_LEFT),
-            'tag'   => $tag,
-            'kind'  => $kind,
+            'tag' => $tag,
+            'kind' => $kind,
             'phase' => $phase,
             'quote' => $quote,
-            'text'  => $clean,
+            'text' => $clean,
         ];
     }
 
@@ -791,8 +792,8 @@ class ReportAnalysis
     private function removeQuote(string $text, string $quote): string
     {
         $patterns = [
-            '/["“”]?' . preg_quote($quote, '/') . '["“”]?/u',
-            '/\b(?:the|your|his|her|their|its)\s+(?:["“”]?' . preg_quote($quote, '/') . '["“”]?)/ui',
+            '/["“”]?'.preg_quote($quote, '/').'["“”]?/u',
+            '/\b(?:the|your|his|her|their|its)\s+(?:["“”]?'.preg_quote($quote, '/').'["“”]?)/ui',
         ];
 
         foreach ($patterns as $pattern) {
@@ -803,7 +804,7 @@ class ReportAnalysis
         // the punctuation that used to sit next to it.
         $text = preg_replace('/\s{2,}/u', ' ', $text) ?? $text;
         $text = trim($text);
-        $text = ltrim($text, " \t\n\r—–-:,.;" );
+        $text = ltrim($text, " \t\n\r—–-:,.;");
         $text = rtrim($text, " \t\n\r—–-:.,;");
 
         return $text;
@@ -832,12 +833,12 @@ class ReportAnalysis
         foreach (self::PHASES as $phase) {
             $capitalised = ucfirst($phase);
 
-            if (preg_match('/\b' . $capitalised . '\b/', $text, $matches, PREG_OFFSET_CAPTURE) === 1) {
+            if (preg_match('/\b'.$capitalised.'\b/', $text, $matches, PREG_OFFSET_CAPTURE) === 1) {
                 $at = $matches[0][1];
 
                 if ($bestAt === null || $at < $bestAt) {
                     $bestAt = $at;
-                    $best   = $phase;
+                    $best = $phase;
                 }
             }
         }
@@ -946,39 +947,39 @@ class ReportAnalysis
             $phase = $round->phase ?? 'sparring';
 
             $userTurn = $round->turns->firstWhere('speaker', 'user');
-            $aiTurn   = $round->turns->firstWhere('speaker', 'ai');
+            $aiTurn = $round->turns->firstWhere('speaker', 'ai');
 
             $userWords = $userTurn ? $this->wordCount($userTurn->transcript) : 0;
-            $aiWords   = $aiTurn ? $this->wordCount($aiTurn->transcript) : 0;
+            $aiWords = $aiTurn ? $this->wordCount($aiTurn->transcript) : 0;
 
             $budget = (int) (config('debate.phase_duration')[$phase] ?? 0);
 
             $phases[] = [
-                'key'       => $phase,
-                'label'     => $this->phaseLabel($phase),
-                'order'     => (int) $round->phase_order,
-                'words'     => $userWords,
-                'ai_words'  => $aiWords,
-                'seconds'   => $this->estimateSeconds($userWords),
-                'budget'    => $budget,
+                'key' => $phase,
+                'label' => $this->phaseLabel($phase),
+                'order' => (int) $round->phase_order,
+                'words' => $userWords,
+                'ai_words' => $aiWords,
+                'seconds' => $this->estimateSeconds($userWords),
+                'budget' => $budget,
                 // The share of the budget used. It is not capped at a
                 // hundred: a phase that overran its time is reported
                 // as an overrun, and a hundred per cent would say the
                 // time was used exactly, which is the opposite.
-                'fill'      => $budget > 0
+                'fill' => $budget > 0
                     ? max(0, (int) round(($this->estimateSeconds($userWords) / $budget) * 100))
                     : null,
                 'transcript' => $userTurn?->transcript ?? '',
                 // The whole exchange, so a judge can see what the speech
                 // was answered against and not only the speech itself.
-                'turns'     => $round->turns->map(fn ($turn) => [
-                    'speaker'    => $turn->speaker,
-                    'side'       => $turn->speaker === 'user'
+                'turns' => $round->turns->map(fn ($turn) => [
+                    'speaker' => $turn->speaker,
+                    'side' => $turn->speaker === 'user'
                         ? ucfirst($this->debate->user_side)
                         : ucfirst($this->debate->aiSide()),
                     'transcript' => $turn->transcript,
-                    'excerpt'    => $this->excerpt($turn->transcript),
-                    'words'      => $this->wordCount($turn->transcript),
+                    'excerpt' => $this->excerpt($turn->transcript),
+                    'words' => $this->wordCount($turn->transcript),
                 ])->values()->all(),
             ];
         }
@@ -998,11 +999,11 @@ class ReportAnalysis
     private function phaseLabel(string $phase): string
     {
         return match ($phase) {
-            'opening'  => 'Opening',
+            'opening' => 'Opening',
             'rebuttal' => 'Rebuttal',
-            'closing'  => 'Closing',
+            'closing' => 'Closing',
             'sparring' => 'Sparring',
-            default    => ucfirst($phase),
+            default => ucfirst($phase),
         };
     }
 
@@ -1033,9 +1034,9 @@ class ReportAnalysis
         // claim and never punctuates it. Cut on a word boundary.
         if (mb_strlen($text) > 220) {
             $cut = mb_substr($text, 0, 220);
-            $at  = mb_strrpos($cut, ' ');
+            $at = mb_strrpos($cut, ' ');
 
-            return rtrim($at !== false ? mb_substr($cut, 0, $at) : $cut, ' ,;:') . '…';
+            return rtrim($at !== false ? mb_substr($cut, 0, $at) : $cut, ' ,;:').'…';
         }
 
         return $text;
@@ -1053,7 +1054,7 @@ class ReportAnalysis
      */
     private function phaseNote(array $phase): array
     {
-        $fill   = $phase['fill'];
+        $fill = $phase['fill'];
         $budget = $phase['budget'];
 
         if ($budget <= 0 || $fill === null) {
@@ -1066,23 +1067,23 @@ class ReportAnalysis
         // number supports: the speech was short, not that it did not
         // happen.
         $shortfall = match ($phase['key']) {
-            'opening'  => 'The case was left undeveloped — there was room on the clock for a mechanism and a warrant.',
+            'opening' => 'The case was left undeveloped — there was room on the clock for a mechanism and a warrant.',
             'rebuttal' => 'The answer to the opposition was left unfinished — there was room to take the case apart in full.',
-            'closing'  => 'The case was not landed — there was room on the clock for the last thing the House needed to hear.',
-            default    => 'There was material on the table that never reached the House.',
+            'closing' => 'The case was not landed — there was room on the clock for the last thing the House needed to hear.',
+            default => 'There was material on the table that never reached the House.',
         };
 
         $overrun = match ($phase['key']) {
-            'opening'  => 'The opening ran long, which leaves the rebuttal and the closing with less to work with.',
+            'opening' => 'The opening ran long, which leaves the rebuttal and the closing with less to work with.',
             'rebuttal' => 'The rebuttal ran long, which is time taken from the closing.',
-            'closing'  => 'The closing ran long, which usually means the case was not finished.',
-            default    => 'The speech ran past the time allowed for the phase.',
+            'closing' => 'The closing ran long, which usually means the case was not finished.',
+            default => 'The speech ran past the time allowed for the phase.',
         };
 
         return match (true) {
-            $fill < 55  => ['tone' => 'short', 'text' => $shortfall],
+            $fill < 55 => ['tone' => 'short', 'text' => $shortfall],
             $fill > 105 => ['tone' => 'long',  'text' => $overrun],
-            default     => ['tone' => 'ok',    'text' => 'The time allowed for this phase was used, without overrunning it.'],
+            default => ['tone' => 'ok',    'text' => 'The time allowed for this phase was used, without overrunning it.'],
         };
     }
 
@@ -1108,7 +1109,7 @@ class ReportAnalysis
         if ($budgeted->isEmpty()) {
             return [
                 'available' => false,
-                'phases'    => [],
+                'phases' => [],
             ];
         }
 
@@ -1116,30 +1117,30 @@ class ReportAnalysis
 
         foreach ($budgeted as $phase) {
             $rows[] = [
-                'key'     => $phase['key'],
-                'label'   => $phase['label'],
+                'key' => $phase['key'],
+                'label' => $phase['label'],
                 'seconds' => $phase['seconds'],
-                'budget'  => $phase['budget'],
-                'fill'    => $phase['fill'],
-                'short'   => $phase['fill'] !== null && $phase['fill'] < 55,
-                'long'    => $phase['fill'] !== null && $phase['fill'] > 105,
+                'budget' => $phase['budget'],
+                'fill' => $phase['fill'],
+                'short' => $phase['fill'] !== null && $phase['fill'] < 55,
+                'long' => $phase['fill'] !== null && $phase['fill'] > 105,
             ];
         }
 
         $totalWords = collect($phases)->sum('words');
-        $totalTime  = collect($phases)->sum('seconds');
+        $totalTime = collect($phases)->sum('seconds');
         $totalBudget = $budgeted->sum('budget');
 
         return [
-            'available'   => true,
-            'phases'      => $rows,
+            'available' => true,
+            'phases' => $rows,
             'total_words' => $totalWords,
-            'total_time'  => $totalTime,
-            'total_budget'=> $totalBudget,
-            'fill'        => $totalBudget > 0
+            'total_time' => $totalTime,
+            'total_budget' => $totalBudget,
+            'fill' => $totalBudget > 0
                 ? max(0, (int) round(($totalTime / $totalBudget) * 100))
                 : null,
-            'wpm'         => config('debate.words_per_minute', 140),
+            'wpm' => config('debate.words_per_minute', 140),
         ];
     }
 
@@ -1159,13 +1160,13 @@ class ReportAnalysis
         foreach ($this->debate->rounds as $round) {
             foreach ($round->turns as $turn) {
                 $rows[] = [
-                    'phase'      => $this->phaseLabel($round->phase ?? 'sparring'),
-                    'speaker'    => $turn->speaker,
-                    'side'       => $turn->speaker === 'user'
+                    'phase' => $this->phaseLabel($round->phase ?? 'sparring'),
+                    'speaker' => $turn->speaker,
+                    'side' => $turn->speaker === 'user'
                         ? ucfirst($this->debate->user_side)
                         : ucfirst($this->debate->aiSide()),
                     'transcript' => $turn->transcript,
-                    'words'      => $this->wordCount($turn->transcript),
+                    'words' => $this->wordCount($turn->transcript),
                 ];
             }
         }
@@ -1222,7 +1223,7 @@ class ReportAnalysis
     public static function duration(int $seconds): string
     {
         $minutes = intdiv($seconds, 60);
-        $rest    = $seconds % 60;
+        $rest = $seconds % 60;
 
         return sprintf('%d:%02d', $minutes, $rest);
     }

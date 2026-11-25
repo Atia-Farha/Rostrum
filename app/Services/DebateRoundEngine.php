@@ -8,7 +8,7 @@ use App\Models\Round;
 /**
  * Encapsulates Tournament Mode turn-order logic.
  *
- * Asian Parliamentary 1v1 adaptation (PRD §6.3, §13):
+ * Asian Parliamentary 1v1 adaptation:
  * - Opening:  Government speaks first.
  * - Rebuttal: Same order as Opening (Government first).
  * - Closing:  REVERSED — whoever spoke second in Opening speaks first.
@@ -27,8 +27,8 @@ class DebateRoundEngine
     public function seedFirstRound(Debate $debate): Round
     {
         return Round::create([
-            'debate_id'   => $debate->id,
-            'phase'       => 'opening',
+            'debate_id' => $debate->id,
+            'phase' => 'opening',
             'phase_order' => 1,
         ]);
     }
@@ -39,8 +39,8 @@ class DebateRoundEngine
     public function seedSparringRound(Debate $debate): Round
     {
         return Round::create([
-            'debate_id'   => $debate->id,
-            'phase'       => null,
+            'debate_id' => $debate->id,
+            'phase' => null,
             'phase_order' => 1,
         ]);
     }
@@ -72,8 +72,8 @@ class DebateRoundEngine
      */
     public function nextSpeaker(Debate $debate, Round $round): string
     {
-        $turnCount      = $round->turns()->count();
-        $firstSpeaker   = $this->firstSpeakerForPhase($debate, $round->phase ?? 'opening');
+        $turnCount = $round->turns()->count();
+        $firstSpeaker = $this->firstSpeakerForPhase($debate, $round->phase ?? 'opening');
 
         // Even turns (0-indexed): first speaker's turn. Odd turns: second speaker's turn.
         if ($turnCount % 2 === 0) {
@@ -110,7 +110,7 @@ class DebateRoundEngine
         }
 
         $currentIndex = array_search($latestRound->phase, self::PHASES, true);
-        $nextIndex    = $currentIndex + 1;
+        $nextIndex = $currentIndex + 1;
 
         if ($nextIndex >= count(self::PHASES)) {
             // All phases complete
@@ -118,8 +118,8 @@ class DebateRoundEngine
         }
 
         return Round::create([
-            'debate_id'   => $debate->id,
-            'phase'       => self::PHASES[$nextIndex],
+            'debate_id' => $debate->id,
+            'phase' => self::PHASES[$nextIndex],
             'phase_order' => $latestRound->phase_order + 1,
         ]);
     }
@@ -169,27 +169,27 @@ class DebateRoundEngine
     {
         $debate->load(['motion', 'persona', 'rounds.turns.rewrite']);
 
-        $currentRound  = $this->currentRound($debate);
-        $isComplete    = $this->isDebateComplete($debate);
-        $nextSpeaker   = $currentRound ? $this->nextSpeaker($debate, $currentRound) : null;
+        $currentRound = $this->currentRound($debate);
+        $isComplete = $this->isDebateComplete($debate);
+        $nextSpeaker = $currentRound ? $this->nextSpeaker($debate, $currentRound) : null;
 
         $phaseDurations = config('debate.phase_duration', [
-            'opening'  => 180,
+            'opening' => 180,
             'rebuttal' => 120,
-            'closing'  => 120,
+            'closing' => 120,
         ]);
 
         return [
-            'debate'        => $debate,
-            'currentRound'  => $currentRound,
-            'nextSpeaker'   => $nextSpeaker,
-            'isComplete'    => $isComplete,
-            'currentPhase'  => $debate->mode === 'sparring' ? 'sparring' : ($currentRound?->phase ?? 'opening'),
+            'debate' => $debate,
+            'currentRound' => $currentRound,
+            'nextSpeaker' => $nextSpeaker,
+            'isComplete' => $isComplete,
+            'currentPhase' => $debate->mode === 'sparring' ? 'sparring' : ($currentRound?->phase ?? 'opening'),
             'phaseDuration' => $currentRound
                 ? ($phaseDurations[$currentRound->phase] ?? 120)
                 : 0,
-            'rounds'        => $debate->rounds,
-            'phases'        => self::PHASES,
+            'rounds' => $debate->rounds,
+            'phases' => self::PHASES,
         ];
     }
 }

@@ -11,6 +11,7 @@ use App\Models\User;
 use App\Services\DebateRoundEngine;
 use Database\Seeders\PersonaSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Str;
 use Tests\TestCase;
 
 /**
@@ -43,22 +44,22 @@ class PhaseTimelineTest extends TestCase
     private function makeDebate(User $user, string $userSide = 'opposition'): Debate
     {
         $motion = Motion::create([
-            'text_en'  => 'This House believes that developed nations should pay financial reparations to developing countries for climate-related damages.',
-            'text_bn'  => 'এই সভা মনে করে যে উন্নয়নশীল দেশগুলোর জলবায়ু-সংক্রান্ত ক্ষতির জন্য উন্নয়নশীল দেশগুলোকে আর্থিক ক্ষতিপূরণ দিতে হবে।',
+            'text_en' => 'This House believes that developed nations should pay financial reparations to developing countries for climate-related damages.',
+            'text_bn' => 'এই সভা মনে করে যে উন্নয়নশীল দেশগুলোর জলবায়ু-সংক্রান্ত ক্ষতির জন্য উন্নয়নশীল দেশগুলোকে আর্থিক ক্ষতিপূরণ দিতে হবে।',
             'category' => 'Environment',
-            'source'   => 'manual',
+            'source' => 'manual',
         ]);
 
         $debate = Debate::create([
             'session_id' => 'session-'.uniqid(),
-            'user_id'    => $user->id,
-            'motion_id'  => $motion->id,
+            'user_id' => $user->id,
+            'motion_id' => $motion->id,
             'persona_id' => Persona::first()->id,
-            'user_side'  => $userSide,
+            'user_side' => $userSide,
             'difficulty' => 'intermediate',
-            'mode'       => 'tournament',
-            'language'   => 'en',
-            'status'     => 'in_progress',
+            'mode' => 'tournament',
+            'language' => 'en',
+            'status' => 'in_progress',
         ]);
 
         app(DebateRoundEngine::class)->seedFirstRound($debate);
@@ -80,7 +81,7 @@ class PhaseTimelineTest extends TestCase
      */
     public function test_the_timeline_steps_name_their_phase(): void
     {
-        $user   = User::factory()->create();
+        $user = User::factory()->create();
         $debate = $this->makeDebate($user);
 
         $html = $this->arenaHtml($debate, $user);
@@ -96,13 +97,13 @@ class PhaseTimelineTest extends TestCase
      */
     public function test_the_timeline_can_be_moved_without_a_reload(): void
     {
-        $user   = User::factory()->create();
+        $user = User::factory()->create();
         $debate = $this->makeDebate($user);
 
         $html = $this->arenaHtml($debate, $user);
 
         $this->assertStringContainsString('setActivePhase', $html);
-        $this->assertStringContainsString(".timeline-step[data-phase]", $html);
+        $this->assertStringContainsString('.timeline-step[data-phase]', $html);
     }
 
     /**
@@ -116,7 +117,7 @@ class PhaseTimelineTest extends TestCase
      */
     public function test_every_phase_advance_moves_the_timeline(): void
     {
-        $user   = User::factory()->create();
+        $user = User::factory()->create();
         $debate = $this->makeDebate($user);
 
         $html = $this->arenaHtml($debate, $user);
@@ -133,7 +134,7 @@ class PhaseTimelineTest extends TestCase
      */
     public function test_the_opponent_opening_a_phase_moves_the_timeline(): void
     {
-        $user   = User::factory()->create();
+        $user = User::factory()->create();
         $debate = $this->makeDebate($user);
 
         $html = $this->arenaHtml($debate, $user);
@@ -152,7 +153,7 @@ class PhaseTimelineTest extends TestCase
      */
     public function test_the_opponents_own_speech_can_end_a_phase_and_the_timeline_follows(): void
     {
-        $user   = User::factory()->create();
+        $user = User::factory()->create();
         $debate = $this->makeDebate($user);
 
         $html = $this->arenaHtml($debate, $user);
@@ -170,7 +171,7 @@ class PhaseTimelineTest extends TestCase
      */
     public function test_the_reader_opening_a_phase_no_longer_needs_a_reload(): void
     {
-        $user   = User::factory()->create();
+        $user = User::factory()->create();
         $debate = $this->makeDebate($user);
 
         $html = $this->arenaHtml($debate, $user);
@@ -187,7 +188,7 @@ class PhaseTimelineTest extends TestCase
      */
     public function test_a_phase_divider_is_added_when_the_phase_changes(): void
     {
-        $user   = User::factory()->create();
+        $user = User::factory()->create();
         $debate = $this->makeDebate($user);
 
         $html = $this->arenaHtml($debate, $user);
@@ -203,7 +204,7 @@ class PhaseTimelineTest extends TestCase
      */
     public function test_a_phase_is_never_divided_twice(): void
     {
-        $user   = User::factory()->create();
+        $user = User::factory()->create();
         $debate = $this->makeDebate($user);
 
         $html = $this->arenaHtml($debate, $user);
@@ -224,7 +225,7 @@ class PhaseTimelineTest extends TestCase
      */
     public function test_a_server_rendered_phase_is_not_announced_again(): void
     {
-        $user   = User::factory()->create();
+        $user = User::factory()->create();
         $debate = $this->makeDebate($user);
 
         // Give the debate a second phase, with a divider rendered for
@@ -243,7 +244,7 @@ class PhaseTimelineTest extends TestCase
      */
     public function test_the_phase_the_client_tracks_starts_on_the_servers_phase(): void
     {
-        $user   = User::factory()->create();
+        $user = User::factory()->create();
         $debate = $this->makeDebate($user);
 
         $html = $this->arenaHtml($debate, $user);
@@ -262,7 +263,7 @@ class PhaseTimelineTest extends TestCase
      */
     public function test_a_debate_can_advance_a_phase_without_the_page_reloading(): void
     {
-        $user   = User::factory()->create();
+        $user = User::factory()->create();
         $debate = $this->makeDebate($user);
         $engine = app(DebateRoundEngine::class);
 
@@ -270,16 +271,16 @@ class PhaseTimelineTest extends TestCase
         // phase is complete and the next one begins.
         $opening = $debate->rounds()->first();
         Turn::create([
-            'id'         => (string) \Illuminate\Support\Str::uuid(),
-            'round_id'   => $opening->id,
-            'speaker'    => 'ai',
+            'id' => (string) Str::uuid(),
+            'round_id' => $opening->id,
+            'speaker' => 'ai',
             'transcript' => 'The Government opens the debate.',
             'audio_path' => null,
         ]);
         Turn::create([
-            'id'         => (string) \Illuminate\Support\Str::uuid(),
-            'round_id'   => $opening->id,
-            'speaker'    => 'user',
+            'id' => (string) Str::uuid(),
+            'round_id' => $opening->id,
+            'speaker' => 'user',
             'transcript' => 'The Opposition responds.',
             'audio_path' => null,
         ]);

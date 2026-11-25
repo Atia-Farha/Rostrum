@@ -205,7 +205,7 @@
                                 : route('debates.show', $debate->id);
                         @endphp
 
-                        <tr data-mode="{{ $debate->mode }}"
+                        <tr data-mode="{{ $debate->mode->value }}"
                             data-status="{{ $adj ? 'adjudicated' : 'in_progress' }}"
                             data-motion="{{ $motionText }}"
                             data-score="{{ $adj ? $adj->total_score : '' }}"
@@ -219,7 +219,7 @@
                                      not to its name. A tag rather than a
                                      column, so the motion keeps the room. --}}
                                 <span class="surf-record-meta">
-                                    <span class="surf-tag">{{ ucfirst($debate->mode) }}</span>
+                                    <span class="surf-tag">{{ ucfirst($debate->mode->value) }}</span>
                                     <span class="surf-tag">{{ ucfirst($debate->user_side) }}</span>
                                     <span class="surf-tag">{{ ucfirst(str_replace('_', ' ', $debate->difficulty)) }}</span>
 

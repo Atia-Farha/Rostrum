@@ -1,10 +1,10 @@
-# Rostrum — AI Debate Training Platform
+# Rostrum
 
-![Built for YUNET AIGNITE BUILDATHON 2026](/public/Built-for-AIgnite-2026.png)
+> AI Debate Training Platform
 
 ## Table of Contents
 
-- [Rostrum — AI Debate Training Platform](#rostrum--ai-debate-training-platform)
+- [Rostrum](#rostrum)
 	- [Table of Contents](#table-of-contents)
 	- [Live Demo Link](#live-demo-link)
 		- [Demo Account](#demo-account)
@@ -652,7 +652,7 @@ stateDiagram-v2
 |---|---|
 | Backend | Laravel 13, PHP 8.3+ (Docker image runs 8.4) |
 | Frontend | Blade, Tailwind CSS v4 (Vite), Alpine.js (bundled via Vite, with a CDN fallback if the bundle fails to load) |
-| Database | SQLite (portable, hackathon-ready) |
+| Database | SQLite (portable) |
 | Auth | Laravel session guard + `DebatePolicy` (no third-party auth provider) |
 | AI | Gemini 3.6 Flash via Google AI Studio REST API |
 | Voice AI | ElevenLabs Scribe v1 (STT) + TTS (3 personas × 2 languages) |
@@ -850,5 +850,3 @@ All IDs are UUIDs (`HasUuids`) except `users` (auto-increment). All child tables
 
 ## Author
 Developed by [Atia Farha](https://github.com/atia-farha).
-
-> See [rostrum-prd.md](rostrum-prd.md) for the full product specification document.

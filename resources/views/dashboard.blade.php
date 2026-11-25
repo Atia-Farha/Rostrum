@@ -350,7 +350,7 @@
                                          a fifth column squeezed the
                                          record's own name into a
                                          two-word gutter. --}}
-                                    <span class="surf-cell-sub">{{ ucfirst($debate->mode) }}</span>
+                                    <span class="surf-cell-sub">{{ ucfirst($debate->mode->value) }}</span>
                                 </td>
                                 <td data-label="Opponent" class="col-person">{{ $debate->persona->name }}</td>
                                 <td data-label="Date" class="col-date">{{ $debate->created_at->format('d M Y') }}</td>

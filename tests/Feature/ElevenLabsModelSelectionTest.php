@@ -34,10 +34,10 @@ class ElevenLabsModelSelectionTest extends TestCase
     private function clonedVoiceMetadata(string $voiceId = 'd532cgnzlrx7AWL3CD9i'): array
     {
         return [
-            'voice_id'  => $voiceId,
-            'name'      => 'Fahad Mir - Casual',
-            'category'  => 'professional',
-            'labels'    => ['language' => 'bn', 'gender' => 'male'],
+            'voice_id' => $voiceId,
+            'name' => 'Fahad Mir - Casual',
+            'category' => 'professional',
+            'labels' => ['language' => 'bn', 'gender' => 'male'],
             'high_quality_base_model_ids' => [
                 'eleven_v4',
                 'eleven_v4_hq',
@@ -133,7 +133,7 @@ class ElevenLabsModelSelectionTest extends TestCase
 
         $name = $service->synthesize('আমি একটি উদাহরণ।', 'd532cgnzlrx7AWL3CD9i', 'bn');
 
-        $this->assertFileExists(storage_path('app/private/audio/' . $name));
+        $this->assertFileExists(storage_path('app/private/audio/'.$name));
 
         // Two synthesis requests: the denied model, then the next one.
         $ttsRequests = Http::recorded(fn ($request) => str_contains($request->url(), '/text-to-speech/'));

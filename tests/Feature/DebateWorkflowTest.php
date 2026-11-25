@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Enums\DebateMode;
 use App\Models\Debate;
 use App\Models\Persona;
 use App\Models\User;
@@ -39,15 +40,15 @@ class DebateWorkflowTest extends TestCase
     public function test_debate_creation_stores_models_and_seeds_first_round(): void
     {
         $persona = Persona::first();
-        $user    = User::factory()->create();
+        $user = User::factory()->create();
 
         $response = $this->actingAs($user)->post('/debates', [
             'motion_text' => 'This House believes social media does more harm than good.',
-            'user_side'   => 'government',
-            'persona_id'  => $persona->id,
-            'difficulty'  => 'intermediate',
-            'mode'        => 'tournament',
-            'language'    => 'en',
+            'user_side' => 'government',
+            'persona_id' => $persona->id,
+            'difficulty' => 'intermediate',
+            'mode' => 'tournament',
+            'language' => 'en',
         ]);
 
         $this->assertDatabaseHas('motions', [
@@ -60,9 +61,9 @@ class DebateWorkflowTest extends TestCase
         $this->assertEquals('intermediate', $debate->difficulty);
         $this->assertEquals($user->id, $debate->user_id);
 
-        $response->assertRedirect('/debates/' . $debate->id);
+        $response->assertRedirect('/debates/'.$debate->id);
 
-        $debateResponse = $this->actingAs($user)->get('/debates/' . $debate->id);
+        $debateResponse = $this->actingAs($user)->get('/debates/'.$debate->id);
         $debateResponse->assertStatus(200);
         $debateResponse->assertSee('Opening');
     }
@@ -70,27 +71,27 @@ class DebateWorkflowTest extends TestCase
     public function test_sparring_debate_renders_end_round_without_phases(): void
     {
         $persona = Persona::first();
-        $user    = User::factory()->create();
+        $user = User::factory()->create();
 
         $this->actingAs($user)->post('/debates', [
             'motion_text' => 'This House would legalize ride-sharing apps.',
-            'user_side'   => 'opposition',
-            'persona_id'  => $persona->id,
-            'difficulty'  => 'beginner',
-            'mode'        => 'sparring',
-            'language'    => 'en',
+            'user_side' => 'opposition',
+            'persona_id' => $persona->id,
+            'difficulty' => 'beginner',
+            'mode' => 'sparring',
+            'language' => 'en',
         ]);
 
         $debate = Debate::first();
         $this->assertNotNull($debate);
-        $this->assertEquals('sparring', $debate->mode);
+        $this->assertEquals(DebateMode::Sparring, $debate->mode);
 
         $this->assertDatabaseHas('rounds', [
             'debate_id' => $debate->id,
-            'phase'     => null,
+            'phase' => null,
         ]);
 
-        $debateResponse = $this->actingAs($user)->get('/debates/' . $debate->id);
+        $debateResponse = $this->actingAs($user)->get('/debates/'.$debate->id);
         $debateResponse->assertStatus(200);
         $debateResponse->assertSee('End Round &amp; Get Feedback', false);
         $debateResponse->assertSee('No fixed phases here');
@@ -99,15 +100,15 @@ class DebateWorkflowTest extends TestCase
     public function test_mixed_language_is_rejected(): void
     {
         $persona = Persona::first();
-        $user    = User::factory()->create();
+        $user = User::factory()->create();
 
         $this->actingAs($user)->post('/debates', [
             'motion_text' => 'This House believes X.',
-            'user_side'   => 'government',
-            'persona_id'  => $persona->id,
-            'difficulty'  => 'beginner',
-            'mode'        => 'tournament',
-            'language'    => 'mixed',
+            'user_side' => 'government',
+            'persona_id' => $persona->id,
+            'difficulty' => 'beginner',
+            'mode' => 'tournament',
+            'language' => 'mixed',
         ])->assertSessionHasErrors('language');
 
         $this->assertDatabaseMissing('debates', [

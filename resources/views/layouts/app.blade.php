@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#070910">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', 'Rostrum')</title>
     <meta name="description" content="@yield('meta_description', 'Practice competitive debate against an AI opponent in English or Bangla. Get expert adjudication and argument coaching.')">
@@ -108,6 +109,8 @@
     {{-- Global Toast Notification System --}}
     <div x-data="toastSystem()"
          @show-toast.window="add($event.detail)"
+         aria-live="polite"
+         aria-atomic="true"
          class="toast-container"
          style="position: fixed !important; bottom: 1.5rem !important; right: 1.5rem !important; top: auto !important; left: auto !important; z-index: 99999 !important; display: flex !important; flex-direction: column !important; align-items: flex-end !important; gap: 0.6rem !important; max-width: 380px !important; width: calc(100% - 3rem) !important; pointer-events: none !important;">
 
@@ -322,7 +325,7 @@
 
     </script>
 
-    <main id="main-content" aria-label="Main content">
+    <main id="main-content" aria-label="Main content" tabindex="-1">
         @yield('content')
     </main>
 

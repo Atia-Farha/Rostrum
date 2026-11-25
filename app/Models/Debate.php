@@ -1,14 +1,20 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Models;
 
+use App\Enums\DebateMode;
+use App\Enums\DebateStatus;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Support\Collection;
 
-class Debate extends Model
+final class Debate extends Model
 {
     use HasUuids;
 
@@ -23,6 +29,11 @@ class Debate extends Model
         'mode',
         'language',
         'status',
+    ];
+
+    protected $casts = [
+        'status' => DebateStatus::class,
+        'mode' => DebateMode::class,
     ];
 
     public function motion(): BelongsTo
@@ -62,19 +73,69 @@ class Debate extends Model
         return $this->user_side === 'government' ? 'opposition' : 'government';
     }
 
+    // ── Scopes ───────────────────────────────────────────────────────────────
+
+    /**
+     * Only debates that belong to a specific user.
+     */
+    public function scopeForUser(Builder $query, int|string $userId): Builder
+    {
+        return $query->where('user_id', $userId);
+    }
+
+    /**
+     * Only debates that have been adjudicated (have a report).
+     */
+    public function scopeAdjudicated(Builder $query): Builder
+    {
+        return $query->whereHas('adjudication');
+    }
+
+    /**
+     * Only debates still in progress (no adjudication yet).
+     */
+    public function scopeInProgress(Builder $query): Builder
+    {
+        return $query->whereDoesntHave('adjudication');
+    }
+
+    // ── Accessors / Methods ───────────────────────────────────────────────────
+
     /**
      * Returns all turns across all rounds, ordered chronologically.
      *
-     * The ordering is by round, then by time, then by id. Turns in one
-     * round are often written within the same second — the user speaks
-     * and the AI answers immediately — and ordering only by created_at
+     * When rounds are already eager-loaded (via `load('rounds.turns')`),
+     * this method leverages the in-memory collection to avoid extra queries.
+     * Otherwise it falls back to a single indexed query.
+     *
+     * The ordering is by round phase_order, then by created_at, then by id.
+     * Turns in one round are often written within the same second — the user
+     * speaks and the AI answers immediately — and ordering only by created_at
      * leaves the database free to return those two in either order. A
-     * transcript that puts the AI's answer before the speech it was
-     * answering is worse than useless: it teaches the model that the
-     * opponent replies to things nobody has said yet.
+     * transcript that puts the AI's answer before the speech it was answering
+     * is worse than useless: it teaches the model that the opponent replies
+     * to things nobody has said yet.
+     *
+     * @return Collection<int, Turn>
      */
-    public function allTurns()
+    public function allTurns(): Collection
     {
+        // If rounds are already loaded (the common case after buildViewState),
+        // flatten them in memory instead of issuing a new query.
+        if ($this->relationLoaded('rounds')) {
+            return $this->rounds
+                ->flatMap(fn (Round $round) => $round->relationLoaded('turns')
+                    ? $round->turns
+                    : $round->turns()->get()
+                )
+                ->sortBy(fn (Turn $turn) => [
+                    (int) ($turn->round?->phase_order ?? 0),
+                    (string) $turn->created_at,
+                    (string) $turn->id,
+                ])
+                ->values();
+        }
+
         return Turn::query()
             ->whereIn('round_id', $this->rounds()->pluck('id'))
             ->with('round')
@@ -112,7 +173,7 @@ class Debate extends Model
                 : $this->sideLabel($this->aiSide());
 
             $phaseLabel = $turn->round?->phase
-                ? '[' . strtoupper($turn->round->phase) . ' PHASE] '
+                ? '['.strtoupper($turn->round->phase).' PHASE] '
                 : '';
 
             $lines[] = "{$phaseLabel}{$speaker}: {$turn->transcript}";

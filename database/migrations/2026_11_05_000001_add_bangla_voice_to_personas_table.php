@@ -34,9 +34,9 @@ return new class extends Migration
      * library, chosen to match the character each persona argues in.
      */
     private const BANGLA_VOICES = [
-        'Calm Logician'             => 'd532cgnzlrx7AWL3CD9i', // Fahad Mir - Casual
+        'Calm Logician' => 'd532cgnzlrx7AWL3CD9i', // Fahad Mir - Casual
         'Aggressive Cross-Examiner' => 'vvOYlSJHf8lTWIG4tDNP', // Rayhan - Engaging & Excitement
-        "Devil's Advocate"          => 'VizHiwkPO7hXc967v4tE', // Rakib - Deep, Authoritative
+        "Devil's Advocate" => 'VizHiwkPO7hXc967v4tE', // Rakib - Deep, Authoritative
     ];
 
     public function up(): void

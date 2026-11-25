@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers;
 
 use App\Models\Debate;
@@ -9,12 +11,13 @@ use App\Services\DebateRoundEngine;
 use App\Services\GeminiService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
 class SetupController extends Controller
 {
     public function __construct(
-        private GeminiService    $gemini,
+        private GeminiService $gemini,
         private DebateRoundEngine $engine,
     ) {}
 
@@ -23,7 +26,7 @@ class SetupController extends Controller
      */
     public function index(Request $request)
     {
-        $personas   = Persona::all();
+        $personas = Persona::all();
         $categories = config('debate.motion_categories', []);
 
         return view('setup', compact('personas', 'categories'));
@@ -48,7 +51,7 @@ class SetupController extends Controller
                 $request->input('category')
             );
         } catch (\Exception $e) {
-            \Illuminate\Support\Facades\Log::error('Motion generation failed in SetupController: ' . $e->getMessage());
+            Log::error('Motion generation failed in SetupController: '.$e->getMessage());
             // Fallback sample motions if API quota/limit is exceeded or fails
             $fallbacks = [
                 'en' => [
@@ -64,7 +67,7 @@ class SetupController extends Controller
                     'এই সভা মনে করে যে রাষ্ট্রের উন্নয়নের জন্য ব্যক্তিগত গোপনীয়তাকে অগ্রাধিকার দেওয়া উচিত।',
                 ],
             ];
-            $options    = $fallbacks[$geminiLang] ?? $fallbacks['en'];
+            $options = $fallbacks[$geminiLang] ?? $fallbacks['en'];
             $motionText = $options[array_rand($options)];
         }
 
@@ -78,12 +81,12 @@ class SetupController extends Controller
     {
         $request->validate([
             'motion_text' => 'required_without:motion_id|nullable|string|max:500',
-            'motion_id'   => 'required_without:motion_text|nullable|uuid|exists:motions,id',
-            'user_side'   => 'required|in:government,opposition,auto',
-            'persona_id'  => 'required|uuid|exists:personas,id',
-            'difficulty'  => 'required|in:beginner,intermediate,advanced,world_champion',
-            'mode'        => 'nullable|in:tournament,sparring',
-            'language'    => 'required|in:en,bn',
+            'motion_id' => 'required_without:motion_text|nullable|uuid|exists:motions,id',
+            'user_side' => 'required|in:government,opposition,auto',
+            'persona_id' => 'required|uuid|exists:personas,id',
+            'difficulty' => 'required|in:beginner,intermediate,advanced,world_champion',
+            'mode' => 'nullable|in:tournament,sparring',
+            'language' => 'required|in:en,bn',
         ]);
 
         $language = $request->input('language');
@@ -97,10 +100,10 @@ class SetupController extends Controller
             $hasBangla = (bool) preg_match('/[\x{0980}-\x{09FF}]/u', $motionText);
 
             $motion = Motion::create([
-                'id'       => (string) Str::uuid(),
-                'text_en'  => (!$hasBangla && $language === 'en') ? $motionText : null,
-                'text_bn'  => ($hasBangla || $language === 'bn') ? $motionText : null,
-                'source'   => 'manual',
+                'id' => (string) Str::uuid(),
+                'text_en' => (! $hasBangla && $language === 'en') ? $motionText : null,
+                'text_bn' => ($hasBangla || $language === 'bn') ? $motionText : null,
+                'source' => 'manual',
             ]);
         }
 
@@ -117,16 +120,16 @@ class SetupController extends Controller
             // always exists; the session id is still stored so the debate
             // can be attributed to the browser that started it.
             $debate = Debate::create([
-                'id'         => (string) Str::uuid(),
+                'id' => (string) Str::uuid(),
                 'session_id' => $request->session()->getId(),
-                'user_id'    => $request->user()->id,
-                'motion_id'  => $motion->id,
-                'user_side'  => $userSide,
+                'user_id' => $request->user()->id,
+                'motion_id' => $motion->id,
+                'user_side' => $userSide,
                 'persona_id' => $request->input('persona_id'),
                 'difficulty' => $request->input('difficulty', 'beginner'),
-                'mode'       => $mode,
-                'language'   => $language,
-                'status'     => 'in_progress',
+                'mode' => $mode,
+                'language' => $language,
+                'status' => 'in_progress',
             ]);
 
             // Seed the first round
@@ -136,7 +139,8 @@ class SetupController extends Controller
                 $this->engine->seedSparringRound($debate);
             }
         } catch (\Exception $e) {
-            \Illuminate\Support\Facades\Log::error('Debate creation failed: ' . $e->getMessage());
+            Log::error('Debate creation failed: '.$e->getMessage());
+
             return back()
                 ->withInput()
                 ->with('error', 'Could not start the debate right now. Please try again.');

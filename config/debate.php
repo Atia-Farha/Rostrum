@@ -47,9 +47,9 @@ return [
     |--------------------------------------------------------------------------
     */
     'phase_duration' => [
-        'opening'  => 180, // 3 min
+        'opening' => 180, // 3 min
         'rebuttal' => 120, // 2 min
-        'closing'  => 120, // 2 min
+        'closing' => 120, // 2 min
     ],
 
     /*
@@ -68,18 +68,18 @@ return [
     */
     'ai_word_count' => [
         // Phase-level fallbacks.
-        'opening'  => '150–220',
+        'opening' => '150–220',
         'rebuttal' => '100–160',
-        'closing'  => '100–160',
+        'closing' => '100–160',
         'sparring' => '100–160',
 
         // Slot-level, keyed "{phase}.{first|second}".
-        'opening.first'   => '150–220',
-        'opening.second'  => '110–170',
-        'rebuttal.first'  => '110–170',
+        'opening.first' => '150–220',
+        'opening.second' => '110–170',
+        'rebuttal.first' => '110–170',
         'rebuttal.second' => '100–160',
-        'closing.first'   => '100–160',
-        'closing.second'  => '90–140',
+        'closing.first' => '100–160',
+        'closing.second' => '90–140',
     ],
 
     /*
@@ -234,10 +234,10 @@ return [
     'rubric' => [
         'criteria' => [
             'matter' => [
-                'label'    => 'Matter',
+                'label' => 'Matter',
                 'question' => 'Quality, relevance and logical soundness of arguments and evidence',
-                'weight'   => 40,
-                'bands'    => [
+                'weight' => 40,
+                'bands' => [
                     ['min' => 34, 'label' => 'Excellent',   'note' => 'Well-evidenced, causally sound and directly on the motion.'],
                     ['min' => 27, 'label' => 'Solid',       'note' => 'Substantive argument with real evidence; the reasoning largely holds.'],
                     ['min' => 20, 'label' => 'Adequate',    'note' => 'The case is made, but links or evidence are thin in places.'],
@@ -246,10 +246,10 @@ return [
                 ],
             ],
             'manner' => [
-                'label'    => 'Manner',
+                'label' => 'Manner',
                 'question' => 'Persuasiveness, clarity and rhetorical delivery',
-                'weight'   => 30,
-                'bands'    => [
+                'weight' => 30,
+                'bands' => [
                     ['min' => 26, 'label' => 'Excellent',   'note' => 'Commanding and clear; the framing carries the speech.'],
                     ['min' => 21, 'label' => 'Solid',       'note' => 'Confident and readable, with a consistent through-line.'],
                     ['min' => 15, 'label' => 'Adequate',    'note' => 'Clear enough to follow, though the delivery is flat in places.'],
@@ -258,10 +258,10 @@ return [
                 ],
             ],
             'method' => [
-                'label'    => 'Method',
+                'label' => 'Method',
                 'question' => 'Structure, organisation and how directly the speaker rebutted',
-                'weight'   => 30,
-                'bands'    => [
+                'weight' => 30,
+                'bands' => [
                     ['min' => 26, 'label' => 'Excellent',   'note' => 'Structured, signposted and every point answers the opponent.'],
                     ['min' => 21, 'label' => 'Solid',       'note' => 'Well ordered, with the rebuttals landing where they should.'],
                     ['min' => 15, 'label' => 'Adequate',    'note' => 'The shape is sound but the case is not pushed far enough.'],
@@ -367,8 +367,8 @@ return [
     | never ship the default password on a public deployment.
     |--------------------------------------------------------------------------
     */
-    'seed_account_name'     => env('SEED_ACCOUNT_NAME', 'Demo Debater'),
-    'seed_account_email'    => env('SEED_ACCOUNT_EMAIL', 'demo@rostrum.app'),
+    'seed_account_name' => env('SEED_ACCOUNT_NAME', 'Demo Debater'),
+    'seed_account_email' => env('SEED_ACCOUNT_EMAIL', 'demo@rostrum.app'),
     'seed_account_password' => env('SEED_ACCOUNT_PASSWORD', 'rostrum-demo'),
 
     /*
@@ -407,39 +407,39 @@ return [
 
         'en' => [
             'government' => [
-                'role'      => 'the Government team',
-                'short'     => 'Government',
-                'first'     => 'the Government team',
-                'self'      => 'our side',
-                'opponent'  => 'the Opposition team',
-                'opposing'  => 'the Opposition team',
+                'role' => 'the Government team',
+                'short' => 'Government',
+                'first' => 'the Government team',
+                'self' => 'our side',
+                'opponent' => 'the Opposition team',
+                'opposing' => 'the Opposition team',
             ],
             'opposition' => [
-                'role'      => 'the Opposition team',
-                'short'     => 'Opposition',
-                'first'     => 'the Opposition team',
-                'self'      => 'our side',
-                'opponent'  => 'the Government team',
-                'opposing'  => 'the Government team',
+                'role' => 'the Opposition team',
+                'short' => 'Opposition',
+                'first' => 'the Opposition team',
+                'self' => 'our side',
+                'opponent' => 'the Government team',
+                'opposing' => 'the Government team',
             ],
         ],
 
         'bn' => [
             'government' => [
-                'role'      => 'সরকার দল',
-                'short'     => 'সরকার দল',
-                'first'     => 'সরকার দল',
-                'self'      => 'আমাদের পক্ষ',
-                'opponent'  => 'বিরোধী দল',
-                'opposing'  => 'বিরোধী দল',
+                'role' => 'সরকার দল',
+                'short' => 'সরকার দল',
+                'first' => 'সরকার দল',
+                'self' => 'আমাদের পক্ষ',
+                'opponent' => 'বিরোধী দল',
+                'opposing' => 'বিরোধী দল',
             ],
             'opposition' => [
-                'role'      => 'বিরোধী দল',
-                'short'     => 'বিরোধী দল',
-                'first'     => 'বিরোধী দল',
-                'self'      => 'আমাদের পক্ষ',
-                'opponent'  => 'সরকার দল',
-                'opposing'  => 'সরকার দল',
+                'role' => 'বিরোধী দল',
+                'short' => 'বিরোধী দল',
+                'first' => 'বিরোধী দল',
+                'self' => 'আমাদের পক্ষ',
+                'opponent' => 'সরকার দল',
+                'opposing' => 'সরকার দল',
             ],
         ],
 
@@ -458,7 +458,7 @@ return [
     | speech, and the second one is the one a debater would understand.
     */
     'phase_purposes' => [
-        'opening'  => 'the phase in which both sides build their case from the ground up, before any clash',
+        'opening' => 'the phase in which both sides build their case from the ground up, before any clash',
         'rebuttal' => 'the phase in which the two cases are put directly against each other',
         // The closing phase holds two speeches with two different jobs.
         // Describing it as "the phase in which a verdict is reached"
@@ -466,7 +466,7 @@ return [
         // delivers a verdict, and it delivered one. The phase only
         // decides the round at its very end, in the Government's
         // final reply.
-        'closing'  => 'the phase in which the two sides answer each other for the last time before the round is decided — the Opposition replies first, and only the Government\'s final reply in this phase decides the round',
+        'closing' => 'the phase in which the two sides answer each other for the last time before the round is decided — the Opposition replies first, and only the Government\'s final reply in this phase decides the round',
         'sparring' => 'a free practice exchange with no fixed phases and no fixed speeches',
     ],
 
@@ -497,10 +497,10 @@ return [
     | the speech where it belongs.
     */
     'move_type_tags' => [
-        'FOLLOW-UP'   => 'follow_up',
+        'FOLLOW-UP' => 'follow_up',
         'CONTRADICTION' => 'contradiction',
-        'CHALLENGE'   => 'challenge',
-        'REBUTTAL'    => 'rebuttal',
+        'CHALLENGE' => 'challenge',
+        'REBUTTAL' => 'rebuttal',
     ],
 
 ];

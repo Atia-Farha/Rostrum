@@ -37,35 +37,35 @@ class DashboardRenderTest extends TestCase
     private function makeDebate(User $user, bool $scored = false): Debate
     {
         $motion = Motion::create([
-            'text_en'   => 'This House believes that open-sourced AI should be regulated.',
-            'text_bn'   => 'এই সভা মনে করে যে ওপেন-সোর্সড এআই নিয়ন্ত্রণ করা উচিত।',
-            'category'  => 'Technology',
-            'source'    => 'manual',
+            'text_en' => 'This House believes that open-sourced AI should be regulated.',
+            'text_bn' => 'এই সভা মনে করে যে ওপেন-সোর্সড এআই নিয়ন্ত্রণ করা উচিত।',
+            'category' => 'Technology',
+            'source' => 'manual',
         ]);
 
         $debate = Debate::create([
-            'session_id'   => 'session-'.uniqid(),
-            'user_id'      => $user->id,
-            'motion_id'    => $motion->id,
-            'persona_id'   => Persona::first()->id,
-            'user_side'    => 'government',
-            'difficulty'   => 'advanced',
-            'mode'         => 'tournament',
-            'language'     => 'en',
-            'status'       => $scored ? 'adjudicated' : 'in_progress',
+            'session_id' => 'session-'.uniqid(),
+            'user_id' => $user->id,
+            'motion_id' => $motion->id,
+            'persona_id' => Persona::first()->id,
+            'user_side' => 'government',
+            'difficulty' => 'advanced',
+            'mode' => 'tournament',
+            'language' => 'en',
+            'status' => $scored ? 'adjudicated' : 'in_progress',
         ]);
 
         if ($scored) {
             Adjudication::create([
-                'debate_id'       => $debate->id,
-                'total_score'     => 78,
-                'matter_score'    => 30,
-                'manner_score'    => 23,
-                'method_score'    => 25,
-                'verdict'         => 'A disciplined performance with one weak warrant.',
-                'fallacies'       => [[
-                    'phase'       => 'Rebuttal',
-                    'type'        => 'Unwarranted Assumption',
+                'debate_id' => $debate->id,
+                'total_score' => 78,
+                'matter_score' => 30,
+                'manner_score' => 23,
+                'method_score' => 25,
+                'verdict' => 'A disciplined performance with one weak warrant.',
+                'fallacies' => [[
+                    'phase' => 'Rebuttal',
+                    'type' => 'Unwarranted Assumption',
                     'explanation' => 'The claim was never supported.',
                 ]],
                 'feedback_bullets' => [
@@ -138,7 +138,7 @@ class DashboardRenderTest extends TestCase
      */
     private function statTile(string $html, string $label): string
     {
-        $start = strpos($html, '>' . $label . '<');
+        $start = strpos($html, '>'.$label.'<');
 
         if ($start === false) {
             return '';

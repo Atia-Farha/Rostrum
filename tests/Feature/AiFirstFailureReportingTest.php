@@ -40,22 +40,22 @@ class AiFirstFailureReportingTest extends TestCase
     private function arenaHtml(User $user): string
     {
         $motion = Motion::create([
-            'text_en'  => 'This House would abolish all monetary policy.',
-            'text_bn'  => 'এই সভা মনে করে যে সব মুদ্রা নীতি বাতিল করা উচিত।',
+            'text_en' => 'This House would abolish all monetary policy.',
+            'text_bn' => 'এই সভা মনে করে যে সব মুদ্রা নীতি বাতিল করা উচিত।',
             'category' => 'Economics',
-            'source'   => 'manual',
+            'source' => 'manual',
         ]);
 
         $debate = Debate::create([
             'session_id' => 'session-'.uniqid(),
-            'user_id'    => $user->id,
-            'motion_id'  => $motion->id,
+            'user_id' => $user->id,
+            'motion_id' => $motion->id,
             'persona_id' => Persona::first()->id,
-            'user_side'  => 'opposition',
+            'user_side' => 'opposition',
             'difficulty' => 'intermediate',
-            'mode'       => 'tournament',
-            'language'   => 'en',
-            'status'     => 'in_progress',
+            'mode' => 'tournament',
+            'language' => 'en',
+            'status' => 'in_progress',
         ]);
 
         return $this->actingAs($user)
