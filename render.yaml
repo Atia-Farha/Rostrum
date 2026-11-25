@@ -14,6 +14,9 @@ services:
         value: false
       - key: APP_NAME
         value: Rostrum
+      # ⚠️  Set APP_URL and ASSET_URL in the Render dashboard BEFORE the first deploy.
+      # Use the full public HTTPS URL Render assigns (e.g. https://rostrum.onrender.com).
+      # If left blank, the entrypoint automatically falls back to $RENDER_EXTERNAL_URL.
       - key: APP_URL
         sync: false
       - key: ASSET_URL
@@ -24,6 +27,11 @@ services:
         value: stderr
       - key: DB_CONNECTION
         value: sqlite
+        # SQLite file must live inside the persistent disk mount (/var/www/html/storage)
+        # so it survives container restarts and redeploys. The entrypoint creates the
+        # directory and file on first boot.
+      - key: DB_DATABASE
+        value: /var/www/html/storage/database/database.sqlite
       - key: SESSION_DRIVER
         value: database
       - key: SESSION_SECURE_COOKIE

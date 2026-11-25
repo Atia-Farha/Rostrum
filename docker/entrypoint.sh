@@ -1,6 +1,22 @@
 #!/bin/bash
 set -e
 
+# ---------------------------------------------------------------------------
+# APP_URL / ASSET_URL fallback
+#
+# Render injects the service's public HTTPS URL as RENDER_EXTERNAL_URL.
+# Use it as an automatic fallback so config:cache never bakes in "localhost".
+# Explicit values set in the Render dashboard always win.
+# ---------------------------------------------------------------------------
+if [ -z "${APP_URL}" ] && [ -n "${RENDER_EXTERNAL_URL}" ]; then
+    export APP_URL="${RENDER_EXTERNAL_URL}"
+    echo "APP_URL not set — falling back to RENDER_EXTERNAL_URL: ${APP_URL}"
+fi
+if [ -z "${ASSET_URL}" ] && [ -n "${RENDER_EXTERNAL_URL}" ]; then
+    export ASSET_URL="${RENDER_EXTERNAL_URL}"
+    echo "ASSET_URL not set — falling back to RENDER_EXTERNAL_URL: ${ASSET_URL}"
+fi
+
 # Dynamically set Nginx port if PORT environment variable is injected by Render
 PORT="${PORT:-8080}"
 sed -i "s/listen 8080/listen ${PORT}/g" /etc/nginx/nginx.conf
@@ -17,6 +33,7 @@ rm -f /var/www/html/public/hot
 mkdir -p \
     /var/www/html/storage/app/public \
     /var/www/html/storage/app/private/audio \
+    /var/www/html/storage/database \
     /var/www/html/storage/framework/cache/data \
     /var/www/html/storage/framework/sessions \
     /var/www/html/storage/framework/views \
@@ -29,11 +46,16 @@ chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache /var/www/html/d
 # Lock the private disk down — only the web user may read it.
 chmod -R 750 /var/www/html/storage/app/private
 
-# Setup SQLite database if DB_CONNECTION is sqlite (or fallback default)
-rm -f /var/www/html/bootstrap/cache/packages.php /var/www/html/bootstrap/cache/services.php /var/www/html/bootstrap/cache/config.php /var/www/html/bootstrap/cache/routes.php
+# ---------------------------------------------------------------------------
+# SQLite database bootstrap
+#
+# DB_DATABASE is set to /var/www/html/storage/database/database.sqlite in
+# render.yaml so the file lives on the persistent disk.  The fallback below
+# ensures the entrypoint is also self-contained for local Docker runs.
+# ---------------------------------------------------------------------------
 DB_CONN="${DB_CONNECTION:-sqlite}"
 if [ "$DB_CONN" = "sqlite" ]; then
-    DB_FILE="${DB_DATABASE:-/var/www/html/database/database.sqlite}"
+    DB_FILE="${DB_DATABASE:-/var/www/html/storage/database/database.sqlite}"
     mkdir -p "$(dirname "$DB_FILE")"
     if [ ! -f "$DB_FILE" ]; then
         echo "Creating SQLite database at $DB_FILE..."
@@ -46,6 +68,14 @@ fi
 # Ensure storage link exists for public access to audio files
 echo "Linking storage directory..."
 php artisan storage:link --force || true
+
+# Clear any stale bootstrap cache files so config:cache always starts fresh.
+# Without this, a cached config from a previous deploy can shadow new env vars.
+rm -f \
+    /var/www/html/bootstrap/cache/packages.php \
+    /var/www/html/bootstrap/cache/services.php \
+    /var/www/html/bootstrap/cache/config.php \
+    /var/www/html/bootstrap/cache/routes.php
 
 # Run production Laravel caches
 echo "Optimizing Laravel config, routes, and views..."

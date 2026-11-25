@@ -1,6 +1,6 @@
 # Rostrum
 
-> AI Debate Training Platform
+An AI debate training platform powered by Gemini 3.6 Flash for reasoning and ElevenLabs for a distinct spoken voice and transcription.
 
 ## Table of Contents
 
