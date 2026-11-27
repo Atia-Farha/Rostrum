@@ -127,7 +127,7 @@
                     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
                 </div>
                 <h3 class="landing-bento-title">Live Argument Rewriting</h3>
-                <p class="landing-bento-desc">Refine your speeches mid-debate with phase-aware Gemini rewrites that show live before/after comparisons and coaching tips.</p>
+                <p class="landing-bento-desc">Refine your speeches mid-debate with phase-aware Groq rewrites that show live before/after comparisons and coaching tips.</p>
             </div>
 
             {{-- Card 3: Championship Adjudication (span 4 on md+) --}}
@@ -301,7 +301,7 @@
                 &copy; {{ date('Y') }} Rostrum. All rights reserved.
             </p>
             <p class="landing-footer-tech">
-                Powered by <strong>Gemini 3.6 Flash</strong> &amp; <strong>ElevenLabs Scribe &amp; Voice</strong>
+                Powered by <strong>Groq AI reasoning</strong>, <strong>Groq Whisper</strong>, and <strong>Gemini TTS</strong>
             </p>
         </div>
     </footer>

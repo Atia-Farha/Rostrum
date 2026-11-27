@@ -32,7 +32,7 @@ class SecurityHeaders
             'X-Frame-Options' => 'SAMEORIGIN',
             'Referrer-Policy' => 'strict-origin-when-cross-origin',
             'Cross-Origin-Opener-Policy' => 'same-origin',
-            'Permissions-Policy' => 'camera=(self), microphone=(self), geolocation=(), interest-cohort=()',
+            'Permissions-Policy' => 'camera=(self), microphone=(self), geolocation=()',
         ];
 
         foreach ($headers as $name => $value) {

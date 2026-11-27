@@ -6,8 +6,9 @@ namespace App\Jobs;
 
 use App\Models\Debate;
 use App\Models\Turn;
-use App\Services\ElevenLabsService;
-use App\Services\GoogleTtsService;
+use App\Services\EdgeTtsService;
+use App\Services\Exceptions\TtsProviderException;
+use App\Services\GeminiTtsService;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -31,14 +32,14 @@ final class SynthesizeTurnAudio implements ShouldQueue
 
     public int $backoff = 15;
 
-    public int $timeout = 30;
+    public int $timeout = 60;
 
     public function __construct(
         private readonly Debate $debate,
         private readonly Turn $turn,
     ) {}
 
-    public function handle(ElevenLabsService $elevenlabs, GoogleTtsService $googleTts): void
+    public function handle(GeminiTtsService $geminiTts, EdgeTtsService $edgeTts): void
     {
         // Turn was already given audio — nothing to do.
         if ($this->turn->audio_path !== null) {
@@ -46,37 +47,58 @@ final class SynthesizeTurnAudio implements ShouldQueue
         }
 
         $audioFile = null;
+        $audioProvider = null;
 
         try {
-            $audioFile = $elevenlabs->synthesize(
-                $this->turn->transcript,
-                $this->debate->persona->voiceId($this->debate->language),
-                $this->debate->language,
-            );
-        } catch (\Throwable $e) {
-            Log::warning('SynthesizeTurnAudio: ElevenLabs failed — trying Google TTS', [
+            $audioFile = $geminiTts->synthesize($this->turn->transcript, $this->debate->language);
+            $audioProvider = 'gemini';
+        } catch (TtsProviderException $exception) {
+            Log::warning('SynthesizeTurnAudio: Gemini TTS failed', [
                 'turn_id' => $this->turn->id,
-                'error' => $e->getMessage(),
+                'error' => $exception->getMessage(),
             ]);
+
+            if (! $exception->shouldFallback) {
+                $this->recordAudioFailure();
+
+                return;
+            }
+        } catch (\Throwable $exception) {
+            Log::error('SynthesizeTurnAudio: Gemini TTS configuration failed', [
+                'turn_id' => $this->turn->id,
+                'error' => $exception->getMessage(),
+            ]);
+
+            $this->recordAudioFailure();
+
+            return;
         }
 
         if ($audioFile === null) {
             try {
-                $audioFile = $googleTts->synthesize($this->turn->transcript, $this->debate->language);
-                Log::info('SynthesizeTurnAudio: Google TTS fallback used', ['turn_id' => $this->turn->id]);
-            } catch (\Throwable $e) {
-                Log::warning('SynthesizeTurnAudio: Google TTS fallback failed', [
+                $audioFile = $edgeTts->synthesize($this->turn->transcript, $this->debate->language);
+                $audioProvider = 'edge_tts';
+                Log::info('SynthesizeTurnAudio: Microsoft Edge TTS fallback used', ['turn_id' => $this->turn->id]);
+            } catch (\Throwable $exception) {
+                Log::warning('SynthesizeTurnAudio: Microsoft Edge TTS fallback failed', [
                     'turn_id' => $this->turn->id,
-                    'error' => $e->getMessage(),
+                    'error' => $exception->getMessage(),
                 ]);
 
-                // Audio is optional — do not re-throw.
+                $this->recordAudioFailure();
+
+                // Audio is optional — the user receives a recoverable
+                // text-only state rather than a failed debate turn.
                 return;
             }
         }
 
         if ($audioFile !== null) {
-            $this->turn->update(['audio_path' => $audioFile]);
+            $this->turn->update([
+                'audio_path' => $audioFile,
+                'audio_provider' => $audioProvider,
+                'audio_error' => null,
+            ]);
         }
     }
 
@@ -86,6 +108,13 @@ final class SynthesizeTurnAudio implements ShouldQueue
             'turn_id' => $this->turn->id,
             'error' => $e->getMessage(),
         ]);
-        // TTS failure is non-fatal — debate continues without audio.
+        $this->recordAudioFailure();
+    }
+
+    private function recordAudioFailure(): void
+    {
+        $this->turn->update([
+            'audio_error' => 'Audio is unavailable right now. You can continue reading the response.',
+        ]);
     }
 }

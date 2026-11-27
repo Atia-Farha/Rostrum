@@ -44,6 +44,12 @@ class SecurityAuditTest extends TestCase
         $this->get('/')->assertStatus(200);
     }
 
+    public function test_security_headers_do_not_send_the_removed_interest_cohort_policy(): void
+    {
+        $this->get('/')
+            ->assertHeader('Permissions-Policy', 'camera=(self), microphone=(self), geolocation=()');
+    }
+
     public function test_the_login_page_is_public(): void
     {
         $this->get('/login')->assertStatus(200);
@@ -542,6 +548,20 @@ class SecurityAuditTest extends TestCase
             Storage::disk('local')->path('audio/'.$name),
             $response->baseResponse->getFile()->getPathname()
         );
+    }
+
+    public function test_the_owner_can_download_a_gemini_wav_recording(): void
+    {
+        $owner = User::factory()->create();
+        $debate = $this->makeDebate($owner);
+        $name = 'gemini_tts_'.Str::uuid().'.wav';
+
+        $this->storeAudio($debate, $name);
+
+        $this->actingAs($owner)
+            ->get('/debates/'.$debate->id.'/audio/'.$name)
+            ->assertOk()
+            ->assertHeader('Content-Type', 'audio/wav');
     }
 
     public function test_a_voice_recording_is_never_cached_by_a_shared_cache(): void

@@ -136,7 +136,7 @@ class DebateAttributionBadgeTest extends TestCase
         [$feed] = $this->panels(User::factory()->create());
 
         $this->assertStringNotContainsString('Logic:', $feed);
-        $this->assertStringNotContainsString('Gemini', $feed);
+        $this->assertStringNotContainsString('Groq AI reasoning', $feed);
     }
 
     /**
@@ -147,7 +147,7 @@ class DebateAttributionBadgeTest extends TestCase
         [$feed] = $this->panels(User::factory()->create());
 
         $this->assertStringNotContainsString('Voice:', $feed);
-        $this->assertStringNotContainsString('ElevenLabs', $feed);
+        $this->assertStringNotContainsString('Gemini TTS', $feed);
     }
 
     /**
@@ -164,7 +164,7 @@ class DebateAttributionBadgeTest extends TestCase
         // that selected it.
         $this->assertStringNotContainsString('sttBadgeHtml', $feed);
         $this->assertStringNotContainsString('stt_provider === ', $feed);
-        $this->assertStringNotContainsString('Transcribed by Gemini Multimodal', $feed);
+        $this->assertStringNotContainsString('Transcribed by', $feed);
     }
 
     /**
@@ -188,13 +188,13 @@ class DebateAttributionBadgeTest extends TestCase
         [$feed, $podium] = $this->panels(User::factory()->create());
 
         $this->assertStringContainsString('Logic:', $podium);
-        $this->assertStringContainsString('Gemini 3.6 Flash', $podium);
+        $this->assertStringContainsString('Groq AI reasoning', $podium);
 
         $this->assertStringContainsString('Transcribe:', $podium);
         $this->assertStringContainsString('ElevenLabs Scribe', $podium);
 
         $this->assertStringContainsString('Voice:', $podium);
-        $this->assertStringContainsString('ElevenLabs ('.Persona::first()->voiceName('en').')', $podium);
+        $this->assertStringContainsString('Gemini TTS (Microsoft Edge TTS fallback)', $podium);
     }
 
     /**
@@ -211,7 +211,7 @@ class DebateAttributionBadgeTest extends TestCase
 
         $this->assertSame(
             1,
-            substr_count($podium, 'ElevenLabs ('.Persona::first()->voiceName('en').')'),
+            substr_count($podium, 'Gemini TTS (Microsoft Edge TTS fallback)'),
             'The podium should name the voice once.',
         );
 
@@ -244,33 +244,21 @@ class DebateAttributionBadgeTest extends TestCase
     }
 
     /**
-     * A Bangla debate is spoken by the Bangla voice.
-     *
-     * The podium names the voice that will actually be heard, so a reader
-     * in a Bangla debate should be told about the Bangla voice — and not
-     * about the English one, which is not speaking.
+     * A stable provider is shown for Bangla as well as English.
      */
-    public function test_a_bangla_debate_names_the_bangla_voice(): void
+    public function test_a_bangla_debate_names_the_stable_tts_provider(): void
     {
         $user = User::factory()->create();
         $debate = $this->makeDebateWithTurns($user, 'bn');
-        $persona = $debate->persona;
-
         $html = $this->actingAs($user)
             ->get(route('debates.show', $debate->id))
             ->assertOk()
             ->getContent();
 
         $this->assertStringContainsString(
-            'ElevenLabs ('.$persona->voiceName('bn').')',
+            'Gemini TTS (Microsoft Edge TTS fallback)',
             $html,
-            'A Bangla debate should name the Bangla voice.',
-        );
-
-        $this->assertStringNotContainsString(
-            'ElevenLabs ('.$persona->voiceName('en').')',
-            $html,
-            'A Bangla debate should not name the English voice.',
+            'A Bangla debate should name its TTS provider.',
         );
     }
 }

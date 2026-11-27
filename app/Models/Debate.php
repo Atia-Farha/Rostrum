@@ -29,6 +29,8 @@ final class Debate extends Model
         'mode',
         'language',
         'status',
+        'ai_provider',
+        'ai_error',
     ];
 
     protected $casts = [
@@ -151,7 +153,7 @@ final class Debate extends Model
     }
 
     /**
-     * Returns the full transcript as a flat string for Gemini context,
+     * Returns the full transcript as a flat string for Groq reasoning context,
      * with each turn labeled with its phase (tournament mode only).
      *
      * The speakers are labelled by the team they speak for — the

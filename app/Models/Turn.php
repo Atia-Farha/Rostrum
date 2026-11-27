@@ -19,6 +19,8 @@ final class Turn extends Model
         'speaker',
         'transcript',
         'audio_path',
+        'audio_provider',
+        'audio_error',
         'ai_move_type',
     ];
 

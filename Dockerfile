@@ -47,6 +47,8 @@ RUN apk add --no-cache \
     postgresql-dev \
     curl \
     ca-certificates \
+    python3 \
+    py3-pip \
     && docker-php-ext-configure gd --with-freetype --with-jpeg \
     && docker-php-ext-install -j$(nproc) \
         pdo \
@@ -62,6 +64,10 @@ RUN apk add --no-cache \
 
 # Refresh the CA bundle after installing ca-certificates.
 RUN update-ca-certificates
+
+# TTS fallback used only when Gemini is unavailable.
+RUN pip3 install --no-cache-dir --break-system-packages 'edge-tts>=7.2,<8' \
+    && edge-tts --version
 
 # Set working directory
 WORKDIR /var/www/html

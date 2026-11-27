@@ -1,6 +1,6 @@
 # Rostrum
 
-An AI debate training platform powered by Gemini 3.6 Flash for reasoning and ElevenLabs for a distinct spoken voice and transcription.
+An AI debate training platform powered by Groq for reasoning and transcription, Gemini for text-to-speech, and Edge TTS as a speech fallback.
 
 ## Table of Contents
 
@@ -16,8 +16,8 @@ An AI debate training platform powered by Gemini 3.6 Flash for reasoning and Ele
 	- [How to Use](#how-to-use)
 	- [Features](#features)
 		- [1. Core Debate Engine](#1-core-debate-engine)
-		- [2. AI Opponent — Gemini 3.6 Flash](#2-ai-opponent--gemini-36-flash)
-		- [3. Voice Round-Trip — ElevenLabs](#3-voice-round-trip--elevenlabs)
+		- [2. AI Opponent — Groq](#2-ai-opponent--groq)
+		- [3. Voice Round-Trip](#3-voice-round-trip)
 		- [4. Fallback Chain (every third-party call has one)](#4-fallback-chain-every-third-party-call-has-one)
 		- [5. Argument Rewrite Assistant](#5-argument-rewrite-assistant)
 		- [6. AI Personas \& Difficulty](#6-ai-personas--difficulty)
@@ -31,6 +31,7 @@ An AI debate training platform powered by Gemini 3.6 Flash for reasoning and Ele
 		- [13. Arena Layout \& Accessibility](#13-arena-layout--accessibility)
 		- [13a. The Workspace Shell](#13a-the-workspace-shell)
 	- [How We Used the APIs](#how-we-used-the-apis)
+		- [Groq API](#groq-api)
 		- [Gemini API (via Google AI Studio)](#gemini-api-via-google-ai-studio)
 		- [ElevenLabs API](#elevenlabs-api)
 	- [Architecture](#architecture)
@@ -69,15 +70,15 @@ The demo debate belongs to this account alone — no other account can read it, 
 
 > **Note:** The demo is hosted on Render's free tier and may take a while to load on the first request due to cold starts.
 
-> **Note:** As the live site is using free tiers of Gemini and ElevenLabs, the demo may run out of credits anytime and fail to generate speeches. So we recommend you to run the demo locally by following the [Local Setup](#local-setup) instructions using your own API keys.
+> **Note:** The live site depends on external AI providers, which may be rate-limited or unavailable. Run it locally with your own API keys for reliable evaluation.
 
 ## What It Does
 
 Rostrum is an on-demand debate sparring partner, coach, and judge — rolled into a single web app.
 
-A user picks a debate motion (or generates one with Gemini), selects a side, an AI persona, and a difficulty level, then debates **by speaking aloud** through a structured 3-phase round (Opening → Rebuttal → Closing). The AI opponent argues back in character — using **Gemini 3.6 Flash** for reasoning and **ElevenLabs** for a distinct spoken voice and transcription. After the round, Gemini acts as a formal adjudicator and produces a scored feedback sheet modeled on real Asian Parliamentary debate rubrics.
+A user picks a debate motion (or generates one with Groq), selects a side, an AI persona, and a difficulty level, then debates **by speaking aloud** through a structured 3-phase round (Opening → Rebuttal → Closing). Groq reasons about the debate and transcribes speech; Gemini generates the opponent audio, with Edge TTS as fallback. After the round, Groq produces a scored feedback sheet modeled on real Asian Parliamentary debate rubrics.
 
-In mid-debate, the user can tap "Improve argument" on any of their own speeches. Gemini rewrites it live — showing a slot-aware before/after that visually demonstrates the model improving human reasoning in real time, not just answering a question.
+In mid-debate, the user can tap "Improve argument" on any of their own speeches. Groq rewrites it live — showing a slot-aware before/after that visually demonstrates the model improving human reasoning in real time, not just answering a question.
 
 Every practice belongs to an account. The overview page turns a record of debates into a picture of a debater's practice — a score trend over time, where the marks are won, and how much of each phase's time was actually used.
 
@@ -111,11 +112,10 @@ Existing learning avenues fail debaters in three critical ways:
 
 1. **Overview (`/dashboard/overview`):**
    - Sign in and land on the overview page: your metric strip (debates, reports, average and best score), your score trend over time, where your marks are won, and your four most recent debates. A new account starts with nothing on record, and fills the page by debating.
-   - The four main pages — Overview, New Debate, History and Settings — are always in the nav rail, and signing out sits in the rail too rather than behind a menu.
 
 2. **Configure Your Debate Session (`/dashboard/setup`):**
    - **Language:** Choose between English or Bangla. The AI opponent answers in the same language, and the voice you hear changes with it.
-   - **Motion:** Select a pre-loaded topic, enter your own motion, or click **"Generate with Gemini"** for an AI-suggested motion.
+   - **Motion:** Select a pre-loaded topic, enter your own motion, or click **"Generate with Groq"** for an AI-suggested motion.
    - **Side:** Choose **Government** (Proposing) or **Opposition** (Opposing).
    - **AI Persona:** Select your AI practice partner (**Calm Logician**, **Aggressive Cross-Examiner**, or **Devil's Advocate**).
    - **Difficulty:** Pick from **Beginner**, **Intermediate**, **Advanced**, or **World Champion**.
@@ -124,8 +124,8 @@ Existing learning avenues fail debaters in three critical ways:
 3. **Enter the Arena (`/debates/{id}`):**
    - Click the **Mic button** to begin recording your speech. On a phone the mic docks at the foot of the screen, with the phase clock beside it.
    - Speak your arguments clearly in your chosen language.
-   - Click **Stop** when finished — ElevenLabs Scribe will transcribe your voice while Gemini generates the AI opponent's response.
-   - Hear the AI speak back in its designated ElevenLabs voice — a native Bangla voice in a Bangla debate.
+   - Click **Stop** when finished — Groq Whisper transcribes your voice while the AI opponent's response is generated.
+   - Hear the AI speak back through Gemini TTS, with Edge TTS used automatically if Gemini is unavailable.
 
 4. **Improve Your Arguments Mid-Debate:**
    - Tap **"Improve argument"** under any of your speech bubbles.
@@ -147,30 +147,28 @@ Existing learning avenues fail debaters in three critical ways:
 - **Slot-aware stage brief** — `DebateStage` works out where a speaker stands when they speak: the phase, the slot within it (first or second), the speech they are answering, and what their own side has already established. The slot is derived from the round's actual turns, not from a counter, so a round that was resumed or partly failed still describes itself correctly.
   - **A note on reading the config.** The stage profiles and the word counts are keyed `"{phase}.{first|second}"` — the key itself contains a dot. They are read as **flat array keys** (`config('debate.stage_profiles', [])[$key]`), *not* through Laravel's dot-notation lookup, because `config('debate.stage_profiles.opening.first')` resolves to the `first` key *inside* `opening` — which silently falls every profile back to `sparring`, and puts the "Sparring Exchange" role on a tournament opening.
 
-### 2. AI Opponent — Gemini 3.6 Flash
-- One Gemini call per AI turn, given: the full prior transcript (labeled per phase and per role), a **stage brief**, the persona's system prompt, the debate register, the difficulty modifier, and the motion + side.
+### 2. AI Opponent — Groq
+- One Groq call per AI turn, given: the full prior transcript (labeled per phase and per role), a **stage brief**, the persona's system prompt, the debate register, the difficulty modifier, and the motion + side.
+- **Model priority (all via Groq Chat Completions API):**
+  1. **Primary:** GPT-OSS 120B — `openai/gpt-oss-120b`
+  2. **First fallback:** Qwen 3.8 27B — `qwen/qwen3.8-27b`
+  3. **Second fallback:** GPT-OSS 20B — `openai/gpt-oss-20b`
+- Automatic sequential fallback on rate limits, provider unavailability, timeouts, or service failures. All models share the same system prompts, conversation history, and response structure.
 - **The stage brief — phase AND slot aware:** a phase holds two speeches and the two are not the same speech, so the prompt names the slot as well as the phase. The first speaker of the opening builds the case; the second *answers* it. The first speaker of the closing weighs the debate; the second takes the last word. The brief carries the speech being answered (quoted verbatim), what the speaker's own side has already put into the round, and which phases are still to come — so a closing introduces no new arguments and a reply does not rebuild a case already made.
-- Five distinct prompt modes, all through the same model: motion generation (A), debate turn (B), Gemini multimodal audio fallback (B2), argument rewrite (C), and adjudication (D).
+- Four distinct prompt modes, all through the same model: motion generation (A), debate turn (B), argument rewrite (C), and adjudication (D).
 - **Debate register:** a shared directive that makes the output a speech rather than an essay — signposted, in full spoken sentences, with no headings or markdown, and each argument given as claim → mechanism → impact. The sides speak under their parliamentary roles (the Prime Minister, the Leader of the Opposition) rather than as "you" and "the AI", which gives the AI a stance to argue from and the transcript the shape of a debate.
 - **Slot-aware rewrite (C):** the rewrite prompt changes what it optimises for by phase *and* slot — Opening = build the constructive case; Rebuttal = sharper surgical clash; Closing = impact comparison and persuasive framing. A reply stays a reply; an opening stays an opening. The rewrite is cached per turn so repeat requests are instant.
-- **Structured adjudication (D):** Gemini returns strict JSON scored on Matter (/40), Manner (/30), Method (/30) + fallacy list + 3–5 grounded feedback bullets (each quoting the user's exact words from the transcript) + a verdict. A `parseJson` helper strips stray markdown fences and falls back gracefully if JSON decoding fails.
-- **Retry/resilience:** Failed calls are retried up to 5 times with a 3-second pause, and only on a rate limit (429) or a temporary server error (500/502/503/504) — a 400 is not retried, because asking again will not change the answer. The multimodal audio fallback gets 3 attempts. Human-readable error messages — never a raw exception — are returned to the page if every attempt fails. Round state is always preserved.
+- **Structured adjudication (D):** Groq (GPT-OSS 120B → Qwen 3.8 27B → GPT-OSS 20B) returns strict JSON scored on Matter (/40), Manner (/30), Method (/30) + fallacy list + 3–5 grounded feedback bullets (each quoting the user's exact words from the transcript) + a verdict. A `parseJson` helper strips stray markdown fences and falls back gracefully if JSON decoding fails.
+- **Retry/resilience:** Groq reasoning models are tried in configured order for rate limits and temporary service failures. A 400 is not retried because asking again will not change the result. Human-readable errors—not raw exceptions—are returned if every model fails, and round state is preserved.
 
-### 3. Voice Round-Trip — ElevenLabs
-- **STT:** ElevenLabs Scribe (`scribe_v1`) transcribes the user's audio. Language is pinned (`eng`/`ben`) per debate — never auto-detected mid-round.
-- **TTS:** Each AI persona carries **two** ElevenLabs voice IDs — one English, one Bangla. The debate's language picks the voice:
-  - Calm Logician → **Adam** (`pNInz6obpgDQGcFmaJgB`) / **Fahad Mir** (`d532cgnzlrx7AWL3CD9i`)
-  - Aggressive Cross-Examiner → **Bella** (`EXAVITQu4vr4xnSDxMaL`) / **Rayhan** (`vvOYlSJHf8lTWIG4tDNP`)
-  - Devil's Advocate → **Liam** (`TX3LPaxmHKxFdv7VOQHJ`) / **Rakib** (`VizHiwkPO7hXc967v4tE`)
-  - The Bangla voices are native Bangla recordings, so a Bangla debate sounds like Bangla rather than an English voice reading Bangla. A persona with no Bangla voice falls back to its English one, so synthesis never goes silent.
-- Model is language-aware: `eleven_multilingual_v2` for Bangla (best phonetics), `eleven_turbo_v2_5` for English.
-- **Quota-trim retry:** When ElevenLabs reports `quota_exceeded`, the remaining credit count is parsed from the error body, text is trimmed to fit the budget (with a 15% safety margin), and the request is retried once automatically — a debate never runs silent because credits ran low.
-- **Voice name badge** in the podium names the voice in use, so it's instantly visible which ElevenLabs voice is speaking.
+### 3. Voice Round-Trip
+- **STT:** Groq Whisper Large-v3 (`whisper-large-v3`) transcribes the user's audio with Whisper Large-v3 Turbo (`whisper-large-v3-turbo`), ElevenLabs STT, and browser Web Speech API in that order as fallbacks. The selected language (`en`/`bn`) is preserved throughout.
+- **TTS:** Gemini 3.8 Flash-Lite TTS (`gemini-3.8-flash-lite-tts`) produces a stable configured voice in English or Bangla. Microsoft Edge TTS is used automatically if Gemini is unavailable.
 
 ### 4. Fallback Chain (every third-party call has one)
-1. **STT:** Scribe fails / returns <10 chars → Gemini multimodal audio (transcribes + generates AI response in a single call, no extra latency) → still failing: turn saved with empty transcript, friendly note shown, AI still responds, round continues.
-2. **TTS:** ElevenLabs fails (or quota exhausted after retry) → **Google Translate TTS** (free public endpoint, chunks text at ~190-char sentence boundaries and concatenates MP3 fragments) → still failing: text-only fallback with a visible notice. The AI's text is always visible regardless.
-3. **Motion generation:** Gemini fails → random motion from curated English/Bangla fallback lists.
+1. **STT:** Groq Whisper Large-v3 (`whisper-large-v3`) → Groq Whisper Large-v3 Turbo (`whisper-large-v3-turbo`) → ElevenLabs STT → browser Web Speech API. The selected language is retained at every step.
+2. **TTS:** Gemini 3.8 Flash-Lite TTS (`gemini-3.8-flash-lite-tts`) → Microsoft Edge TTS → text-only response if both are unavailable.
+3. **Reasoning:** Groq GPT-OSS 120B (`openai/gpt-oss-120b`) → Qwen 3.8 27B (`qwen/qwen3.8-27b`) → GPT-OSS 20B (`openai/gpt-oss-20b`).
 4. User audio is always saved to disk even when STT fails. Partial results (`stt_error`, `ai_error`) are always included in the JSON response — Alpine.js handles whatever succeeded.
 
 ### 5. Argument Rewrite Assistant
@@ -265,7 +263,7 @@ There is **no shared sample**. The seeded demo debate is owned by the demo accou
 
 > **No Content-Security-Policy.** The app loads Google Fonts and a CDN fallback for Alpine.js, and it uses inline Alpine.js expressions throughout. A strict CSP would need nonces threaded through every view, plus an explicit allowlist for the font and script origins. That is a larger change and is deliberately left out rather than half-done.
 
-**Outbound calls** — TLS verification is on for every Gemini and ElevenLabs request. It used to be disabled (`Http::withoutVerifying()`), which let a proxy on the path read API traffic in the clear; it is now enabled, and the Docker image installs `ca-certificates` and runs `update-ca-certificates` so the certificate chain can actually be validated.
+**Outbound calls** — TLS verification is on for every Groq, Gemini, and ElevenLabs request. The Docker image installs `ca-certificates` and runs `update-ca-certificates` so the certificate chain can be validated.
 
 ### 12. Language Parity (English / Bangla)
 - UI strings are in English; the **debate content** is fully bilingual — motions, both speakers' turns, the judge's findings, the fallacies and the verdict all come back in the language the debate was held in.
@@ -296,6 +294,13 @@ Everything behind the account shares one shell.
 
 ## How We Used the APIs
 
+### Groq API
+
+| Feature | How Groq is used |
+|---|---|
+| AI Reasoning | GPT-OSS 120B (`openai/gpt-oss-120b`) primary, with Qwen 3.8 27B (`qwen/qwen3.8-27b`) and GPT-OSS 20B (`openai/gpt-oss-20b`) fallbacks |
+| Speech-to-Text | Whisper Large-v3 (`whisper-large-v3`) primary, Whisper Large-v3 Turbo (`whisper-large-v3-turbo`) fallback — both language-pinned (`en`/`bn`) |
+
 ### Gemini API (via Google AI Studio)
 | Feature | How Gemini is used |
 |---|---|
@@ -305,25 +310,27 @@ Everything behind the account shares one shell.
 | STT fallback | **Multimodal call** — raw audio (base64 `audio/webm`) inline, Gemini transcribes + responds in one call, carrying the same stage brief |
 | Argument rewrite | Slot-aware text prompt → strict JSON output `{rewritten_text, explanation_bullets}` |
 | Adjudication | Full transcript → strict JSON rubric with scores, fallacies, feedback, verdict. The rubric, its weights and its band thresholds are written into the prompt from `config('debate.rubric')` — the same source the report renders from. |
+| Text-to-Speech | **Gemini 3.8 Flash-Lite TTS** (`gemini-3.8-flash-lite-tts`) — primary TTS for both English and Bangla, stable configured voice per language |
 
-All Gemini calls go through server-side Laravel controllers — API key never touches the browser.
+All Groq and Gemini calls go through server-side Laravel controllers — API keys never touch the browser.
 
 ### ElevenLabs API
+
 | Feature | How ElevenLabs is used |
 |---|---|
-| STT | `scribe_v1` endpoint, language-pinned (`eng`/`ben`) |
-| TTS | Persona voice ID, chosen by the debate's language, language-aware model (`eleven_multilingual_v2` / `eleven_turbo_v2_5`) |
-| Quota-trim retry | ElevenLabs returns `quota_exceeded` with "You have N credits remaining," the request is retried once with text trimmed to fit the remaining credits — a debate never runs silent because credits ran low. |
+| STT fallback | `scribe_v1` endpoint, language-pinned (`eng`/`ben`) — activated when both Groq Whisper models fail |
 
 **Per-turn flow:**
 1. User speaks → Alpine.js records via `MediaRecorder`
 2. Audio blob POSTed to `/debates/{debate}/turns` (same-origin, no CORS)
-3. Laravel saves audio, sends to **ElevenLabs Scribe** for STT
-4. If STT fails → **Gemini multimodal** (transcribes + generates AI response in one call)
-5. Otherwise → Gemini text generation with full transcript context
-6. TTS: **ElevenLabs** → **Google Translate TTS** → text-only silent fallback
-7. Laravel persists turns, advances phase if round complete, returns JSON
-8. Alpine swaps HTML into page — no full reload
+3. Laravel saves audio, sends to **Groq Whisper Large-v3** for STT
+4. If STT fails → **Groq Whisper Large-v3 Turbo**
+5. If both Groq models fail → **ElevenLabs Scribe** STT
+6. If all STT fails → **Web Speech API** (browser)
+7. Otherwise → Groq reasoning (GPT-OSS 120B → Qwen 3.8 27B → GPT-OSS 20B)
+8. TTS: **Gemini 3.8 Flash-Lite TTS** → **Microsoft Edge TTS** → text-only fallback
+9. Laravel persists turns, advances phase if round complete, returns JSON
+10. Alpine swaps HTML into page — no full reload
 
 ## Architecture
 
@@ -345,16 +352,18 @@ graph TD
         RA["ReportAnalysis\nbrief · ladders · findings\ndelivery · phases"]
         ST["ScoreTrend\nSVG trend chart geometry"]
         POL["DebatePolicy\nview · participate · adjudicate\nrewrite · delete"]
-        GS["GeminiService\n5 prompt modes\ndebate register\nrubric from shared config"]
-        ELS["ElevenLabsService\nTTS + Scribe STT\nquota-trim retry"]
-        GTTS["GoogleTtsService\nfree TTS fallback\nchunked MP3"]
+        GS["GeminiService\n5 prompt modes + TTS\ndebate register\nrubric from shared config"]
+        GROQ["GroqService\nReasoning (GPT-OSS 120B\n→ Qwen 3.8 27B → GPT-OSS 20B)\nSTT (Whisper Large-v3 → Turbo)"]
+        ELS["ElevenLabsService\nScribe STT\nquota-trim retry"]
+        ETTS["EdgeTtsService\nMicrosoft Edge TTS fallback"]
         DB[("SQLite\nusers · motions · personas\ndebates · rounds\nturns · turn_rewrites\nadjudications")]
         DISK[("Private Disk\nstorage/app/private/audio/\nuser WebM · AI MP3")]
     end
 
-    Gemini["Gemini 3.6 Flash\nGoogle AI Studio REST API"]
-    ElevenLabs["ElevenLabs API\nScribe STT · TTS"]
-    GTTSApi["Google Translate TTS\nfree · no API key"]
+    Gemini["Gemini 3.8 Flash-Lite TTS\nGoogle AI Studio REST API"]
+    GroqAPI["Groq API\nGPT-OSS 120B / Qwen 3.8 27B / GPT-OSS 20B\nWhisper Large-v3 / Turbo"]
+    ElevenLabs["ElevenLabs API\nScribe STT"]
+    EdgeTTS["Microsoft Edge TTS\nedge-tts Python package"]
 
     Browser -->|"form POST register/login/logout"| AU
     Browser -->|"fetch POST audio+phase\nfetch POST rewrite\nform POST adjudicate"| DC
@@ -368,9 +377,11 @@ graph TD
     DC --> RA
     DC --> GS
     GS --> DS
+    DC --> GROQ
     DC --> ELS
-    DC --> GTTS
+    DC --> ETTS
     SC --> GS
+    SC --> GROQ
     DBC --> ST
     DBC --> DB
 
@@ -379,8 +390,9 @@ graph TD
     SC --> POL
 
     GS -->|"REST HTTPS\nkey server-side only"| Gemini
+    GROQ -->|"REST HTTPS\nkey server-side only"| GroqAPI
     ELS -->|"REST HTTPS\nkey server-side only"| ElevenLabs
-    GTTS -->|"public endpoint\nno key"| GTTSApi
+    ETTS -->|"Python subprocess\nno API key"| EdgeTTS
 
     DC --> DB
     SC --> DB
@@ -388,7 +400,7 @@ graph TD
     DBC --> DB
     ACC --> DB
     ELS --> DISK
-    GTTS --> DISK
+    ETTS --> DISK
     DC --> DISK
 ```
 
@@ -399,8 +411,10 @@ sequenceDiagram
     participant U as User Browser
     participant A as Alpine.js
     participant L as Laravel Controller
+    participant GROQ as Groq API
+    participant GEM as Gemini TTS
     participant EL as ElevenLabs API
-    participant GEM as Gemini 3.6 Flash
+    participant ETTS as Edge TTS
     participant DB as SQLite DB
     participant DISK as Local Disk
 
@@ -408,27 +422,38 @@ sequenceDiagram
     A->>L: POST /debates/{id}/turns\n(audio blob + phase)
     L->>DISK: save user audio (always)
 
-    L->>EL: Scribe STT (language-pinned)
+    L->>GROQ: Whisper Large-v3 STT (language-pinned)
     alt STT ok (≥10 chars)
-        EL-->>L: user transcript
+        GROQ-->>L: user transcript
     else STT fails or empty
-        L->>GEM: multimodal call\n(raw audio + prompt)
-        GEM-->>L: {transcript, ai_text}
+        L->>GROQ: Whisper Large-v3 Turbo STT
+        alt STT ok
+            GROQ-->>L: user transcript
+        else STT fails
+            L->>EL: ElevenLabs Scribe STT
+            alt STT ok
+                EL-->>L: user transcript
+            else STT fails
+                L->>L: Web Speech API fallback (browser)
+            end
+        end
     end
 
     alt STT ok path
-        L->>GEM: generateDebateTurn\n(transcript + full context)
-        GEM-->>L: ai_text
+        L->>GROQ: generateDebateTurn\n(GPT-OSS 120B → Qwen 3.8 27B → GPT-OSS 20B)
+        GROQ-->>L: ai_text
     end
 
-    L->>EL: TTS synthesize\n(persona voice for the debate's language)
-    alt ElevenLabs ok
-        EL-->>L: mp3 audio
-    else quota_exceeded
-        L->>EL: retry with trimmed text
-        EL-->>L: mp3 audio
-    else ElevenLabs fails
-        L->>L: Google Translate TTS fallback
+    L->>GEM: Gemini 3.8 Flash-Lite TTS synthesize
+    alt Gemini TTS ok
+        GEM-->>L: mp3 audio
+    else Gemini TTS fails
+        L->>ETTS: Microsoft Edge TTS synthesize
+        alt Edge TTS ok
+            ETTS-->>L: mp3 audio
+        else Edge TTS fails
+            L->>L: text-only fallback
+        end
     end
 
     L->>DB: save user turn + ai turn
@@ -441,19 +466,21 @@ sequenceDiagram
 
 ```mermaid
 flowchart LR
-    GEM["Gemini 3.6 Flash\ngenerativelanguage.googleapis.com"]
+    GEM["Gemini 3.8 Flash-Lite TTS\ngenerativelanguage.googleapis.com"]
 
     A["A Motion Generation\nlanguage + category\n→ motion text"]
-    B["B Debate Turn\nsystem_prompt\n+ persona + register\n+ difficulty\n+ stage brief\n(phase + slot\n+ speech answered)\n+ full transcript\n→ ai_text"]
+    B["B Debate Turn\n(Groq reasoning models)\nsystem_prompt\n+ persona + register\n+ difficulty\n+ stage brief\n(phase + slot\n+ speech answered)\n+ full transcript\n→ ai_text"]
     B2["B2 Multimodal Fallback\nbase64 audio/webm\n+ same stage brief as B\n→ {transcript, ai_text}"]
     C["C Argument Rewrite\nslot-aware coaching prompt\n→ {rewritten_text,\nexplanation_bullets}"]
     D["D Adjudication\nfull transcript + motion\n+ rubric instructions\n→ {matter_score,\nmanner_score, method_score,\ntotal_score, fallacies,\nfeedback_bullets, verdict}"]
+    TTS["TTS Text-to-Speech\nGemini 3.8 Flash-Lite TTS\n→ playable audio"]
 
     GEM --- A
     GEM --- B
     GEM --- B2
     GEM --- C
     GEM --- D
+    GEM --- TTS
 
     note1["All calls go through\nLaravel backend only.\nAPI key never exposed\nto the browser."]
 ```
@@ -463,43 +490,68 @@ flowchart LR
 ```mermaid
 flowchart TD
     subgraph STT["Speech-to-Text Fallback"]
-        S1["ElevenLabs Scribe\nscribe_v1\nlanguage-pinned"]
+        S1["Groq Whisper Large-v3\nwhisper-large-v3\nlanguage-pinned"]
         S2{transcript\n≥10 chars?}
-        S3["Gemini Multimodal\ntranscribes + generates\nAI response in one call"]
-        S4["Save empty turn\nshow friendly note\nAI still responds\nround continues"]
+        S3["Groq Whisper Large-v3 Turbo\nwhisper-large-v3-turbo"]
+        S3b{transcript\n≥10 chars?}
+        S4["ElevenLabs Scribe STT"]
+        S5["Web Speech API\nbrowser fallback"]
+        S6["Save empty turn\nshow friendly note\nAI still responds\nround continues"]
 
         S1 --> S2
         S2 -->|yes| DONE1["STT success"]
         S2 -->|no| S3
-        S3 -->|ok| DONE2["Gemini audio fallback"]
-        S3 -->|fail| S4
+        S3 --> S3b
+        S3b -->|yes| DONE1
+        S3b -->|no| S4
+        S4 -->|ok| DONE2["ElevenLabs STT success"]
+        S4 -->|fail| S5
+        S5 -->|ok| DONE3["Web Speech success"]
+        S5 -->|fail| S6
     end
 
     subgraph TTS["Text-to-Speech Fallback"]
-        T1["ElevenLabs TTS\npersona voice for the debate's language\nlanguage-aware model"]
-        T2{quota\nexceeded?}
-        T3["Trim text to\nremaining credits\n15% safety margin\nretry once"]
-        T4{ok?}
-        T5["Google Translate TTS\nfree endpoint, pure PHP\nchunked at 190 chars"]
-        T6["Text-only fallback\nvisible notice\nAI text always shown"]
+        T1["Gemini 3.8 Flash-Lite TTS\ngemini-3.8-flash-lite-tts"]
+        T2{fail?}
+        T3["Microsoft Edge TTS\nedge-tts Python package"]
+        T4{fail?}
+        T5["Text-only fallback\nvisible notice\nAI text always shown"]
 
         T1 --> T2
-        T2 -->|no| DONE3["ElevenLabs audio"]
+        T2 -->|no| DONE4["Gemini TTS audio"]
         T2 -->|yes| T3
         T3 --> T4
-        T4 -->|ok| DONE3
+        T4 -->|ok| DONE5["Edge TTS audio"]
         T4 -->|fail| T5
-        T5 -->|ok| DONE4["Google TTS audio"]
-        T5 -->|fail| T6
+    end
+
+    subgraph REASON["AI Reasoning Fallback"]
+        R1["GPT-OSS 120B\nopenai/gpt-oss-120b"]
+        R2{fail?}
+        R3["Qwen 3.8 27B\nqwen/qwen3.8-27b"]
+        R4{fail?}
+        R5["GPT-OSS 20B\nopenai/gpt-oss-20b"]
+        R6{fail?}
+        R7["Graceful error\nall models exhausted"]
+
+        R1 --> R2
+        R2 -->|no| DONE6["Reasoning success"]
+        R2 -->|yes| R3
+        R3 --> R4
+        R4 -->|no| DONE6
+        R4 -->|yes| R5
+        R5 --> R6
+        R6 -->|no| DONE6
+        R6 -->|yes| R7
     end
 
     subgraph MOT["Motion Generation Fallback"]
-        M1["Gemini\ntext generation"]
-        M2{ok?}
+        M1["Groq GPT-OSS 120B\ntext generation"]
+        M2{fail?}
         M3["Random motion from\ncurated en/bn fallback lists"]
 
         M1 --> M2
-        M2 -->|ok| DONE5["Gemini motion"]
+        M2 -->|ok| DONE7["Gemini motion"]
         M2 -->|fail| M3
     end
 ```
@@ -654,9 +706,9 @@ stateDiagram-v2
 | Frontend | Blade, Tailwind CSS v4 (Vite), Alpine.js (bundled via Vite, with a CDN fallback if the bundle fails to load) |
 | Database | SQLite (portable) |
 | Auth | Laravel session guard + `DebatePolicy` (no third-party auth provider) |
-| AI | Gemini 3.6 Flash via Google AI Studio REST API |
-| Voice AI | ElevenLabs Scribe v1 (STT) + TTS (3 personas × 2 languages) |
-| TTS Fallback | Google Translate TTS (pure PHP, no key) |
+| AI reasoning | Groq: GPT-OSS 120B (`openai/gpt-oss-120b`), with Qwen 3.8 27B (`qwen/qwen3.8-27b`) and GPT-OSS 20B (`openai/gpt-oss-20b`) fallbacks |
+| Speech-to-text | Groq Whisper Large-v3 (`whisper-large-v3`), then Whisper Large-v3 Turbo (`whisper-large-v3-turbo`), ElevenLabs STT, then browser Web Speech API |
+| Text-to-speech | Gemini 3.8 Flash-Lite TTS (`gemini-3.8-flash-lite-tts`), with Microsoft Edge TTS fallback |
 | Audio | Browser `MediaRecorder` → WebM blob → server, stored on the private disk |
 | Deployment | Docker (nginx + php-fpm) on Render's free tier |
 
@@ -668,6 +720,7 @@ stateDiagram-v2
 - **Database:** SQLite (with `pdo_sqlite` extension enabled)
 - **Browser:** Chromium-based browser (Google Chrome, Brave, Microsoft Edge) for HTML5 `MediaRecorder` audio capture.
 - **API Keys:**
+  - `GROQ_API_KEY` (Groq)
   - `GEMINI_API_KEY` (Google AI Studio)
   - `ELEVENLABS_API_KEY` (ElevenLabs)
 - **Optional configuration:**
@@ -677,14 +730,22 @@ stateDiagram-v2
   | `SESSION_SECURE_COOKIE` | Set `true` in production so the session cookie is HTTPS-only. Left unset locally so it works over `http://localhost`. |
   | `SESSION_SAME_SITE` | `lax` (default), `strict` or `none`. |
   | `SESSION_HTTP_ONLY` | `true` by default — the cookie is not readable from JavaScript. |
-  | `GEMINI_MODEL` | The Gemini model used for reasoning, motion generation and adjudication (default `gemini-2.0-flash`; `.env.example` sets `gemini-3.6-flash`). |
-  | `ELEVENLABS_TTS_MAX_CHARS` | How much of a speech is sent to the synthesiser (default 1500, trimmed at a sentence boundary). |
+  | `GROQ_REASONING_MODEL` | Primary reasoning model (default: `openai/gpt-oss-120b`) |
+  | `GROQ_REASONING_FALLBACK_MODEL_1` | First reasoning fallback (default: `qwen/qwen3.8-27b`) |
+  | `GROQ_REASONING_FALLBACK_MODEL_2` | Second reasoning fallback (default: `openai/gpt-oss-20b`) |
+  | `GROQ_STT_MODEL` | Primary STT model (default: `whisper-large-v3`) |
+  | `GROQ_STT_FALLBACK_MODEL` | STT fallback model (default: `whisper-large-v3-turbo`) |
+  | `GEMINI_TTS_MODEL` | Primary TTS model (default: `gemini-3.8-flash-lite-tts`) |
+  | `ELEVENLABS_STT_MODEL` | ElevenLabs STT model identifier (configured per ElevenLabs supported models) |
+  | `.env.local.example` | Local development template; `composer setup` copies it to `.env` when needed. |
+  | `.env.production.example` | Render production template; copy its values into Render environment variables. |
 
 ## Deployment
 
 The app ships as a Docker image (nginx + php-fpm) and a `render.yaml` for Render.
 
-- The container installs `ca-certificates` so outbound HTTPS to Gemini and ElevenLabs can actually be verified, and creates `storage/app/private/audio` with `750` permissions — the private disk holds every user's voice recording and is readable only by the web user.
+- The container installs `ca-certificates` so outbound HTTPS to Groq, Gemini, and ElevenLabs can be verified, and creates `storage/app/private/audio` with `750` permissions — the private disk holds every user's voice recording and is readable only by the web user.
+- The container also installs the `edge-tts` Python package for Microsoft Edge TTS fallback.
 - `render.yaml` sets `SESSION_SECURE_COOKIE=true` and `SESSION_SAME_SITE=lax` for the deployed environment.
 - The entrypoint runs migrations and seeds on boot, so a fresh deploy comes up with the personas, the rubric and the demo account already in place.
 
@@ -699,8 +760,18 @@ php artisan db:seed
 
 Set your API keys in `.env`:
 ```env
+GROQ_API_KEY=your_key_here
 GEMINI_API_KEY=your_key_here
 ELEVENLABS_API_KEY=your_key_here
+
+# AI Model Configuration (all have sensible defaults)
+GROQ_REASONING_MODEL=openai/gpt-oss-120b
+GROQ_REASONING_FALLBACK_MODEL_1=qwen/qwen3.8-27b
+GROQ_REASONING_FALLBACK_MODEL_2=openai/gpt-oss-20b
+GROQ_STT_MODEL=whisper-large-v3
+GROQ_STT_FALLBACK_MODEL=whisper-large-v3-turbo
+GEMINI_TTS_MODEL=gemini-3.8-flash-lite-tts
+ELEVENLABS_STT_MODEL=
 ```
 
 The seeders also create the [demo account](#demo-account) — override the password in `.env` for anything public:
@@ -779,9 +850,10 @@ php artisan test
 │   └── Services/
 │       ├── DebateRoundEngine.php          # 3-phase Parliamentary engine & Closing reversal logic
 │       ├── DebateStage.php                # Who speaks when: each side's brief, the answering-speech rule, phase budgets
-│       ├── ElevenLabsService.php          # ElevenLabs Scribe STT & TTS with quota-trim retries
-│       ├── GeminiService.php              # 5 Gemini prompt modes (Motion, Turn, Rewrite, Multimodal, Adjudicate)
-│       └── GoogleTtsService.php           # Free chunked MP3 fallback speech synthesis
+│       ├── GroqService.php                # Reasoning (GPT-OSS 120B → Qwen 3.8 27B → GPT-OSS 20B) & STT (Whisper Large-v3 → Turbo)
+│       ├── GeminiService.php              # 5 prompt modes + TTS, debate register, rubric from shared config
+│       ├── ElevenLabsService.php          # ElevenLabs Scribe STT fallback
+│       └── EdgeTtsService.php             # Microsoft Edge TTS fallback
 ├── config/
 │   └── debate.php                         # Phase durations, slot-aware word counts, the debate register, per-slot stage profiles, side labels, difficulty prompts, the shared rubric, seed account & model settings
 ├── database/
@@ -825,7 +897,7 @@ php artisan test
 
 ```
 motions          — text_en, text_bn, category, source (manual/generated)
-personas         — name, description, system_prompt, elevenlabs_voice_id, elevenlabs_voice_id_bn
+personas         — name, description, system_prompt
 users            — name, email (unique), password, remember_token, email_verified_at
 debates          — session_id, user_id (nullable), motion_id, user_side, persona_id, difficulty, mode, language, status
 rounds           — debate_id, phase (opening/rebuttal/closing/null), phase_order
@@ -838,15 +910,13 @@ All IDs are UUIDs (`HasUuids`) except `users` (auto-increment). All child tables
 
 `debates.user_id` is nullable at the schema level so debates created before accounts existed are not lost — the `SeedAccountSeeder` adopts those orphans and gives them an owner. Every debate created through the app today belongs to the signed-in account, and only its owner may open, play, adjudicate or delete it.
 
-`personas.elevenlabs_voice_id_bn` is nullable: a persona with no Bangla voice speaks with its English one rather than falling silent.
-
 `turns.audio_path` holds a bare **file name**, not a URL. The file lives on the private disk and is streamed back through the ownership-checked audio endpoint.
 
 ## Known Limitations
 
 - The live site is hosted on Render's free tier and may take a while to load on the first request due to cold starts.
 
-- As the live site is using free tiers of Gemini and ElevenLabs, the demo may run out of credits anytime and fail to generate speeches.
+- External AI providers can be rate-limited or unavailable.
 
 ## Author
 Developed by [Atia Farha](https://github.com/atia-farha).

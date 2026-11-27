@@ -38,7 +38,7 @@ class AppServiceProvider extends ServiceProvider
     /**
      * Rate limiters.
      *
-     * The Gemini and ElevenLabs endpoints cost money per call, so they are
+     * The Groq, Gemini, and ElevenLabs endpoints cost money per call, so they are
      * capped per account rather than per IP — one abusive account must not be
      * able to exhaust the shared quota.
      */

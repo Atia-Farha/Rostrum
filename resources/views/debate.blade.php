@@ -1378,9 +1378,9 @@
                         <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/></svg>
                         AI Stack
                     </div>
-                    <div>Logic: <strong>Gemini 3.6 Flash</strong></div>
+                    <div>Logic: <strong>Groq AI reasoning</strong></div>
                     <div>Transcribe: <strong>ElevenLabs Scribe</strong></div>
-                    <div>Voice: <strong>ElevenLabs ({{ $debate->persona->voiceName($debate->language) }})</strong></div>
+                    <div>Voice: <strong>Gemini TTS (Microsoft Edge TTS fallback)</strong></div>
                 </div>
 
             </div>
@@ -1818,7 +1818,7 @@
                     this.scrollFeed();
                 },
 
-                // Show AI-side error bubble — Gemini failure, independent of STT
+                // Show AI-side error bubble — Groq reasoning failure, independent of STT
                 showAiError(message, retryCallback = null, userTurnSaved = true) {
                     this.removeStatusBubbles();
                     const container = document.getElementById('dynamic-turns');
@@ -1960,6 +1960,10 @@
                     this.pinned = true;
                     container.appendChild(row);
                     this.turnCount++;
+
+                    if (data.ai_audio_error) {
+                        window.showToast(data.ai_audio_error, 'info');
+                    }
                     this.scrollFeed();
                 },
 
@@ -2134,6 +2138,7 @@
                 timerHandle: null,
                 mediaRecorder: null,
                 audioChunks: [],
+                browserRecognition: null,
 
                 init() {
                     window.podiumComponent = this;
@@ -2252,6 +2257,10 @@
                             });
                             this.handleBlob(blob);
                         };
+                        // Web Speech cannot transcribe a recorded Blob after
+                        // the fact. Start it alongside MediaRecorder so its
+                        // fallback transcript belongs to this same speech.
+                        this.browserRecognition = this.startBrowserRecognition();
                         this.mediaRecorder.start();
                         this.state = 'recording';
                         this.showRetry = false;
@@ -2265,6 +2274,7 @@
 
                 stopRecording() {
                     clearInterval(this.timerHandle);
+                    this.browserRecognition?.stop();
                     if (this.mediaRecorder && this.mediaRecorder.state !== 'inactive') {
                         this.mediaRecorder.stop();
                     }
@@ -2289,7 +2299,7 @@
                     return durations[phase] ?? cfg.phaseDuration;
                 },
 
-                async handleBlob(blob) {
+                async handleBlob(blob, browserTranscript = '', pendingTurnId = null) {
                     if (blob.size < 2000) {
                         window.showToast("Couldn't capture your speech clearly. Please try speaking again.", "error");
                         this.state = 'idle';
@@ -2302,6 +2312,8 @@
 
                     const formData = new FormData();
                     formData.append('audio', blob, 'speech.webm');
+                    if (browserTranscript) formData.append('transcript', browserTranscript);
+                    if (pendingTurnId) formData.append('turn_id', pendingTurnId);
                     formData.append('phase', cfg.currentPhase);
                     formData.append('_token', cfg.csrfToken);
 
@@ -2316,6 +2328,20 @@
                         });
                         const data = await res.json();
 
+                        if (data.requires_browser_fallback) {
+                            try {
+                                window.showToast('Server transcription is unavailable. Using browser speech recognition from this recording.', 'info');
+                                const transcript = await this.browserRecognition?.result;
+                                if (!transcript) throw new Error('Browser speech recognition did not recognize this recording.');
+                                return this.handleBlob(blob, transcript, data.user_turn_id);
+                            } catch (recognitionError) {
+                                window.debateArena?.removeStatusBubbles();
+                                window.showToast(recognitionError.message, 'error');
+                                this.state = 'idle';
+                                return;
+                            }
+                        }
+
                         if (data.error || data.errors) {
                             // Server rejected the submission — either a domain
                             // error ("round already complete") or a 422
@@ -2327,6 +2353,14 @@
                             window.showToast(message, "error");
                             this.state = 'idle';
                             return;
+                        }
+
+                        if (data.stt_provider === 'groq_whisper_large_v3_turbo') {
+                            window.showToast('Using the backup transcription service.', 'info');
+                        } else if (data.stt_provider === 'elevenlabs') {
+                            window.showToast('Using the secondary transcription service.', 'info');
+                        } else if (data.stt_provider === 'web_speech') {
+                            window.showToast('Using browser speech recognition.', 'info');
                         }
 
                         // ── USER TURN: render regardless of AI result ──────────────────
@@ -2427,6 +2461,40 @@
                         window.showToast('Network error. Please check your connection and try again.', 'error');
                         this.state = 'idle';
                     }
+                },
+
+                startBrowserRecognition() {
+                    const Recognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+                    if (!Recognition) return null;
+
+                    let resolveResult;
+                    let rejectResult;
+                    const result = new Promise((resolve, reject) => {
+                        resolveResult = resolve;
+                        rejectResult = reject;
+                    }).catch(() => null);
+
+                    const recognition = new Recognition();
+                    recognition.lang = this.lang === 'bn' ? 'bn-BD' : 'en-US';
+                    recognition.interimResults = false;
+                    recognition.maxAlternatives = 1;
+                    recognition.onresult = (event) => {
+                        const transcript = event.results?.[0]?.[0]?.transcript?.trim();
+                        transcript ? resolveResult(transcript) : rejectResult(new Error('No speech was recognized.'));
+                    };
+                    recognition.onerror = () => rejectResult(new Error('Browser speech recognition failed.'));
+                    recognition.onnomatch = () => rejectResult(new Error('No speech was recognized.'));
+
+                    try {
+                        recognition.start();
+                    } catch (error) {
+                        rejectResult(new Error('Browser speech recognition could not start.'));
+                    }
+
+                    return {
+                        result,
+                        stop: () => recognition.stop(),
+                    };
                 },
 
                 async retryAiGeneration() {
@@ -2611,6 +2679,11 @@
                         const poll = await res.json();
 
                         if (!poll.ai_ready) {
+                            if (poll.ai_error) {
+                                window.debateArena?.showAiError(poll.ai_error, () => this.retryAiGeneration());
+                                this.state = 'idle';
+                                return;
+                            }
                             this.pollForAiTurn(submitData, attempt + 1);
                             return;
                         }
@@ -2619,8 +2692,18 @@
                             ...submitData,
                             ai_text:      poll.ai_turn.transcript,
                             ai_audio_url: poll.ai_turn.audio_url,
+                            ai_audio_error: poll.ai_turn.audio_error,
                             ai_move_type: poll.ai_turn.ai_move_type,
                         };
+
+                        if (poll.ai_turn.reasoning_provider && poll.ai_turn.reasoning_provider !== '{{ config('services.groq.reasoning.models.0') }}') {
+                            window.showToast('Using the backup reasoning model.', 'info');
+                        }
+                        if (poll.ai_turn.audio_provider === 'edge_tts') {
+                            window.showToast('Using the backup voice service.', 'info');
+                        } else if (!poll.ai_turn.audio_provider && !poll.ai_turn.audio_error) {
+                            this.pollForAudioProvider();
+                        }
 
                         window.debateArena?.appendAiTurn(aiData, () => {
                             if (submitData.debate_complete) {
@@ -2645,7 +2728,27 @@
                     } catch (err) {
                         this.pollForAiTurn(submitData, attempt + 1);
                     }
-                }
+                },
+
+                async pollForAudioProvider(attempt = 0) {
+                    if (attempt >= 30) return;
+
+                    await new Promise(r => setTimeout(r, 2000));
+
+                    try {
+                        const res = await fetch(cfg.stateUrl, { headers: { 'Accept': 'application/json' } });
+                        const poll = await res.json();
+
+                        if (poll.ai_turn?.audio_provider === 'edge_tts') {
+                            window.showToast('Using the backup voice service.', 'info');
+                            return;
+                        }
+
+                        if (!poll.ai_turn?.audio_provider) this.pollForAudioProvider(attempt + 1);
+                    } catch (err) {
+                        this.pollForAudioProvider(attempt + 1);
+                    }
+                },
             };
         }
 

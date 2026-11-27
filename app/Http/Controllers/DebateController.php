@@ -11,9 +11,9 @@ use App\Models\Debate;
 use App\Models\Turn;
 use App\Models\TurnRewrite;
 use App\Services\DebateRoundEngine;
-use App\Services\ElevenLabsService;
-use App\Services\GeminiService;
-use App\Services\GoogleTtsService;
+use App\Services\Exceptions\SpeechToTextUnavailableException;
+use App\Services\GroqReasoningService;
+use App\Services\SpeechToTextService;
 use App\Support\ReportAnalysis;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -26,9 +26,8 @@ use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 class DebateController extends Controller
 {
     public function __construct(
-        private GeminiService $gemini,
-        private ElevenLabsService $elevenlabs,
-        private GoogleTtsService $googleTts,
+        private GroqReasoningService $reasoning,
+        private SpeechToTextService $speechToText,
         private DebateRoundEngine $engine,
     ) {}
 
@@ -63,9 +62,9 @@ class DebateController extends Controller
     /**
      * POST /debates/{debate}/turns
      *
-     * Receives audio blob + phase → transcribes (ElevenLabs STT with Gemini
-     * audio fallback), saves the user turn, then dispatches GenerateAiTurn
-     * asynchronously so the 3–8 s Gemini + TTS block happens off the web
+     * Receives audio blob + phase → transcribes through the configured STT chain,
+     * saves the user turn, then dispatches GenerateAiTurn
+     * asynchronously so the 3–8 s AI reasoning provider + TTS block happens off the web
      * worker. Alpine polls GET /debates/{debate}/state to learn when the AI
      * turn is ready.
      *
@@ -79,9 +78,11 @@ class DebateController extends Controller
         // Browsers always send WebM from the MediaRecorder API; the mimes rule
         // guards against non-audio uploads reaching the STT / storage paths.
         $request->validate([
-            'audio' => 'nullable|file|mimes:webm,ogg,mp4,mpeg,mpga,wav,m4a',
+            'audio' => 'nullable|file|mimes:webm,ogg,mp4,mpeg,mpga,wav,m4a|max:25600',
+            'transcript' => 'nullable|string|max:12000',
             'phase' => 'required|string',
             'ai_first' => 'nullable|boolean',
+            'turn_id' => 'nullable|uuid',
         ]);
 
         $currentRound = $this->engine->currentRound($debate);
@@ -94,110 +95,86 @@ class DebateController extends Controller
         $userAudioUrl = null;
         $sttError = null;
         $sttProvider = null;
-        $geminiAiText = null;
 
         // ── USER TURN (skip when AI speaks first) ───────────────────────────
         if (! $request->boolean('ai_first')) {
-            if (! $request->hasFile('audio')) {
-                return response()->json(['error' => 'Audio file is required.'], 422);
-            }
+            $browserTranscript = trim((string) $request->input('transcript'));
+            $pendingTurnId = $request->input('turn_id');
 
-            $audioFile = $request->file('audio');
+            if ($pendingTurnId && $browserTranscript !== '') {
+                $userTurn = $currentRound->turns()
+                    ->whereKey($pendingTurnId)
+                    ->where('speaker', 'user')
+                    ->first();
 
-            // --- 1. Save user audio file (always, even if STT fails) ---
-            try {
-                // User recordings live on the PRIVATE disk and are served
-                // through DebateController::audio(), which checks ownership.
-                // The public disk would expose every user's voice to anyone
-                // who can guess (or enumerate) the filename.
-                $userAudioName = 'user_'.Str::uuid().'.webm';
-
-                // The disk is configured with 'throw' => false, so a failed
-                // write returns false instead of raising. Without this check
-                // the URL below would point at a file that was never written
-                // and the turn would offer a Listen button that 404s.
-                $written = Storage::disk('local')->put(
-                    'audio/'.$userAudioName,
-                    file_get_contents($audioFile->getRealPath())
-                );
-
-                if ($written === false) {
-                    Log::error('Could not store the user recording', [
-                        'debate_id' => $debate->id,
-                        'file' => $userAudioName,
-                    ]);
-
-                    $userAudioUrl = null;
-                } else {
-                    $userAudioUrl = route('debates.audio', [
-                        'debate' => $debate->id,
-                        'file' => $userAudioName,
-                    ]);
+                if (! $userTurn || trim($userTurn->transcript) !== '') {
+                    return response()->json(['error' => 'That recording can no longer be transcribed. Please record again.'], 422);
                 }
-            } catch (\Exception $e) {
-                Log::error('Could not store the user recording', [
-                    'debate_id' => $debate->id,
-                    'error' => $e->getMessage(),
-                ]);
 
-                $userAudioUrl = null;
-            }
+                $userTurn->update(['transcript' => $browserTranscript]);
+                $userTranscript = $browserTranscript;
+                $sttProvider = 'web_speech';
+                $userAudioUrl = $userTurn->audio_path
+                    ? route('debates.audio', ['debate' => $debate->id, 'file' => basename($userTurn->audio_path)])
+                    : null;
+            } elseif (! $request->hasFile('audio')) {
+                return response()->json(['error' => 'Audio file is required.'], 422);
+            } else {
 
-            // --- 2. Transcribe via ElevenLabs STT ---
-            try {
-                $userTranscript = $this->elevenlabs->transcribe(
-                    $audioFile->getRealPath(),
-                    $debate->language
-                );
+                $audioFile = $request->file('audio');
 
-                if (strlen(trim($userTranscript ?? '')) < 10) {
+                // Store first: the original recording remains available even if every
+                // server provider is unavailable and browser recognition is needed.
+                $userAudioName = 'user_'.Str::uuid().'.webm';
+                try {
+                    $written = Storage::disk('local')->put('audio/'.$userAudioName, file_get_contents($audioFile->getRealPath()));
+                    if ($written === false) {
+                        throw new \RuntimeException('Could not store user recording.');
+                    }
+                    $userAudioUrl = route('debates.audio', ['debate' => $debate->id, 'file' => $userAudioName]);
+                } catch (\Throwable $exception) {
+                    Log::error('Could not store the user recording', ['debate_id' => $debate->id]);
+
+                    return response()->json(['error' => 'Could not save your recording. Please try again.'], 503);
+                }
+
+                try {
+                    $result = $this->speechToText->transcribe($audioFile->getRealPath(), $debate->language);
+                    $userTranscript = $result->text;
+                    $sttProvider = $result->provider;
+                } catch (SpeechToTextUnavailableException $exception) {
+                    $sttError = 'Server transcription is unavailable. Your recording was saved; browser speech recognition can provide a transcript from this recording.';
+                } catch (\Throwable $exception) {
+                    Log::error('Speech-to-text failed unexpectedly.', ['debate_id' => $debate->id]);
+                    $sttError = 'Could not transcribe your speech. Your recording was saved; browser speech recognition can provide a transcript from this recording.';
+                }
+
+                if ($userTranscript !== null && mb_strlen(trim($userTranscript)) < 2) {
                     $userTranscript = null;
                     $sttError = 'No clear speech was detected. Your recording was saved — try again or check your mic.';
-                } else {
-                    $sttProvider = 'elevenlabs';
                 }
-            } catch (\Exception $e) {
-                $userTranscript = null;
-                $sttError = $e->getMessage() ?: 'Could not transcribe your speech.';
-            }
 
-            // --- 2a. Gemini multimodal audio fallback ---
-            // Gemini processes the raw audio directly — transcribes AND
-            // generates AI response in one call.
-            if ($userTranscript === null && $audioFile->getRealPath()) {
-                try {
-                    $audioFallback = $this->gemini->generateDebateTurnFromAudio(
-                        $debate,
-                        $currentRound,
-                        $audioFile->getRealPath(),
-                    );
-                    $userTranscript = $audioFallback['transcript'] ?: null;
-                    $geminiAiText = $audioFallback['ai_text'] ?: null;
-                    if ($userTranscript) {
-                        $sttProvider = 'gemini';
-                    }
-                    $sttError = null; // Gemini handled it
-                } catch (\Exception $e) {
-                    $geminiAiText = null;
-                }
-            }
-
-            // --- 3. Save user turn (always — even with empty transcript) ---
-            try {
                 $userTurn = Turn::create([
                     'id' => (string) Str::uuid(),
                     'round_id' => $currentRound->id,
                     'speaker' => 'user',
                     'transcript' => $userTranscript ?? '',
-                    'audio_path' => $userAudioUrl,
+                    'audio_path' => $userAudioName,
                 ]);
-            } catch (\Exception $e) {
-                // DB save failed — non-fatal, proceed
+            }
+
+            if ($userTranscript === null && $sttError !== null) {
+                return response()->json([
+                    'user_turn_id' => $userTurn->id,
+                    'user_audio_url' => $userAudioUrl,
+                    'stt_error' => $sttError,
+                    'requires_browser_fallback' => true,
+                ]);
             }
         }
 
         // ── AI RESPONSE — dispatched asynchronously (Q-05) ──────────────────
-        // The expensive Gemini + TTS pipeline is now queued. Alpine polls
+        // The expensive AI reasoning provider + TTS pipeline is now queued. Alpine polls
         // GET /debates/{debate}/state every 2 s to pick up the AI turn when
         // it arrives. This keeps the web-request latency at 1–2 s (STT only)
         // instead of 5–10 s (STT + LLM + TTS).
@@ -206,6 +183,7 @@ class DebateController extends Controller
             ->exists();
 
         if (! $aiAlreadySpoke) {
+            $debate->update(['ai_error' => null]);
             $lastUserTranscript = $userTranscript
                 ?? $debate->allTurns()->where('speaker', 'user')->last()?->transcript
                 ?? '';
@@ -214,7 +192,6 @@ class DebateController extends Controller
                 $debate,
                 $currentRound,
                 $lastUserTranscript,
-                $geminiAiText,  // null unless the audio fallback already produced it
             );
         }
 
@@ -300,6 +277,7 @@ class DebateController extends Controller
             return response()->json([
                 'ai_ready' => false,
                 'ai_turn' => null,
+                'ai_error' => $debate->ai_error,
             ]);
         }
 
@@ -309,6 +287,9 @@ class DebateController extends Controller
                 'id' => $aiTurn->id,
                 'transcript' => $aiTurn->transcript,
                 'ai_move_type' => $aiTurn->ai_move_type,
+                'reasoning_provider' => $debate->ai_provider,
+                'audio_provider' => $aiTurn->audio_provider,
+                'audio_error' => $aiTurn->audio_error,
                 'audio_url' => $aiTurn->audio_path
                     ? route('debates.audio', [
                         'debate' => $debate->id,
@@ -324,7 +305,7 @@ class DebateController extends Controller
 
     /**
      * POST /debates/{debate}/turns/{turn}/rewrite
-     * Calls Gemini to rewrite the user's argument and returns before/after JSON.
+     * Calls AI reasoning provider to rewrite the user's argument and returns before/after JSON.
      */
     public function rewriteTurn(Request $request, Debate $debate, Turn $turn): JsonResponse
     {
@@ -352,7 +333,7 @@ class DebateController extends Controller
         }
 
         try {
-            $result = $this->gemini->rewriteArgument($turn->transcript, $debate, $turn->round);
+            $result = $this->reasoning->rewriteArgument($turn->transcript, $debate, $turn->round);
         } catch (\Exception $e) {
             return response()->json([
                 'error' => $e->getMessage() ?: 'Unable to generate argument rewrite right now. Please try again.',
@@ -392,7 +373,7 @@ class DebateController extends Controller
         }
 
         try {
-            $result = $this->gemini->adjudicate($debate);
+            $result = $this->reasoning->adjudicate($debate);
         } catch (\Exception $e) {
             $msg = $e->getMessage() ?: 'Adjudication generation took too long. Please try again.';
 
@@ -436,7 +417,7 @@ class DebateController extends Controller
         // traversal would escape the audio directory.
         $name = basename($file);
 
-        if (! preg_match('/^(user_[0-9a-f\-]{36}\.webm|[0-9a-f\-]{36}\.mp3|google_tts_[0-9a-f\-]{36}\.mp3)$/', $name)) {
+        if (! preg_match('/^(user_[0-9a-f\-]{36}\.webm|(?:gemini_tts_|edge_tts_)?[0-9a-f\-]{36}\.(?:mp3|wav))$/', $name)) {
             abort(404);
         }
 
@@ -446,7 +427,11 @@ class DebateController extends Controller
             abort(404);
         }
 
-        $type = str_ends_with($name, '.webm') ? 'audio/webm' : 'audio/mpeg';
+        $type = match (pathinfo($name, PATHINFO_EXTENSION)) {
+            'webm' => 'audio/webm',
+            'wav' => 'audio/wav',
+            default => 'audio/mpeg',
+        };
 
         // NOTE: response()->file() builds a BinaryFileResponse with
         // $public = true, which calls setPublic() and stamps

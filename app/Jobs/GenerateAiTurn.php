@@ -7,7 +7,7 @@ namespace App\Jobs;
 use App\Models\Debate;
 use App\Models\Round;
 use App\Models\Turn;
-use App\Services\GeminiService;
+use App\Services\GroqReasoningService;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -38,38 +38,29 @@ final class GenerateAiTurn implements ShouldQueue
         private readonly Debate $debate,
         private readonly Round $round,
         private readonly string $userTranscript,
-        private readonly ?string $geminiAiText = null,
     ) {}
 
-    public function handle(GeminiService $gemini): void
+    public function handle(GroqReasoningService $reasoning): void
     {
         // If the AI already spoke in this round (ai_first flow), skip.
         if ($this->round->turns()->where('speaker', 'ai')->exists()) {
             return;
         }
 
-        $aiMoveType = null;
-        $aiText = null;
-
-        if ($this->geminiAiText !== null && $this->geminiAiText !== '') {
-            // Audio-fallback already produced the AI text — just extract the move tag.
-            [$aiMoveType, $aiText] = $gemini->extractMoveType($this->geminiAiText);
-        } else {
-            try {
-                $raw = $gemini->generateDebateTurn(
-                    $this->debate,
-                    $this->round,
-                    $this->userTranscript,
-                );
-                [$aiMoveType, $aiText] = $gemini->extractMoveType($raw);
-            } catch (\Throwable $e) {
-                Log::error('GenerateAiTurn failed', [
-                    'debate_id' => $this->debate->id,
-                    'error' => $e->getMessage(),
-                ]);
-                // Re-throw so the queue retries / marks as failed.
-                throw $e;
-            }
+        try {
+            $raw = $reasoning->generateDebateTurn(
+                $this->debate,
+                $this->round,
+                $this->userTranscript,
+            );
+            [$aiMoveType, $aiText] = $reasoning->extractMoveType($raw);
+        } catch (\Throwable $e) {
+            Log::error('GenerateAiTurn failed', [
+                'debate_id' => $this->debate->id,
+                'error' => $e->getMessage(),
+            ]);
+            // Re-throw so the queue retries / marks as failed.
+            throw $e;
         }
 
         if ($aiText === null || $aiText === '') {
@@ -85,6 +76,11 @@ final class GenerateAiTurn implements ShouldQueue
             'ai_move_type' => $aiMoveType,
         ]);
 
+        $this->debate->update([
+            'ai_provider' => $reasoning->lastModel(),
+            'ai_error' => null,
+        ]);
+
         // Chain TTS synthesis — it needs the saved turn ID for the audio URL.
         SynthesizeTurnAudio::dispatch($this->debate, $aiTurn);
     }
@@ -95,5 +91,6 @@ final class GenerateAiTurn implements ShouldQueue
             'debate_id' => $this->debate->id,
             'error' => $e->getMessage(),
         ]);
+        $this->debate->update(['ai_error' => 'The opponent could not respond right now. Please retry.']);
     }
 }

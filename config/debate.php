@@ -4,45 +4,6 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | Gemini Model
-    |--------------------------------------------------------------------------
-    */
-    'gemini_model' => env('GEMINI_MODEL', 'gemini-2.0-flash'),
-
-    /*
-    |--------------------------------------------------------------------------
-    | ElevenLabs
-    |--------------------------------------------------------------------------
-    |
-    | `elevenlabs_model` is the general model. It is the fallback for a voice
-    | the account cannot speak with its own model, and the model for a
-    | premade voice, which has no model of its own.
-    |
-    | The cloned voices carry their character in the model they were
-    | fine-tuned on, so the model is looked up per voice at synthesis time
-    | (see ElevenLabsService::modelsFor). `tts_language` is the language a
-    | cloned voice is expected to be verified in — the app's cloned voices
-    | are Bangla.
-    |
-    */
-    'elevenlabs_model' => env('ELEVENLABS_MODEL', 'eleven_multilingual_v2'),
-
-    'tts_language' => env('ELEVENLABS_TTS_LANGUAGE', 'bn'),
-
-    /*
-    |--------------------------------------------------------------------------
-    | TTS Max Characters
-    | The AI transcript is trimmed to this many characters (at a sentence
-    | boundary) before it is sent to ElevenLabs. The full text is still shown
-    | in the transcript. When the account has few credits left, the request
-    | is automatically retried with an even shorter text that fits the
-    | remaining quota — so a debate never runs completely silent.
-    |--------------------------------------------------------------------------
-    */
-    'tts_max_chars' => (int) env('ELEVENLABS_TTS_MAX_CHARS', 1500),
-
-    /*
-    |--------------------------------------------------------------------------
     | Phase Time Limits (seconds)
     |--------------------------------------------------------------------------
     */
@@ -216,7 +177,7 @@ return [
     |--------------------------------------------------------------------------
     | The three criteria the judge scores against, and what each one is
     | looking at. This is the single source of truth for the rubric: the
-    | Gemini prompt is built from it, and the report renders it. A report
+    | Groq reasoning prompt is built from it, and the report renders it. A report
     | that shows a rubric the judge never used is a document that lies
     | about its own method, so the two cannot be separate copies.
     |

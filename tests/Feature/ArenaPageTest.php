@@ -250,6 +250,18 @@ class ArenaPageTest extends TestCase
         $this->assertStringContainsString('Opponent responding', $html);
     }
 
+    public function test_browser_speech_recognition_starts_with_the_original_recording_and_never_requests_a_repeat(): void
+    {
+        $html = $this->arenaHtml(User::factory()->create());
+
+        $this->assertStringContainsString('this.browserRecognition = this.startBrowserRecognition();', $html);
+        $this->assertStringContainsString('this.browserRecognition?.stop();', $html);
+        $this->assertStringContainsString('Using browser speech recognition from this recording.', $html);
+        $this->assertStringContainsString('!poll.ai_turn.audio_provider && !poll.ai_turn.audio_error', $html);
+        $this->assertStringNotContainsString('short spoken repeat', $html);
+        $this->assertStringNotContainsString('recognizeWithBrowser()', $html);
+    }
+
     /**
      * There must never be two microphones on screen.
      *
@@ -294,7 +306,7 @@ class ArenaPageTest extends TestCase
      * x-init="init()" as well called it a second time.
      *
      * That was not harmless: on a debate where the opponent speaks
-     * first, the opening speech was requested twice — two Gemini
+     * first, the opening speech was requested twice — two Groq reasoning
      * calls and two speech syntheses for one speech — and the reader
      * saw the round start twice.
      */

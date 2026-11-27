@@ -8,7 +8,7 @@ use App\Models\Debate;
 use App\Models\Motion;
 use App\Models\Persona;
 use App\Services\DebateRoundEngine;
-use App\Services\GeminiService;
+use App\Services\GroqReasoningService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -17,7 +17,7 @@ use Illuminate\Support\Str;
 class SetupController extends Controller
 {
     public function __construct(
-        private GeminiService $gemini,
+        private GroqReasoningService $reasoning,
         private DebateRoundEngine $engine,
     ) {}
 
@@ -33,7 +33,7 @@ class SetupController extends Controller
     }
 
     /**
-     * POST /motions/generate — Generate a motion via Gemini.
+     * POST /motions/generate — Generate a motion via Groq.
      */
     public function generateMotion(Request $request): JsonResponse
     {
@@ -43,11 +43,11 @@ class SetupController extends Controller
         ]);
 
         // Use selected language directly for motion generation
-        $geminiLang = $request->input('language', 'en');
+        $language = $request->input('language', 'en');
 
         try {
-            $motionText = $this->gemini->generateMotion(
-                $geminiLang,
+            $motionText = $this->reasoning->generateMotion(
+                $language,
                 $request->input('category')
             );
         } catch (\Exception $e) {
@@ -67,7 +67,7 @@ class SetupController extends Controller
                     'এই সভা মনে করে যে রাষ্ট্রের উন্নয়নের জন্য ব্যক্তিগত গোপনীয়তাকে অগ্রাধিকার দেওয়া উচিত।',
                 ],
             ];
-            $options = $fallbacks[$geminiLang] ?? $fallbacks['en'];
+            $options = $fallbacks[$language] ?? $fallbacks['en'];
             $motionText = $options[array_rand($options)];
         }
 
